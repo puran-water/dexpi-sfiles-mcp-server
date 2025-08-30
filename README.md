@@ -173,9 +173,16 @@ command = "python"
 args = ["-m", "src.server"]
 ```
 
-2. Use Codex CLI to interact with the server:
+2. Launch Codex TUI interface for interactive engineering drawing creation:
 ```bash
-codex "Create a BFD for an ammonia synthesis process"
+codex
+```
+
+Then use natural language in the TUI:
+```
+> Create a BFD for an ammonia synthesis process
+> Add a distillation column C-101 to the current P&ID
+> Generate control loop for level control on tank TK-101
 ```
 
 ### With uvx (Quick Start)

@@ -1,5 +1,8 @@
 # Example Codex CLI Configuration for Engineering MCP Server
 # Add this to your ~/.codex/config.toml
+#
+# After configuration, launch Codex TUI with: codex
+# Then interact with natural language commands in the TUI interface
 
 # For development installation (using uv)
 [mcp_servers.engineering-mcp]
