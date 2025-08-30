@@ -268,7 +268,6 @@ Contributors will be recognized in:
 - Release notes for significant contributions
 - Documentation credits where appropriate
 
-Thank you for helping improve engineering drawing automation with AI!
 
 ---
 

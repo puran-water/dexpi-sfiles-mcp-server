@@ -7,9 +7,9 @@
 
 ## Motivation
 
-### The Paradigm Shift: Database-First Engineering Documentation
+### Database-First Engineering Documentation
 
-Future engineering workflows will require every deliverable to be machine-readable and directly ingestible by Large Language Models (LLMs). This represents a fundamental shift from the current visual-first approach to a database-first methodology with visualization as a secondary representation layer.
+Engineering workflows require deliverables to be machine-readable and directly processable by Large Language Models (LLMs). This approach prioritizes data models over visual representations, with visualization serving as a secondary layer.
 
 Traditional process engineering drawings (Block Flow Diagrams, Process Flow Diagrams, and Piping & Instrumentation Diagrams) are created using proprietary CAD software that produces binary files which are:
 - Not machine-readable by LLMs or automation systems
@@ -286,4 +286,3 @@ For questions, issues, or contributions, please open an issue on GitHub.
 
 ---
 
-*Developed for the process engineering community to enable AI-assisted design workflows*

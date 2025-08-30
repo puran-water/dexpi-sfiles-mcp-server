@@ -317,7 +317,7 @@ After successful installation:
 2. **Try the examples** in the `examples/` directory
 3. **Explore the dashboard** to understand visualization capabilities
 4. **Create your first project** using Claude Desktop or the Python API
-5. **Join the community** and share your engineering drawings
+5. **Review documentation** for advanced features and API details
 
 ## Additional Resources
 
