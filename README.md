@@ -1,228 +1,275 @@
-# Engineering Drawing MCP Server
+# Process Engineering Drawings MCP Server
+### Machine-Readable, Git-Compatible BFD/PFD/P&ID Generation with DEXPI and SFILES
 
-An MCP (Model Context Protocol) server for LLM-assisted generation of engineering drawings including Block Flow Diagrams (BFD), Process Flow Diagrams (PFD), and Piping & Instrumentation Diagrams (P&ID).
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![MCP Compatible](https://img.shields.io/badge/MCP-Compatible-green.svg)](https://github.com/anthropics/mcp)
 
-## Features
+## 🎯 Motivation
 
-- **P&ID Generation (DEXPI-based)**
-  - Create and manipulate P&ID models using DEXPI standard
-  - Add equipment, piping, and instrumentation
-  - Export to JSON and GraphML formats
-  - ISA-5.1 compliant tag validation
+Traditional process engineering drawings (Block Flow Diagrams, Process Flow Diagrams, and Piping & Instrumentation Diagrams) are created using proprietary CAD software that produces binary files which are:
+- **Not machine-readable** - LLMs and automation tools cannot interpret them
+- **Not git-friendly** - Binary formats prevent meaningful version control and diffs
+- **Not interoperable** - Vendor lock-in prevents integration with modern DevOps workflows
 
-- **BFD/PFD Generation (SFILES2-based)**
-  - Create flowsheets with units and streams
-  - Convert to/from compact SFILES string format
-  - Export to NetworkX and GraphML formats
-  - Support for control instrumentation
+This MCP (Model Context Protocol) server enables LLMs to create, modify, and understand process engineering drawings using:
+- **DEXPI** - ISO 15926 compliant P&ID data model for detailed instrumentation
+- **SFILES** - Compact text notation for BFD/PFD flowsheets
+- **Git-native formats** - JSON and text files that support proper version control
+- **Real-time visualization** - Interactive dashboard for auditing LLM-generated drawings
 
-- **Graph Conversion**
-  - Unified conversion between DEXPI, NetworkX, and GraphML
-  - Machine-learning ready representations
-  - Topology analysis and comparison
+## 🚀 Features
 
-- **LLM Integration**
-  - LLM-guided pattern generation for P&IDs
-  - Structured plan validation
-  - Equipment pattern library
+### Core Capabilities
+- **LLM-Assisted Drawing Generation** - MCP tools allow Claude and other LLMs to create process drawings
+- **DEXPI P&ID Support** - Create detailed P&IDs with equipment, piping, valves, and instrumentation
+- **SFILES BFD/PFD Support** - Generate compact flowsheet notation for high-level process diagrams
+- **Git-Based Persistence** - All drawings stored as diffable JSON/text with automatic commit tracking
+- **Real-Time Dashboard** - Cytoscape.js visualization with WebSocket updates
+- **GraphML Export** - Machine learning ready graph formats for downstream analysis
 
-- **Engineering Validation**
-  - ISA-5.1 tag name validation
-  - Pipe class and material validation
-  - Equipment specification constraints
-  - Control loop validation
+### MCP Tools Available
 
-## Installation
+#### DEXPI P&ID Tools
+- `dexpi_create_pid` - Initialize new P&ID with metadata
+- `dexpi_add_equipment` - Add tanks, pumps, reactors, heat exchangers
+- `dexpi_add_valve` - Add various valve types (ball, gate, globe, etc.)
+- `dexpi_add_instrumentation` - Add sensors and controllers
+- `dexpi_connect_components` - Create piping connections
+- `dexpi_validate_model` - Check engineering rules
+- `dexpi_export_json` - Export to JSON format
+- `dexpi_export_graphml` - Export for ML pipelines
 
+#### SFILES Flowsheet Tools
+- `sfiles_create_flowsheet` - Initialize BFD/PFD
+- `sfiles_add_unit` - Add unit operations
+- `sfiles_add_stream` - Connect units with streams
+- `sfiles_add_control` - Add control loops
+- `sfiles_to_string` - Export compact SFILES notation
+- `sfiles_validate_syntax` - Validate SFILES format
+
+#### Project Management Tools
+- `*_init_project` - Create git-tracked project
+- `*_save_to_project` - Save with version control
+- `*_load_from_project` - Load previous versions
+- `*_list_project_models` - List all drawings
+
+## 📋 Requirements
+
+- Python 3.10+
+- Virtual environment recommended
+- Git for version control
+
+## 🛠️ Installation
+
+See [SETUP.md](SETUP.md) for detailed installation instructions.
+
+Quick start:
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/yourusername/engineering-mcp-server.git
 cd engineering-mcp-server
 
+# Create virtual environment
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
 # Install dependencies
-pip install -e .
+pip install -r requirements.txt
 
-# For development
-pip install -e ".[dev]"
-```
-
-## Usage
-
-### Starting the MCP Server
-
-```bash
+# Start the MCP server
 python -m src.server
+
+# Start the dashboard (optional)
+python -m src.dashboard.server
 ```
 
-Or using the installed script:
+## 🎮 Usage
 
-```bash
-engineering-mcp
-```
+### With Claude Desktop
 
-### Available MCP Tools
-
-#### P&ID Tools (DEXPI)
-
-- `dexpi_create_pid` - Initialize a new P&ID model
-- `dexpi_add_equipment` - Add equipment (pump, tank, reactor, etc.)
-- `dexpi_add_piping` - Add piping segments
-- `dexpi_add_instrumentation` - Add instrumentation
-- `dexpi_connect_components` - Create piping connections
-- `dexpi_validate_model` - Validate P&ID model
-- `dexpi_export_json` - Export as JSON
-- `dexpi_export_graphml` - Export as GraphML
-- `dexpi_import_json` - Import from JSON
-
-#### BFD/PFD Tools (SFILES)
-
-- `sfiles_create_flowsheet` - Initialize a new flowsheet
-- `sfiles_add_unit` - Add unit operation
-- `sfiles_add_stream` - Add stream between units
-- `sfiles_to_string` - Convert to SFILES string
-- `sfiles_from_string` - Create from SFILES string
-- `sfiles_export_networkx` - Export as NetworkX graph
-- `sfiles_export_graphml` - Export as GraphML
-- `sfiles_add_control` - Add control instrumentation
-- `sfiles_validate_topology` - Validate flowsheet topology
-
-### Available MCP Resources
-
-Resources provide read-only access to generated models:
-
-- `dexpi/{model_id}/json` - P&ID model as JSON
-- `dexpi/{model_id}/graphml` - P&ID topology as GraphML
-- `dexpi/{model_id}/networkx` - P&ID as NetworkX graph
-- `sfiles/{flowsheet_id}/string` - Flowsheet as SFILES string
-- `sfiles/{flowsheet_id}/graphml` - Flowsheet as GraphML
-- `sfiles/{flowsheet_id}/networkx` - Flowsheet as NetworkX graph
-
-## Example Usage with LLM
-
-### Creating a P&ID
-
+1. Add to your Claude Desktop configuration (`~/Library/Application Support/Claude/claude_desktop_config.json`):
 ```json
 {
-  "tool": "dexpi_create_pid",
-  "arguments": {
-    "project_name": "Water Treatment Plant",
-    "drawing_number": "WTP-PID-001",
-    "revision": "A",
-    "description": "Raw water intake system"
-  }
-}
-```
-
-### Adding Equipment
-
-```json
-{
-  "tool": "dexpi_add_equipment",
-  "arguments": {
-    "model_id": "uuid-here",
-    "equipment_type": "Pump",
-    "tag_name": "P-101",
-    "specifications": {
-      "flow_rate": 100.0,
-      "head": 30.0
+  "mcpServers": {
+    "engineering-mcp": {
+      "command": "python",
+      "args": ["-m", "src.server"],
+      "cwd": "/path/to/engineering-mcp-server",
+      "env": {
+        "PYTHONPATH": "/path/to/engineering-mcp-server"
+      }
     }
   }
 }
 ```
 
-### Creating a BFD/PFD
-
-```json
-{
-  "tool": "sfiles_create_flowsheet",
-  "arguments": {
-    "name": "Ethanol Production",
-    "type": "PFD",
-    "description": "Fermentation section"
-  }
-}
+2. Restart Claude Desktop and use natural language to create drawings:
+```
+"Create a P&ID for a simple reactor system with feed tank, pump, heat exchanger, and reactor"
 ```
 
-### Adding Units and Streams
+### Dashboard Visualization
 
-```json
-{
-  "tool": "sfiles_add_unit",
-  "arguments": {
-    "flowsheet_id": "uuid-here",
-    "unit_name": "fermentor-1",
-    "unit_type": "reactor",
-    "parameters": {
-      "volume": 500.0,
-      "temperature": 35.0
-    }
-  }
-}
-```
-
-## Architecture
-
-The server is organized into several modules:
-
-- **tools/** - MCP tool implementations for DEXPI and SFILES
-- **resources/** - MCP resource providers for data access
-- **converters/** - Graph conversion utilities
-- **generators/** - LLM-guided generation functions
-- **validators/** - Engineering constraints and validation
-- **patterns/** - Equipment pattern library
-
-## Testing
-
-Run tests using pytest:
-
+1. Start the dashboard server:
 ```bash
-pytest tests/
+python -m src.dashboard.server
 ```
 
-With coverage:
+2. Open http://localhost:8000 in your browser
 
-```bash
-pytest --cov=src tests/
+3. Enter your project path and click "Open Project"
+
+4. Click on models to visualize them with interactive layouts
+
+## 📁 Project Structure
+
+```
+engineering-mcp-server/
+├── src/
+│   ├── server.py              # Main MCP server
+│   ├── tools/                  # MCP tool implementations
+│   │   ├── dexpi_tools.py     # DEXPI P&ID tools
+│   │   └── sfiles_tools.py    # SFILES flowsheet tools
+│   ├── persistence/           # Git-based storage
+│   ├── dashboard/             # Web visualization
+│   │   ├── server.py          # FastAPI server
+│   │   └── static/            # HTML/JS frontend
+│   └── converters/            # Format converters
+├── examples/                  # Example drawings
+├── tests/                     # Test suite
+├── requirements.txt          # Python dependencies
+├── LICENSE                   # AGPL v3 license
+└── README.md                # This file
 ```
 
-## Development
+## 🔧 Example: Creating a P&ID
 
-Format code:
+```python
+# The LLM can execute these through MCP:
 
-```bash
-black src/ tests/
+# 1. Initialize project
+dexpi_init_project(
+    project_path="/tmp/plant_project",
+    project_name="Demo Plant"
+)
+
+# 2. Create P&ID
+model_id = dexpi_create_pid(
+    project_name="Demo Plant",
+    drawing_number="PID-001"
+)
+
+# 3. Add equipment
+dexpi_add_equipment(
+    model_id=model_id,
+    equipment_type="Tank",
+    tag_name="TK-101"
+)
+
+dexpi_add_equipment(
+    model_id=model_id,
+    equipment_type="Pump",
+    tag_name="P-101"
+)
+
+# 4. Connect with piping
+dexpi_connect_components(
+    model_id=model_id,
+    from_component="TK-101",
+    to_component="P-101",
+    line_number="100-PL-001"
+)
+
+# 5. Save to git
+dexpi_save_to_project(
+    model_id=model_id,
+    project_path="/tmp/plant_project",
+    model_name="main_pid"
+)
 ```
 
-Lint code:
+## 🔧 Example: Creating a PFD with SFILES
 
-```bash
-ruff check src/ tests/
+```python
+# Create flowsheet
+flowsheet_id = sfiles_create_flowsheet(
+    name="Reactor Process",
+    type="PFD"
+)
+
+# Add units
+sfiles_add_unit(flowsheet_id, "feed-1", "feed")
+sfiles_add_unit(flowsheet_id, "reactor-1", "reactor")
+sfiles_add_unit(flowsheet_id, "product-1", "product")
+
+# Connect units
+sfiles_add_stream(flowsheet_id, "feed-1", "reactor-1")
+sfiles_add_stream(flowsheet_id, "reactor-1", "product-1")
+
+# Export SFILES notation
+result = sfiles_to_string(flowsheet_id)
+# Output: "(feed)(reactor)(product)"
 ```
 
-Type checking:
+## 📚 Standards & Specifications
 
-```bash
-mypy src/
-```
+- **DEXPI** - ISO 15926 compliant P&ID information model
+- **SFILES** - Simplified Flowsheet Input Line Entry System
+- **GraphML** - Graph Markup Language for ML pipelines
+- **MCP** - Anthropic's Model Context Protocol
 
-## Dependencies
+## 🤝 Contributing
 
-- **pyDEXPI** - DEXPI P&ID data model (AGPL-3.0 license)
-- **SFILES2** - Flowsheet representation (Apache license)
-- **NetworkX** - Graph manipulation
-- **MCP** - Model Context Protocol
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and contribution guidelines.
 
-## License
+## 📄 License
 
-MIT
+This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
 
-## Contributing
+### Key License Requirements
 
-Contributions are welcome! Please ensure all tests pass and code is formatted before submitting pull requests.
+- **Source Code Disclosure**: If you run this software as a network service, you must provide source code access to users
+- **Copyleft**: Modifications must be released under the same AGPL license
+- **Attribution**: Must maintain copyright notices and license information
 
-## Notes
+### Dependencies & Attribution
 
-- This server provides data-only representations without visualization
-- Graphics/visualization can be added as a separate layer
-- All formats (JSON, SFILES, GraphML) are git-friendly and diffable
-- The server runs as a service to satisfy pyDEXPI's AGPL license requirements
+This project uses the following open-source libraries:
+
+- **pyDEXPI** - AGPL-3.0 License
+  - Copyright (C) 2025 Artur M. Schweidtmann
+  - [GitHub](https://github.com/process-intelligence-research/pyDEXPI)
+  
+- **NetworkX** - BSD 3-Clause License
+  - Copyright (C) NetworkX Developers
+  
+- **FastAPI** - MIT License
+  - Copyright (c) 2018 Sebastián Ramírez
+  
+- **MCP** - MIT License
+  - Copyright (c) 2024 Anthropic
+
+See [LICENSE](LICENSE) for full license text and [LICENSES/](LICENSES/) for dependency licenses.
+
+## 🙏 Acknowledgments
+
+- **Process Intelligence Research** for pyDEXPI
+- **Anthropic** for the MCP protocol
+- **DEXPI Initiative** for P&ID standards
+- **Cytoscape.js** team for visualization
+
+## 📧 Contact
+
+For questions, issues, or contributions, please open an issue on GitHub.
+
+## 🔗 Links
+
+- [DEXPI Standard](https://www.dexpi.org/)
+- [MCP Documentation](https://github.com/anthropics/mcp)
+- [pyDEXPI Documentation](https://github.com/process-intelligence-research/pyDEXPI)
+- [Dashboard Guide](docs/dashboard.md)
+
+---
+
+*Built with ❤️ for the process engineering community to enable AI-assisted design workflows*

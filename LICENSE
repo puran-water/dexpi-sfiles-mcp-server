@@ -1,0 +1,87 @@
+Process Engineering Drawings MCP Server
+Copyright (C) 2025 Contributors
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+================================================================================
+ATTRIBUTION AND THIRD-PARTY LICENSES
+================================================================================
+
+This software incorporates or depends on the following open-source projects:
+
+1. pyDEXPI
+   Copyright (C) 2025 Artur M. Schweidtmann
+   License: GNU Affero General Public License v3.0
+   Source: https://github.com/process-intelligence-research/pyDEXPI
+   
+   pyDEXPI is used for DEXPI P&ID data model implementation and is a core
+   dependency of this project. As it is licensed under AGPL-3.0, this project
+   must also be licensed under AGPL-3.0 or later.
+
+2. NetworkX
+   Copyright (C) 2004-2025 NetworkX Developers
+   License: BSD 3-Clause License
+   Source: https://github.com/networkx/networkx
+   
+3. FastAPI
+   Copyright (c) 2018 Sebastián Ramírez
+   License: MIT License
+   Source: https://github.com/tiangolo/fastapi
+
+4. MCP (Model Context Protocol)
+   Copyright (c) 2024 Anthropic
+   License: MIT License
+   Source: https://github.com/anthropics/mcp
+
+5. Pydantic
+   Copyright (c) 2017 Samuel Colvin
+   License: MIT License
+   Source: https://github.com/pydantic/pydantic
+
+6. Cytoscape.js (client-side dependency)
+   Copyright (c) The Cytoscape Consortium
+   License: MIT License
+   Source: https://github.com/cytoscape/cytoscape.js
+
+================================================================================
+IMPORTANT NOTICE REGARDING AGPL-3.0
+================================================================================
+
+This software is licensed under the GNU Affero General Public License v3.0.
+This means:
+
+1. SOURCE CODE DISCLOSURE: If you run this software as a network service
+   (including as an MCP server accessible to users), you MUST provide access
+   to the complete source code to all users of the service.
+
+2. COPYLEFT: Any modifications or derivative works must also be licensed
+   under AGPL-3.0 or later.
+
+3. ATTRIBUTION: You must maintain all copyright notices and this license
+   file in any distribution.
+
+4. NO WARRANTY: This software comes with no warranty. See Section 15 of
+   the AGPL-3.0 for details.
+
+For the complete text of the GNU Affero General Public License v3.0, see:
+https://www.gnu.org/licenses/agpl-3.0.html
+
+================================================================================
+CONTRIBUTOR AGREEMENT
+================================================================================
+
+By contributing to this project, you agree that your contributions will be
+licensed under the GNU Affero General Public License v3.0.
+
+================================================================================
