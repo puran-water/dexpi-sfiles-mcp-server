@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Engineering MCP Dashboard</title>
+    
+    <!-- Cytoscape.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.26.0/cytoscape.min.js"></script>
+    
+    <!-- Cytoscape layouts -->
+    <script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.5.0/cytoscape-dagre.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dagre@0.8.5/dist/dagre.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1e1e1e;
+            color: #e0e0e0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background: #2d2d30;
+            padding: 1rem;
+            border-bottom: 1px solid #3e3e42;
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+        
+        .header h1 {
+            font-size: 1.5rem;
+            color: #ffffff;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .controls input, .controls select, .controls button {
+            padding: 0.5rem;
+            background: #3e3e42;
+            color: #e0e0e0;
+            border: 1px solid #555;
+            border-radius: 4px;
+        }
+        
+        .controls button {
+            cursor: pointer;
+            background: #0e639c;
+            border-color: #0e639c;
+        }
+        
+        .controls button:hover {
+            background: #1177bb;
+        }
+        
+        .main-container {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+        
+        .sidebar {
+            width: 300px;
+            background: #252526;
+            border-right: 1px solid #3e3e42;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+        
+        .sidebar h2 {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: #cccccc;
+        }
+        
+        .model-list {
+            list-style: none;
+        }
+        
+        .model-list li {
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
+            background: #2d2d30;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .model-list li:hover {
+            background: #3e3e42;
+        }
+        
+        .model-list li.active {
+            background: #0e639c;
+        }
+        
+        .model-type {
+            font-size: 0.8rem;
+            color: #999;
+            text-transform: uppercase;
+        }
+        
+        .graph-container {
+            flex: 1;
+            position: relative;
+            background: #1e1e1e;
+        }
+        
+        #cy {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .status-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #2d2d30;
+            padding: 0.5rem 1rem;
+            border-top: 1px solid #3e3e42;
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            font-size: 0.9rem;
+        }
+        
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #888;
+            display: inline-block;
+            margin-right: 0.5rem;
+        }
+        
+        .status-indicator.connected {
+            background: #4ec9b0;
+        }
+        
+        .layout-controls {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: #2d2d30;
+            padding: 0.5rem;
+            border-radius: 4px;
+            border: 1px solid #3e3e42;
+        }
+        
+        .layout-controls button {
+            display: block;
+            width: 100%;
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background: #3e3e42;
+            color: #e0e0e0;
+            border: 1px solid #555;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .layout-controls button:hover {
+            background: #4e4e52;
+        }
+        
+        .layout-controls button:last-child {
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Engineering MCP Dashboard</h1>
+        <div class="controls">
+            <input type="text" id="projectPath" placeholder="Project path..." value="/tmp/test_project">
+            <button onclick="openProject()">Open Project</button>
+            <select id="modelTypeFilter" onchange="filterModels()">
+                <option value="all">All Models</option>
+                <option value="dexpi">DEXPI Only</option>
+                <option value="sfiles">SFILES Only</option>
+            </select>
+        </div>
+    </div>
+    
+    <div class="main-container">
+        <div class="sidebar">
+            <h2>Models</h2>
+            <ul id="modelList" class="model-list">
+                <!-- Models will be populated here -->
+            </ul>
+        </div>
+        
+        <div class="graph-container">
+            <div id="cy"></div>
+            
+            <div class="layout-controls">
+                <button onclick="applyLayout('dagre')">Hierarchical</button>
+                <button onclick="applyLayout('cose')">Force-Directed</button>
+                <button onclick="applyLayout('breadthfirst')">Breadth-First</button>
+                <button onclick="fitGraph()">Fit to View</button>
+            </div>
+            
+            <div class="status-bar">
+                <div>
+                    <span class="status-indicator" id="wsStatus"></span>
+                    <span id="connectionStatus">Disconnected</span>
+                </div>
+                <div id="nodeCount">Nodes: 0</div>
+                <div id="edgeCount">Edges: 0</div>
+                <div id="selectedModel">No model selected</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Global variables
+        let cy = null;
+        let ws = null;
+        let currentProject = null;
+        let currentModels = { dexpi: [], sfiles: [] };
+        
+        // Initialize Cytoscape
+        function initCytoscape() {
+            cy = cytoscape({
+                container: document.getElementById('cy'),
+                style: [
+                    {
+                        selector: 'node',
+                        style: {
+                            'background-color': '#666',
+                            'label': 'data(label)',
+                            'color': '#fff',
+                            'text-valign': 'center',
+                            'text-halign': 'center',
+                            'font-size': '12px',
+                            'width': 40,
+                            'height': 40
+                        }
+                    },
+                    {
+                        selector: 'node.equipment',
+                        style: {
+                            'background-color': '#0e639c',
+                            'shape': 'rectangle',
+                            'width': 60,
+                            'height': 40
+                        }
+                    },
+                    {
+                        selector: 'node.pump',
+                        style: {
+                            'background-color': '#16825d',
+                            'shape': 'triangle'
+                        }
+                    },
+                    {
+                        selector: 'node.valve',
+                        style: {
+                            'background-color': '#e06c75',
+                            'shape': 'diamond'
+                        }
+                    },
+                    {
+                        selector: 'node.instrument',
+                        style: {
+                            'background-color': '#d19a66',
+                            'shape': 'octagon',
+                            'width': 35,
+                            'height': 35
+                        }
+                    },
+                    {
+                        selector: 'node.reactor',
+                        style: {
+                            'background-color': '#c678dd',
+                            'shape': 'hexagon',
+                            'width': 60,
+                            'height': 60
+                        }
+                    },
+                    {
+                        selector: 'node.column',
+                        style: {
+                            'background-color': '#56b6c2',
+                            'shape': 'rectangle',
+                            'width': 40,
+                            'height': 80
+                        }
+                    },
+                    {
+                        selector: 'node.heat-exchanger',
+                        style: {
+                            'background-color': '#e5c07b',
+                            'shape': 'barrel',
+                            'width': 50,
+                            'height': 40
+                        }
+                    },
+                    {
+                        selector: 'edge',
+                        style: {
+                            'width': 2,
+                            'line-color': '#666',
+                            'target-arrow-color': '#666',
+                            'target-arrow-shape': 'triangle',
+                            'curve-style': 'bezier',
+                            'label': 'data(label)',
+                            'font-size': '10px',
+                            'color': '#888'
+                        }
+                    },
+                    {
+                        selector: 'edge.piping',
+                        style: {
+                            'line-color': '#4ec9b0',
+                            'target-arrow-color': '#4ec9b0',
+                            'width': 3
+                        }
+                    },
+                    {
+                        selector: 'edge.control-signal',
+                        style: {
+                            'line-color': '#d19a66',
+                            'target-arrow-color': '#d19a66',
+                            'line-style': 'dashed'
+                        }
+                    }
+                ],
+                layout: {
+                    name: 'dagre',
+                    rankDir: 'LR'
+                },
+                wheelSensitivity: 0.2
+            });
+            
+            // Add click handler for nodes
+            cy.on('tap', 'node', function(evt) {
+                const node = evt.target;
+                console.log('Node clicked:', node.data());
+            });
+        }
+        
+        // Initialize WebSocket
+        function initWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.hostname}:8000/ws`;
+            
+            ws = new WebSocket(wsUrl);
+            
+            ws.onopen = () => {
+                console.log('WebSocket connected');
+                document.getElementById('wsStatus').classList.add('connected');
+                document.getElementById('connectionStatus').textContent = 'Connected';
+                
+                // Subscribe to updates if project is open
+                if (currentProject) {
+                    ws.send(JSON.stringify({
+                        type: 'subscribe',
+                        project_path: currentProject
+                    }));
+                }
+            };
+            
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                console.log('WebSocket message:', data);
+                
+                if (data.type === 'model_updated' || data.type === 'models_update') {
+                    if (data.project_path === currentProject) {
+                        currentModels = data.models;
+                        updateModelList();
+                    }
+                }
+            };
+            
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
+            
+            ws.onclose = () => {
+                console.log('WebSocket disconnected');
+                document.getElementById('wsStatus').classList.remove('connected');
+                document.getElementById('connectionStatus').textContent = 'Disconnected';
+                
+                // Reconnect after 3 seconds
+                setTimeout(initWebSocket, 3000);
+            };
+        }
+        
+        // Open a project
+        async function openProject() {
+            const projectPath = document.getElementById('projectPath').value;
+            if (!projectPath) {
+                alert('Please enter a project path');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/projects/open', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ project_path: projectPath })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                currentProject = projectPath;
+                currentModels = data.models;
+                updateModelList();
+                
+                // Subscribe to updates via WebSocket
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({
+                        type: 'subscribe',
+                        project_path: projectPath
+                    }));
+                }
+            } catch (error) {
+                console.error('Error opening project:', error);
+                alert('Failed to open project: ' + error.message);
+            }
+        }
+        
+        // Update model list in sidebar
+        function updateModelList() {
+            const list = document.getElementById('modelList');
+            const filter = document.getElementById('modelTypeFilter').value;
+            
+            list.innerHTML = '';
+            
+            // Add DEXPI models
+            if (filter === 'all' || filter === 'dexpi') {
+                currentModels.dexpi.forEach(model => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <div class="model-type">DEXPI</div>
+                        <div>${model}</div>
+                    `;
+                    li.onclick = () => loadModel('dexpi', model);
+                    list.appendChild(li);
+                });
+            }
+            
+            // Add SFILES models
+            if (filter === 'all' || filter === 'sfiles') {
+                currentModels.sfiles.forEach(model => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <div class="model-type">SFILES</div>
+                        <div>${model}</div>
+                    `;
+                    li.onclick = () => loadModel('sfiles', model);
+                    list.appendChild(li);
+                });
+            }
+        }
+        
+        // Load and display a model
+        async function loadModel(type, name) {
+            if (!currentProject) {
+                alert('Please open a project first');
+                return;
+            }
+            
+            try {
+                const url = `/api/models/${type}/${encodeURIComponent(currentProject)}/${name}`;
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const graphData = await response.json();
+                
+                // Update Cytoscape
+                cy.elements().remove();
+                // Combine nodes and edges into a single array for Cytoscape
+                const elements = (graphData.nodes || []).concat(graphData.edges || []);
+                cy.add(elements);
+                
+                // Apply layout
+                applyLayout('dagre');
+                
+                // Update status bar
+                document.getElementById('selectedModel').textContent = `${type.toUpperCase()}: ${name}`;
+                document.getElementById('nodeCount').textContent = `Nodes: ${graphData.nodes.length}`;
+                document.getElementById('edgeCount').textContent = `Edges: ${graphData.edges.length}`;
+                
+                // Update active state in list
+                document.querySelectorAll('.model-list li').forEach(li => {
+                    li.classList.remove('active');
+                });
+                event.target.closest('li').classList.add('active');
+                
+            } catch (error) {
+                console.error('Error loading model:', error);
+                alert('Failed to load model: ' + error.message);
+            }
+        }
+        
+        // Apply layout to graph
+        function applyLayout(layoutName) {
+            const layouts = {
+                'dagre': {
+                    name: 'dagre',
+                    rankDir: 'LR',
+                    nodeSep: 100,
+                    rankSep: 150,
+                    animate: true,
+                    animationDuration: 500
+                },
+                'cose': {
+                    name: 'cose',
+                    nodeRepulsion: 4000,
+                    idealEdgeLength: 100,
+                    edgeElasticity: 100,
+                    nestingFactor: 5,
+                    gravity: 80,
+                    numIter: 1000,
+                    animate: true,
+                    animationDuration: 500
+                },
+                'breadthfirst': {
+                    name: 'breadthfirst',
+                    directed: true,
+                    spacingFactor: 1.5,
+                    animate: true,
+                    animationDuration: 500
+                }
+            };
+            
+            const layout = cy.layout(layouts[layoutName]);
+            layout.run();
+        }
+        
+        // Fit graph to view
+        function fitGraph() {
+            cy.fit();
+        }
+        
+        // Filter models
+        function filterModels() {
+            updateModelList();
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            initCytoscape();
+            initWebSocket();
+        });
+    </script>
+</body>
+</html>

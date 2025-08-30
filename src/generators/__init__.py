@@ -1,0 +1,1 @@
+"""LLM-guided generation for engineering drawings."""

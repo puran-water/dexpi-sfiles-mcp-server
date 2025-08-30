@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "engineering-drawing-server": {
+      "command": "python",
+      "args": ["-m", "src.server"],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      }
+    }
+  }
+}

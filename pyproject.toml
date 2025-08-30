@@ -1,0 +1,64 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "engineering-mcp-server"
+version = "0.1.0"
+description = "MCP server for LLM-assisted engineering drawing generation (BFD/PFD/P&ID)"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "Engineering MCP Team"},
+]
+keywords = ["mcp", "engineering", "dexpi", "sfiles", "pid", "pfd", "bfd"]
+
+dependencies = [
+    "mcp>=0.9.0",
+    "pyDEXPI @ git+https://github.com/process-intelligence-research/pyDEXPI.git",
+    "SFILES2 @ git+https://github.com/process-intelligence-research/SFILES2.git",
+    "networkx>=3.0",
+    "pydantic>=2.0",
+    "numpy",
+    "pandas",
+    "lxml",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-asyncio",
+    "pytest-cov",
+    "black",
+    "ruff",
+    "mypy",
+]
+
+[project.scripts]
+engineering-mcp = "src.server:main"
+
+[tool.black]
+line-length = 100
+target-version = ["py310", "py311", "py312"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+select = ["E", "F", "I", "N", "UP", "B", "SIM", "ARG", "DTZ", "RUF"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
