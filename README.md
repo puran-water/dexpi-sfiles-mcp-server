@@ -5,28 +5,42 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![MCP Compatible](https://img.shields.io/badge/MCP-Compatible-green.svg)](https://github.com/anthropics/mcp)
 
-## 🎯 Motivation
+## Motivation
+
+### The Paradigm Shift: Database-First Engineering Documentation
+
+Future engineering workflows will require every deliverable to be machine-readable and directly ingestible by Large Language Models (LLMs). This represents a fundamental shift from the current visual-first approach to a database-first methodology with visualization as a secondary representation layer.
 
 Traditional process engineering drawings (Block Flow Diagrams, Process Flow Diagrams, and Piping & Instrumentation Diagrams) are created using proprietary CAD software that produces binary files which are:
-- **Not machine-readable** - LLMs and automation tools cannot interpret them
-- **Not git-friendly** - Binary formats prevent meaningful version control and diffs
-- **Not interoperable** - Vendor lock-in prevents integration with modern DevOps workflows
+- Not machine-readable by LLMs or automation systems
+- Not compatible with git-based version control and diff tools
+- Not interoperable across different engineering platforms
+- Locked into vendor-specific formats preventing workflow automation
 
-This MCP (Model Context Protocol) server enables LLMs to create, modify, and understand process engineering drawings using:
-- **DEXPI** - ISO 15926 compliant P&ID data model for detailed instrumentation
-- **SFILES** - Compact text notation for BFD/PFD flowsheets
-- **Git-native formats** - JSON and text files that support proper version control
-- **Real-time visualization** - Interactive dashboard for auditing LLM-generated drawings
+This repository implements a database-first approach to process engineering documentation where:
+- The primary artifact is a structured, machine-readable data model (DEXPI/SFILES)
+- Visualization is generated from the data model, not vice versa
+- All engineering information is stored in git-compatible text formats
+- LLMs can directly create, modify, and analyze engineering drawings through MCP tools
+- Version control provides complete traceability of engineering decisions
 
-## 🚀 Features
+### Technical Implementation
+
+This MCP (Model Context Protocol) server provides LLM-accessible tools for engineering drawing generation using:
+- **DEXPI** - ISO 15926 compliant P&ID data model for detailed instrumentation diagrams
+- **SFILES** - Compact text notation for BFD/PFD flowsheet representation
+- **Git-native storage** - JSON and text formats enabling proper version control and diffing
+- **Visualization layer** - Cytoscape.js-based rendering of the underlying data models
+
+## Features
 
 ### Core Capabilities
-- **LLM-Assisted Drawing Generation** - MCP tools allow Claude and other LLMs to create process drawings
-- **DEXPI P&ID Support** - Create detailed P&IDs with equipment, piping, valves, and instrumentation
-- **SFILES BFD/PFD Support** - Generate compact flowsheet notation for high-level process diagrams
-- **Git-Based Persistence** - All drawings stored as diffable JSON/text with automatic commit tracking
-- **Real-Time Dashboard** - Cytoscape.js visualization with WebSocket updates
-- **GraphML Export** - Machine learning ready graph formats for downstream analysis
+- **LLM-Accessible Drawing Generation** - MCP tools enable LLMs to programmatically create and modify process drawings
+- **DEXPI P&ID Support** - Full implementation of DEXPI standard for detailed P&ID data models
+- **SFILES BFD/PFD Support** - Compact text notation for flowsheet representation
+- **Git-Based Persistence** - Version-controlled storage with automatic commit tracking
+- **Visualization Dashboard** - Web-based rendering of data models using Cytoscape.js
+- **GraphML Export** - Standardized graph format for machine learning pipelines
 
 ### MCP Tools Available
 
@@ -54,13 +68,13 @@ This MCP (Model Context Protocol) server enables LLMs to create, modify, and und
 - `*_load_from_project` - Load previous versions
 - `*_list_project_models` - List all drawings
 
-## 📋 Requirements
+## Requirements
 
 - Python 3.10+
 - Virtual environment recommended
 - Git for version control
 
-## 🛠️ Installation
+## Installation
 
 See [SETUP.md](SETUP.md) for detailed installation instructions.
 
@@ -84,7 +98,7 @@ python -m src.server
 python -m src.dashboard.server
 ```
 
-## 🎮 Usage
+## Usage
 
 ### With Claude Desktop
 
@@ -122,7 +136,7 @@ python -m src.dashboard.server
 
 4. Click on models to visualize them with interactive layouts
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 engineering-mcp-server/
@@ -143,7 +157,7 @@ engineering-mcp-server/
 └── README.md                # This file
 ```
 
-## 🔧 Example: Creating a P&ID
+## Example: Creating a P&ID
 
 ```python
 # The LLM can execute these through MCP:
@@ -189,7 +203,7 @@ dexpi_save_to_project(
 )
 ```
 
-## 🔧 Example: Creating a PFD with SFILES
+## Example: Creating a PFD with SFILES
 
 ```python
 # Create flowsheet
@@ -212,18 +226,18 @@ result = sfiles_to_string(flowsheet_id)
 # Output: "(feed)(reactor)(product)"
 ```
 
-## 📚 Standards & Specifications
+## Standards & Specifications
 
 - **DEXPI** - ISO 15926 compliant P&ID information model
 - **SFILES** - Simplified Flowsheet Input Line Entry System
 - **GraphML** - Graph Markup Language for ML pipelines
 - **MCP** - Anthropic's Model Context Protocol
 
-## 🤝 Contributing
+## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and contribution guidelines.
 
-## 📄 License
+## License
 
 This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
 
@@ -252,18 +266,18 @@ This project uses the following open-source libraries:
 
 See [LICENSE](LICENSE) for full license text and [LICENSES/](LICENSES/) for dependency licenses.
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **Process Intelligence Research** for pyDEXPI
 - **Anthropic** for the MCP protocol
 - **DEXPI Initiative** for P&ID standards
 - **Cytoscape.js** team for visualization
 
-## 📧 Contact
+## Contact
 
 For questions, issues, or contributions, please open an issue on GitHub.
 
-## 🔗 Links
+## Links
 
 - [DEXPI Standard](https://www.dexpi.org/)
 - [MCP Documentation](https://github.com/anthropics/mcp)
@@ -272,4 +286,4 @@ For questions, issues, or contributions, please open an issue on GitHub.
 
 ---
 
-*Built with ❤️ for the process engineering community to enable AI-assisted design workflows*
+*Developed for the process engineering community to enable AI-assisted design workflows*

@@ -2,7 +2,7 @@
 
 This directory contains example scripts and projects demonstrating the capabilities of the Engineering MCP Server.
 
-## 📁 Contents
+## Contents
 
 - `simple_pid.py` - Create a basic P&ID with tank, pump, and reactor
 - `complex_flowsheet.py` - Build a complete process flowsheet with SFILES
@@ -10,7 +10,7 @@ This directory contains example scripts and projects demonstrating the capabilit
 - `distillation_column.py` - Distillation column with heat integration
 - `batch_process.py` - Batch reactor with sequential operations
 
-## 🚀 Running Examples
+## Running Examples
 
 ### Prerequisites
 
@@ -38,7 +38,7 @@ These examples show the MCP tool calls that Claude can make. Simply ask Claude:
 - "Build a distillation system with heat integration"
 - "Generate a batch process flowsheet"
 
-## 📊 Example Descriptions
+## Example Descriptions
 
 ### 1. Simple P&ID (`simple_pid.py`)
 Creates a basic P&ID with:
@@ -80,7 +80,7 @@ Batch operation example:
 - Temperature control
 - Batch tracking
 
-## 🎯 Learning Path
+## Learning Path
 
 1. **Start with `simple_pid.py`** to understand basic DEXPI operations
 2. **Try `complex_flowsheet.py`** to learn SFILES notation
@@ -88,7 +88,7 @@ Batch operation example:
 4. **Study `distillation_column.py`** for heat integration patterns
 5. **Review `batch_process.py`** for sequential logic
 
-## 📝 Creating Your Own Examples
+## Creating Your Own Examples
 
 Use this template:
 
@@ -113,7 +113,7 @@ if __name__ == "__main__":
     asyncio.run(create_my_process())
 ```
 
-## 🔗 Additional Resources
+## Additional Resources
 
 - [DEXPI Standard Examples](https://www.dexpi.org/examples)
 - [SFILES Notation Guide](../docs/sfiles_notation.md)

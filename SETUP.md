@@ -2,7 +2,7 @@
 
 This guide provides detailed installation and configuration instructions for the Process Engineering Drawings MCP Server.
 
-## 📋 Prerequisites
+## Prerequisites
 
 ### System Requirements
 - **Operating System**: Linux, macOS, or Windows (with WSL2 recommended)
@@ -17,7 +17,7 @@ This guide provides detailed installation and configuration instructions for the
 - Virtual environment support (venv)
 - Web browser (for dashboard visualization)
 
-## 🔧 Installation Steps
+## Installation Steps
 
 ### 1. Clone the Repository
 
@@ -63,10 +63,10 @@ pip install -r requirements.txt
 python -m src.server --help
 
 # Test that imports work correctly
-python -c "from src.tools import DexpiTools, SfilesTools; print('✅ Installation successful!')"
+python -c "from src.tools import DexpiTools, SfilesTools; print('Installation successful!')"
 ```
 
-## 🚀 Configuration
+## Configuration
 
 ### MCP Server Configuration
 
@@ -143,7 +143,7 @@ python -m src.server
 # You can interact with it using the MCP protocol over stdin/stdout
 ```
 
-## 🖥️ Dashboard Setup
+## Dashboard Setup
 
 The web dashboard provides real-time visualization of your engineering drawings.
 
@@ -174,7 +174,7 @@ python -m src.dashboard.server
 4. Click "Open Project" to load models
 5. Click on any model in the sidebar to visualize it
 
-## 🧪 Testing the Installation
+## Testing the Installation
 
 ### Run Built-in Tests
 
@@ -209,7 +209,7 @@ async def test_installation():
         "project_name": "Test Plant",
         "drawing_number": "PID-TEST-001"
     })
-    print(f"✅ DEXPI working: {result['model_id']}")
+    print(f"DEXPI working: {result['model_id']}")
     
     # Test SFILES tools
     sfiles = SfilesTools({})
@@ -217,12 +217,12 @@ async def test_installation():
         "name": "Test Process",
         "type": "PFD"
     })
-    print(f"✅ SFILES working: {result['flowsheet_id']}")
+    print(f"SFILES working: {result['flowsheet_id']}")
 
 asyncio.run(test_installation())
 ```
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Common Issues and Solutions
 
@@ -290,7 +290,7 @@ If you encounter issues not covered here:
    - Complete error message
    - Steps to reproduce the issue
 
-## 🔄 Updating
+## Updating
 
 To update to the latest version:
 
@@ -309,7 +309,7 @@ pip install -r requirements.txt --upgrade
 # Manually restart dashboard if running
 ```
 
-## 🎓 Next Steps
+## Next Steps
 
 After successful installation:
 
@@ -319,7 +319,7 @@ After successful installation:
 4. **Create your first project** using Claude Desktop or the Python API
 5. **Join the community** and share your engineering drawings
 
-## 📚 Additional Resources
+## Additional Resources
 
 - [DEXPI Standard Documentation](https://www.dexpi.org/)
 - [MCP Protocol Specification](https://github.com/anthropics/mcp)

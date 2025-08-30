@@ -2,7 +2,7 @@
 
 Thank you for your interest in contributing to the Process Engineering Drawings MCP Server! This document provides guidelines and instructions for contributing to the project.
 
-## 📜 Code of Conduct
+## Code of Conduct
 
 By participating in this project, you agree to maintain a respectful and inclusive environment. We expect all contributors to:
 
@@ -11,7 +11,7 @@ By participating in this project, you agree to maintain a respectful and inclusi
 - Focus on constructive criticism and collaborative problem-solving
 - Respect differing viewpoints and experiences
 
-## 🤝 How to Contribute
+## How to Contribute
 
 ### Reporting Issues
 
@@ -127,7 +127,7 @@ Then create a Pull Request on GitHub with:
 - Screenshots if UI changes
 - Test results
 
-## 🧪 Testing Guidelines
+## Testing Guidelines
 
 ### Running Tests
 
@@ -166,7 +166,7 @@ class TestDexpiTools:
         assert "model_id" in result
 ```
 
-## 🏗️ Architecture Guidelines
+## Architecture Guidelines
 
 ### Adding New MCP Tools
 
@@ -209,7 +209,7 @@ When modifying the dashboard:
 3. Test with multiple concurrent connections
 4. Maintain backward compatibility with existing projects
 
-## 📋 Pull Request Checklist
+## Pull Request Checklist
 
 Before submitting a PR, ensure:
 
@@ -222,7 +222,7 @@ Before submitting a PR, ensure:
 - [ ] License headers maintained (AGPL-3.0)
 - [ ] PR description is clear and complete
 
-## 🔒 Security Considerations
+## Security Considerations
 
 - Never commit credentials or API keys
 - Validate all user inputs
@@ -230,7 +230,7 @@ Before submitting a PR, ensure:
 - Use secure defaults for all configurations
 - Report security issues privately to maintainers
 
-## 📚 Resources for Contributors
+## Resources for Contributors
 
 ### Understanding the Codebase
 
@@ -252,7 +252,7 @@ Before submitting a PR, ensure:
 - Check the documentation
 - Ask questions in PR comments
 
-## ⚖️ License Agreement
+## License Agreement
 
 By contributing to this project, you agree that your contributions will be licensed under the GNU Affero General Public License v3.0 (AGPL-3.0). This ensures that:
 
@@ -261,7 +261,7 @@ By contributing to this project, you agree that your contributions will be licen
 3. Network use requires source code disclosure
 4. You have the right to contribute the code
 
-## 🙏 Recognition
+## Recognition
 
 Contributors will be recognized in:
 - The project's contributors list
