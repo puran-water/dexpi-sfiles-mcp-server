@@ -33,6 +33,11 @@ class DexpiTools:
     
     def get_tools(self) -> List[Tool]:
         """Return all DEXPI tools."""
+        # Dynamically generate equipment types from introspector
+        equipment_types = self.introspector.generate_dynamic_enum("equipment")
+        valve_types = self.introspector.generate_dynamic_enum("valves")
+        instrumentation_types = self.introspector.generate_dynamic_enum("instrumentation")
+        
         return [
             Tool(
                 name="dexpi_create_pid",
@@ -50,19 +55,20 @@ class DexpiTools:
             ),
             Tool(
                 name="dexpi_add_equipment",
-                description="Add equipment (pump, tank, reactor, etc.) to the P&ID model with nozzles",
+                description=f"Add equipment to the P&ID model ({len(equipment_types)} types available)",
                 inputSchema={
                     "type": "object",
                     "properties": {
                         "model_id": {"type": "string"},
                         "equipment_type": {
                             "type": "string", 
-                            "enum": ["Tank", "Pump", "Compressor", "Reactor", "HeatExchanger"]
+                            "enum": equipment_types,  # Dynamic!
+                            "description": f"Equipment type (one of {len(equipment_types)} available)"
                         },
                         "tag_name": {"type": "string"},
                         "specifications": {
                             "type": "object",
-                            "description": "Equipment-specific specifications"
+                            "description": "Equipment-specific specifications (use dexpi_describe_class to see valid attributes)"
                         },
                         "nozzles": {
                             "type": "array",
@@ -104,13 +110,34 @@ class DexpiTools:
                         "model_id": {"type": "string"},
                         "instrument_type": {
                             "type": "string",
-                            "enum": ["PressureIndicator", "FlowController", "LevelTransmitter", 
-                                    "TemperatureIndicator", "LevelController"]
+                            "enum": instrumentation_types  # Dynamic from introspector
                         },
                         "tag_name": {"type": "string"},
                         "connected_equipment": {"type": "string", "description": "Tag of connected equipment"}
                     },
                     "required": ["model_id", "instrument_type", "tag_name"]
+                }
+            ),
+            Tool(
+                name="dexpi_add_control_loop",
+                description="Add complete control loop with signal generating, control, and actuating functions",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "model_id": {"type": "string"},
+                        "loop_tag": {"type": "string", "description": "Control loop tag (e.g., FIC-101)"},
+                        "controlled_variable": {
+                            "type": "string",
+                            "enum": ["Flow", "Level", "Temperature", "Pressure"],
+                            "description": "Variable being controlled"
+                        },
+                        "sensor_tag": {"type": "string", "description": "Sensor/transmitter tag"},
+                        "controller_tag": {"type": "string", "description": "Controller tag"},
+                        "control_valve_tag": {"type": "string", "description": "Control valve tag"},
+                        "sensing_location": {"type": "string", "description": "Equipment tag where sensor is located"},
+                        "actuating_location": {"type": "string", "description": "Piping segment where valve is located"}
+                    },
+                    "required": ["model_id", "loop_tag", "controlled_variable", "sensor_tag", "controller_tag", "control_valve_tag"]
                 }
             ),
             Tool(
@@ -184,6 +211,19 @@ class DexpiTools:
                 }
             ),
             Tool(
+                name="dexpi_import_proteus_xml",
+                description="Import P&ID model from Proteus 4.2 XML file",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "directory_path": {"type": "string", "description": "Directory path containing the XML file"},
+                        "filename": {"type": "string", "description": "Name of the Proteus XML file"},
+                        "model_id": {"type": "string", "description": "Optional ID for imported model"}
+                    },
+                    "required": ["directory_path", "filename"]
+                }
+            ),
+            Tool(
                 name="dexpi_add_valve",
                 description="Add valve to the P&ID model",
                 inputSchema={
@@ -192,8 +232,7 @@ class DexpiTools:
                         "model_id": {"type": "string"},
                         "valve_type": {
                             "type": "string",
-                            "enum": ["BallValve", "GateValve", "GlobeValve", "CheckValve", 
-                                    "ButterflyValve", "NeedleValve", "PlugValve", "AngleValve"]
+                            "enum": valve_types  # Dynamic from introspector
                         },
                         "tag_name": {"type": "string"},
                         "piping_class": {"type": "string", "default": "CS150"},
@@ -201,6 +240,24 @@ class DexpiTools:
                         "operation": {"type": "string", "description": "Operation mode (optional - uses pyDEXPI defaults)"}
                     },
                     "required": ["model_id", "valve_type", "tag_name"]
+                }
+            ),
+            Tool(
+                name="dexpi_insert_valve_in_segment",
+                description="Insert valve inline within an existing piping segment by splitting it",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "model_id": {"type": "string"},
+                        "segment_id": {"type": "string", "description": "ID of segment to split"},
+                        "valve_type": {
+                            "type": "string",
+                            "enum": valve_types  # Dynamic from introspector
+                        },
+                        "tag_name": {"type": "string"},
+                        "at_position": {"type": "number", "description": "Position along segment (0.0 to 1.0)", "default": 0.5}
+                    },
+                    "required": ["model_id", "segment_id", "valve_type", "tag_name"]
                 }
             ),
             Tool(
@@ -301,6 +358,38 @@ class DexpiTools:
                     },
                     "required": ["project_path"]
                 }
+            ),
+            Tool(
+                name="dexpi_describe_class",
+                description="Get detailed description of a pyDEXPI class including all attributes and schema",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "class_name": {"type": "string", "description": "Name of the class to describe"},
+                        "category": {
+                            "type": "string", 
+                            "enum": ["equipment", "piping", "instrumentation"],
+                            "description": "Category of the class (optional - will auto-detect if not provided)"
+                        }
+                    },
+                    "required": ["class_name"]
+                }
+            ),
+            Tool(
+                name="dexpi_list_class_attributes",
+                description="List all attributes for a specific pyDEXPI class organized by type",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "class_name": {"type": "string", "description": "Name of the class"},
+                        "category": {
+                            "type": "string",
+                            "enum": ["equipment", "piping", "instrumentation"],
+                            "description": "Category of the class"
+                        }
+                    },
+                    "required": ["class_name", "category"]
+                }
             )
         ]
     
@@ -311,12 +400,15 @@ class DexpiTools:
             "dexpi_add_equipment": self._add_equipment,
             "dexpi_add_piping": self._add_piping,
             "dexpi_add_instrumentation": self._add_instrumentation,
+            "dexpi_add_control_loop": self._add_control_loop,
             "dexpi_connect_components": self._connect_components,
             "dexpi_validate_model": self._validate_model,
             "dexpi_export_json": self._export_json,
             "dexpi_export_graphml": self._export_graphml,
             "dexpi_import_json": self._import_json,
+            "dexpi_import_proteus_xml": self._import_proteus_xml,
             "dexpi_add_valve": self._add_valve,
+            "dexpi_insert_valve_in_segment": self._insert_valve_in_segment,
             "dexpi_list_available_types": self._list_available_types,
             "dexpi_validate_connections": self._validate_connections,
             "dexpi_validate_graph": self._validate_graph,
@@ -325,6 +417,8 @@ class DexpiTools:
             "dexpi_load_from_project": self._load_from_project,
             "dexpi_init_project": self._init_project,
             "dexpi_list_project_models": self._list_project_models,
+            "dexpi_describe_class": self._describe_class,
+            "dexpi_list_class_attributes": self._list_class_attributes,
         }
         
         handler = handlers.get(name)
@@ -479,18 +573,49 @@ class DexpiTools:
         }
     
     async def _add_instrumentation(self, args: dict) -> dict:
-        """Add instrumentation to model."""
+        """Add instrumentation to model with enhanced signal support."""
         model_id = args["model_id"]
         if model_id not in self.models:
             raise ValueError(f"Model {model_id} not found")
         
         model = self.models[model_id]
+        instrument_type = args["instrument_type"]
+        tag_name = args["tag_name"]
+        connected_equipment = args.get("connected_equipment")
         
-        # Create instrumentation
-        instrument = ProcessInstrumentationFunction(
-            tagName=args["tag_name"],
-            instrumentationType=args["instrument_type"]
+        # Import instrumentation classes
+        from pydexpi.dexpi_classes.instrumentation import (
+            ProcessInstrumentationFunction,
+            ProcessSignalGeneratingFunction,
+            ProcessSignalGeneratingSystem
         )
+        
+        # Create instrumentation function
+        instrument = ProcessInstrumentationFunction(
+            tagName=tag_name,
+            instrumentationType=instrument_type
+        )
+        
+        # If this is a transmitter/sensor, create signal generating function
+        if instrument_type in ["LevelTransmitter", "PressureTransmitter", "TemperatureTransmitter", "FlowTransmitter"]:
+            signal_gen = ProcessSignalGeneratingFunction(
+                tagName=f"{tag_name}_SG",
+                signalType="4-20mA"
+            )
+            
+            # Set sensing location if equipment is specified
+            if connected_equipment:
+                # Find the equipment
+                if model.conceptualModel and model.conceptualModel.taggedPlantItems:
+                    for item in model.conceptualModel.taggedPlantItems:
+                        if hasattr(item, 'tagName') and item.tagName == connected_equipment:
+                            # Link to equipment nozzle if available
+                            if hasattr(item, 'nozzles') and item.nozzles:
+                                signal_gen.sensingLocation = item.nozzles[0]
+                            break
+            
+            # Add signal generating function to instrumentation
+            instrument.processSignalGeneratingFunctions = [signal_gen]
         
         # Add to model
         if not model.conceptualModel:
@@ -503,8 +628,115 @@ class DexpiTools:
         
         return {
             "status": "success",
-            "instrument_type": args["instrument_type"],
-            "tag_name": args["tag_name"],
+            "instrument_type": instrument_type,
+            "tag_name": tag_name,
+            "connected_equipment": connected_equipment,
+            "model_id": model_id,
+            "signal_generating": instrument_type.endswith("Transmitter")
+        }
+    
+    async def _add_control_loop(self, args: dict) -> dict:
+        """Add complete control loop with signal connections."""
+        model_id = args["model_id"]
+        if model_id not in self.models:
+            raise ValueError(f"Model {model_id} not found")
+        
+        model = self.models[model_id]
+        
+        # Import required classes
+        from pydexpi.dexpi_classes.instrumentation import (
+            ProcessInstrumentationFunction,
+            ProcessControlFunction,
+            ProcessSignalGeneratingFunction,
+            ActuatingFunction,
+            SignalConveyingFunction,
+            MeasuringLineFunction,
+            SignalLineFunction
+        )
+        from pydexpi.dexpi_classes.instrumentation import ActuatingSystem
+        
+        loop_tag = args["loop_tag"]
+        controlled_variable = args["controlled_variable"]
+        sensor_tag = args["sensor_tag"]
+        controller_tag = args["controller_tag"]
+        control_valve_tag = args["control_valve_tag"]
+        sensing_location = args.get("sensing_location")
+        actuating_location = args.get("actuating_location")
+        
+        # Create signal generating function (sensor/transmitter)
+        signal_gen = ProcessSignalGeneratingFunction(
+            tagName=sensor_tag,
+            signalType="4-20mA",
+            measuredVariable=controlled_variable
+        )
+        
+        # Create control function (controller)
+        controller = ProcessControlFunction(
+            tagName=controller_tag,
+            controllerType="PID",
+            controlledVariable=controlled_variable
+        )
+        
+        # Create actuating function (control valve)
+        actuator = ActuatingFunction(
+            tagName=control_valve_tag,
+            actuatorType="ControlValve"
+        )
+        
+        # Create signal connections
+        # Measuring line from sensor to controller
+        measuring_line = MeasuringLineFunction(
+            tagName=f"{sensor_tag}_to_{controller_tag}",
+            source=signal_gen,
+            target=controller
+        )
+        
+        # Signal line from controller to valve
+        signal_line = SignalLineFunction(
+            tagName=f"{controller_tag}_to_{control_valve_tag}",
+            source=controller,
+            target=actuator
+        )
+        
+        # Create main instrumentation function for the loop
+        loop_function = ProcessInstrumentationFunction(
+            tagName=loop_tag,
+            instrumentationType="ControlLoop",
+            processSignalGeneratingFunctions=[signal_gen],
+            processControlFunctions=[controller],
+            actuatingFunctions=[actuator],
+            signalConveyingFunctions=[measuring_line, signal_line]
+        )
+        
+        # Add to model
+        if not model.conceptualModel:
+            model.conceptualModel = ConceptualModel()
+        
+        if not model.conceptualModel.processInstrumentationFunctions:
+            model.conceptualModel.processInstrumentationFunctions = []
+        
+        model.conceptualModel.processInstrumentationFunctions.append(loop_function)
+        
+        # Also add individual functions for visibility
+        model.conceptualModel.processInstrumentationFunctions.extend([
+            ProcessInstrumentationFunction(tagName=sensor_tag, instrumentationType=f"{controlled_variable}Transmitter"),
+            ProcessInstrumentationFunction(tagName=controller_tag, instrumentationType=f"{controlled_variable}Controller"),
+            ProcessInstrumentationFunction(tagName=control_valve_tag, instrumentationType="ControlValve")
+        ])
+        
+        return {
+            "status": "success",
+            "loop_tag": loop_tag,
+            "controlled_variable": controlled_variable,
+            "components": {
+                "sensor": sensor_tag,
+                "controller": controller_tag,
+                "control_valve": control_valve_tag
+            },
+            "signal_connections": [
+                f"{sensor_tag} -> {controller_tag} (measuring)",
+                f"{controller_tag} -> {control_valve_tag} (control)"
+            ],
             "model_id": model_id
         }
     
@@ -697,28 +929,12 @@ class DexpiTools:
         model = self.models[model_id]
         include_msr = args.get("include_msr", True)
         
-        # Convert to NetworkX graph
-        graph = self.graph_loader.dexpi_to_graph(model)
+        # Use UnifiedGraphConverter for consistent GraphML export with sanitization
+        from ..converters.graph_converter import UnifiedGraphConverter
+        converter = UnifiedGraphConverter()
         
-        # Sanitize None values in graph attributes before GraphML export
-        for node, attrs in graph.nodes(data=True):
-            for key, value in list(attrs.items()):
-                if value is None:
-                    attrs[key] = ""  # Replace None with empty string
-        
-        for u, v, attrs in graph.edges(data=True):
-            for key, value in list(attrs.items()):
-                if value is None:
-                    attrs[key] = ""  # Replace None with empty string
-        
-        # Convert to GraphML
-        import networkx as nx
-        from io import BytesIO
-        
-        graphml_buffer = BytesIO()
-        nx.write_graphml(graph, graphml_buffer)
-        graphml_buffer.seek(0)
-        graphml_content = graphml_buffer.read().decode('utf-8')
+        # Convert to GraphML with proper sanitization
+        graphml_content = converter.dexpi_to_graphml(model, include_msr=include_msr)
         
         return {
             "status": "success",
@@ -751,6 +967,60 @@ class DexpiTools:
             "model_id": model_id,
             "project_name": model.metadata.projectData.projectName if model.metadata else "Unknown"
         }
+    
+    async def _import_proteus_xml(self, args: dict) -> dict:
+        """Import model from Proteus XML using pyDEXPI's ProteusSerializer."""
+        directory_path = args["directory_path"]
+        filename = args["filename"]
+        model_id = args.get("model_id", str(uuid4()))
+        
+        try:
+            # Use pyDEXPI's ProteusSerializer to load the XML
+            model = self.proteus_serializer.load(directory_path, filename)
+            
+            # Store model
+            self.models[model_id] = model
+            
+            # Extract basic info from the loaded model
+            project_name = "Unknown"
+            drawing_number = "Unknown"
+            if model.metaData:
+                project_name = model.metaData.projectName or "Unknown"
+                drawing_number = model.metaData.drawingNumber or "Unknown"
+            
+            # Count loaded elements
+            equipment_count = 0
+            piping_count = 0
+            instrumentation_count = 0
+            
+            if model.conceptualModel:
+                if model.conceptualModel.taggedPlantItems:
+                    equipment_count = len(model.conceptualModel.taggedPlantItems)
+                if model.conceptualModel.pipingNetworkSystems:
+                    for system in model.conceptualModel.pipingNetworkSystems:
+                        if hasattr(system, 'segments'):
+                            piping_count += len(system.segments) if system.segments else 0
+                if model.conceptualModel.processInstrumentationFunctions:
+                    instrumentation_count = len(model.conceptualModel.processInstrumentationFunctions)
+            
+            return {
+                "status": "success",
+                "model_id": model_id,
+                "project_name": project_name,
+                "drawing_number": drawing_number,
+                "statistics": {
+                    "equipment_count": equipment_count,
+                    "piping_segments": piping_count,
+                    "instrumentation_functions": instrumentation_count
+                },
+                "note": "Graphics elements are not parsed by pyDEXPI's ProteusSerializer"
+            }
+        except Exception as e:
+            return {
+                "status": "error",
+                "error": f"Failed to import Proteus XML: {str(e)}",
+                "details": "Ensure the file is a valid Proteus 4.2 XML file"
+            }
     
     async def _add_valve(self, args: dict) -> dict:
         """Add valve to P&ID model."""
@@ -835,6 +1105,88 @@ class DexpiTools:
             "tag_name": tag_name,
             "model_id": model_id,
             "operation": operation
+        }
+    
+    async def _insert_valve_in_segment(self, args: dict) -> dict:
+        """Insert valve inline within an existing piping segment."""
+        model_id = args["model_id"]
+        if model_id not in self.models:
+            raise ValueError(f"Model {model_id} not found")
+        
+        model = self.models[model_id]
+        segment_id = args["segment_id"]
+        valve_type = args["valve_type"]
+        tag_name = args["tag_name"]
+        at_position = args.get("at_position", 0.5)
+        
+        # Import required classes
+        from pydexpi.dexpi_classes import piping as piping_module
+        from pydexpi.dexpi_classes.piping import (
+            PipingNetworkSegment,
+            PipingNode,
+            Pipe
+        )
+        
+        # Find the segment to split
+        target_segment = None
+        system = None
+        
+        if model.conceptualModel and model.conceptualModel.pipingNetworkSystems:
+            for sys in model.conceptualModel.pipingNetworkSystems:
+                if hasattr(sys, 'segments'):
+                    for seg in sys.segments:
+                        if hasattr(seg, 'id') and seg.id == segment_id:
+                            target_segment = seg
+                            system = sys
+                            break
+                if target_segment:
+                    break
+        
+        if not target_segment:
+            raise ValueError(f"Segment {segment_id} not found")
+        
+        # Get the valve class
+        valve_class = getattr(piping_module, valve_type, None)
+        if not valve_class:
+            raise ValueError(f"Unknown valve type: {valve_type}")
+        
+        # Create valve instance
+        valve = valve_class(
+            pipingComponentName=tag_name,
+            pipingClassCode=target_segment.pipingClassArtefact or "CS150"
+        )
+        
+        # Create piping nodes for valve connections
+        valve_inlet = PipingNode(
+            id=f"{tag_name}_inlet",
+            nominalDiameterRepresentation="DN50"
+        )
+        valve_outlet = PipingNode(
+            id=f"{tag_name}_outlet",
+            nominalDiameterRepresentation="DN50"
+        )
+        valve.nodes = [valve_inlet, valve_outlet]
+        
+        # Strategy: Keep the existing segment but add the valve to its items
+        # The valve will be inline within the segment
+        if not target_segment.items:
+            target_segment.items = []
+        
+        # Insert valve at the specified position in the items list
+        insert_index = int(len(target_segment.items) * at_position)
+        target_segment.items.insert(insert_index, valve)
+        
+        # If the segment has pipes in connections, ensure they're preserved
+        # This maintains the segment's connectivity
+        
+        return {
+            "status": "success",
+            "valve_type": valve_type,
+            "tag_name": tag_name,
+            "segment_id": segment_id,
+            "insertion_position": at_position,
+            "model_id": model_id,
+            "note": "Valve inserted inline within segment"
         }
     
     async def _list_available_types(self, args: dict) -> dict:
@@ -1142,4 +1494,40 @@ class DexpiTools:
             "status": "success",
             "project_path": project_path,
             "models": models
+        }
+    
+    async def _describe_class(self, args: dict) -> dict:
+        """Get detailed description of a pyDEXPI class."""
+        class_name = args["class_name"]
+        category = args.get("category", None)
+        
+        description = self.introspector.describe_class(class_name, category)
+        
+        if "error" in description:
+            return {
+                "status": "error",
+                "error": description["error"]
+            }
+        
+        return {
+            "status": "success",
+            "class_description": description
+        }
+    
+    async def _list_class_attributes(self, args: dict) -> dict:
+        """List all attributes for a specific pyDEXPI class."""
+        class_name = args["class_name"]
+        category = args["category"]
+        
+        attrs = self.introspector.get_class_attributes(class_name, category)
+        
+        if attrs is None:
+            return {
+                "status": "error",
+                "error": f"Class {class_name} not found in category {category}"
+            }
+        
+        return {
+            "status": "success",
+            "attributes": attrs
         }

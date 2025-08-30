@@ -2,8 +2,10 @@
 
 import inspect
 import logging
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Dict, List, Optional, Type, Union, get_origin, get_args
+from datetime import datetime
 from pydantic import BaseModel
+from pydantic.fields import FieldInfo
 
 from pydexpi.toolkits import base_model_utils as bmt
 import pydexpi.dexpi_classes.equipment as equipment_module
@@ -179,6 +181,216 @@ class DexpiIntrospector:
             if "Valve" in name:
                 valves.append(name)
         return sorted(valves)
+    
+    def _get_class(self, class_name: str, category: str) -> Optional[Type]:
+        """Get a class by name and category."""
+        if category == "equipment":
+            return self._equipment_classes.get(class_name)
+        elif category == "piping":
+            return self._piping_classes.get(class_name)
+        elif category == "instrumentation":
+            return self._instrumentation_classes.get(class_name)
+        return None
+    
+    def map_python_type_to_json(self, python_type: Any) -> str:
+        """Convert Python type annotation to JSON schema type."""
+        import types
+        
+        # Handle Union types (Optional fields) - both typing.Union and types.UnionType (Python 3.10+)
+        origin = get_origin(python_type)
+        if origin is Union or (hasattr(types, 'UnionType') and isinstance(python_type, types.UnionType)):
+            args = get_args(python_type)
+            # Filter out NoneType
+            non_none_types = [arg for arg in args if arg is not type(None)]
+            if non_none_types:
+                return self.map_python_type_to_json(non_none_types[0])
+        
+        # Handle list types
+        if origin is list:
+            return "array"
+        
+        # Map basic Python types to JSON schema types
+        if python_type is str:
+            return "string"
+        elif python_type is int:
+            return "integer"
+        elif python_type is float:
+            return "number"
+        elif python_type is bool:
+            return "boolean"
+        elif python_type is datetime:
+            return "string"  # datetime as ISO string
+        elif hasattr(python_type, '__bases__'):
+            # Check if it's a Pydantic model
+            if BaseModel in python_type.__bases__:
+                return "object"
+            # Try to check the type name for common types
+            elif hasattr(python_type, '__name__'):
+                type_name = python_type.__name__
+                if 'String' in type_name or type_name == 'str':
+                    return "string"
+                elif 'Integer' in type_name or type_name == 'int':
+                    return "integer"
+                elif 'Float' in type_name or 'Quantity' in type_name or type_name == 'float':
+                    return "number"
+                elif 'Bool' in type_name or type_name == 'bool':
+                    return "boolean"
+        
+        # Default to object for complex types
+        return "object"
+    
+    def get_field_schema(self, field_info: FieldInfo, field_name: str) -> Dict[str, Any]:
+        """Convert Pydantic FieldInfo to JSON schema for a field."""
+        schema = {
+            "type": self.map_python_type_to_json(field_info.annotation),
+            "description": field_info.description or f"{field_name} attribute"
+        }
+        
+        # Handle list types
+        origin = get_origin(field_info.annotation)
+        if origin is list:
+            args = get_args(field_info.annotation)
+            if args:
+                item_type = self.map_python_type_to_json(args[0])
+                schema["items"] = {"type": item_type}
+        
+        # Add default if present
+        if field_info.default is not None and field_info.default != ...:
+            # Don't include callable defaults (like list factories)
+            if not callable(field_info.default):
+                schema["default"] = field_info.default
+        
+        # Add attribute category if present
+        if field_info.json_schema_extra:
+            category = field_info.json_schema_extra.get("attribute_category")
+            if category:
+                schema["x-attribute-category"] = category
+        
+        return schema
+    
+    def generate_class_schema(self, class_name: str, category: str = "equipment") -> Optional[Dict[str, Any]]:
+        """Generate full JSON schema for a pyDEXPI class."""
+        cls = self._get_class(class_name, category)
+        if not cls:
+            return None
+        
+        properties = {}
+        required = []
+        
+        # Always include model_id and tag_name for MCP tools
+        properties["model_id"] = {"type": "string", "description": "Model ID"}
+        properties["tag_name"] = {"type": "string", "description": "Tag name for the element"}
+        required.extend(["model_id", "tag_name"])
+        
+        # Process all fields from the class
+        for field_name, field_info in cls.model_fields.items():
+            # Skip internal fields and already added fields
+            if field_name.startswith('_') or field_name in ['id', 'uri', 'tagName']:
+                continue
+            
+            # Generate field schema
+            field_schema = self.get_field_schema(field_info, field_name)
+            properties[field_name] = field_schema
+            
+            # Check if required
+            if field_info.is_required:
+                required.append(field_name)
+        
+        # Special handling for equipment with nozzles
+        if category == "equipment":
+            try:
+                instance = cls()
+                comp_attrs = bmt.get_composition_attributes(instance)
+                if "nozzles" in comp_attrs:
+                    properties["nozzles"] = {
+                        "type": "array",
+                        "description": "Nozzle configurations",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "subTagName": {"type": "string"},
+                                "nominalPressure": {"type": "string"},
+                                "nominalDiameter": {"type": "string"}
+                            }
+                        },
+                        "x-attribute-category": "composition"
+                    }
+            except:
+                pass
+        
+        return {
+            "type": "object",
+            "properties": properties,
+            "required": required,
+            "x-class-name": class_name,
+            "x-category": category
+        }
+    
+    def get_required_fields(self, class_name: str, category: str = "equipment") -> List[str]:
+        """Get list of required fields for a class."""
+        cls = self._get_class(class_name, category)
+        if not cls:
+            return []
+        
+        required = []
+        for field_name, field_info in cls.model_fields.items():
+            if field_info.is_required():
+                required.append(field_name)
+        
+        return required
+    
+    def generate_dynamic_enum(self, category: str, filter_func: Optional[callable] = None) -> List[str]:
+        """Generate dynamic enum of class names for a category."""
+        if category == "equipment":
+            classes = list(self._equipment_classes.keys())
+        elif category == "piping":
+            classes = list(self._piping_classes.keys())
+        elif category == "instrumentation":
+            classes = list(self._instrumentation_classes.keys())
+        elif category == "valves":
+            # Special case for valves
+            classes = self.get_valves()
+        else:
+            classes = []
+        
+        # Apply filter if provided
+        if filter_func:
+            classes = [c for c in classes if filter_func(c)]
+        
+        return sorted(classes)
+    
+    def describe_class(self, class_name: str, category: str = None) -> Dict[str, Any]:
+        """Get comprehensive description of a class including schema and attributes."""
+        # Try to find the class in any category if not specified
+        if not category:
+            for cat in ["equipment", "piping", "instrumentation"]:
+                if self._get_class(class_name, cat):
+                    category = cat
+                    break
+        
+        if not category:
+            return {"error": f"Class {class_name} not found"}
+        
+        # Get basic attributes
+        attrs = self.get_class_attributes(class_name, category)
+        if not attrs:
+            return {"error": f"Could not get attributes for {class_name}"}
+        
+        # Get schema
+        schema = self.generate_class_schema(class_name, category)
+        
+        # Get required fields
+        required = self.get_required_fields(class_name, category)
+        
+        return {
+            "class_name": class_name,
+            "category": category,
+            "composition_attributes": attrs.get("composition_attributes", []),
+            "reference_attributes": attrs.get("reference_attributes", []),
+            "data_attributes": attrs.get("data_attributes", []),
+            "required_fields": required,
+            "schema": schema
+        }
     
     def validate_equipment_completeness(self, equipment_type: str, provided_attrs: Dict[str, Any]) -> Dict[str, Any]:
         """Validate that provided attributes match the pyDEXPI class definition."""

@@ -36,37 +36,58 @@ This MCP (Model Context Protocol) server provides LLM-accessible tools for engin
 
 ### Core Capabilities
 - **LLM-Accessible Drawing Generation** - MCP tools enable LLMs to programmatically create and modify process drawings
+- **Dynamic Schema Generation** - Automatically discovers and exposes all pyDEXPI classes through introspection
 - **DEXPI P&ID Support** - Full implementation of DEXPI standard for detailed P&ID data models
 - **SFILES BFD/PFD Support** - Compact text notation for flowsheet representation
 - **Git-Based Persistence** - Version-controlled storage with automatic commit tracking
 - **Visualization Dashboard** - Web-based rendering of data models using Cytoscape.js
 - **GraphML Export** - Standardized graph format for machine learning pipelines
 
-### MCP Tools Available
+### MCP Tools Available (40 Total)
 
-#### DEXPI P&ID Tools
-- `dexpi_create_pid` - Initialize new P&ID with metadata
-- `dexpi_add_equipment` - Add tanks, pumps, reactors, heat exchangers
-- `dexpi_add_valve` - Add various valve types (ball, gate, globe, etc.)
-- `dexpi_add_instrumentation` - Add sensors and controllers
-- `dexpi_connect_components` - Create piping connections
-- `dexpi_validate_model` - Check engineering rules
-- `dexpi_export_json` - Export to JSON format
-- `dexpi_export_graphml` - Export for ML pipelines
+#### DEXPI P&ID Tools (23 tools)
+- `dexpi_create_pid` - Initialize P&ID with ISO 15926 compliant metadata
+- `dexpi_add_equipment` - Add equipment from 159 available types (dynamically discovered from pyDEXPI)
+- `dexpi_add_piping` - Create piping segments with material specifications
+- `dexpi_add_valve` - Add valves from 22 available types including safety and control valves
+- `dexpi_insert_valve_in_segment` - Insert valve inline within existing piping segment
+- `dexpi_add_instrumentation` - Add instrumentation from 33 available types with signal support
+- `dexpi_add_control_loop` - Create complete control loops with signal generating, control, and actuating functions
+- `dexpi_connect_components` - Create piping connections between equipment with automatic validation
+- `dexpi_import_json` - Import P&ID from JSON representation
+- `dexpi_import_proteus_xml` - Import P&ID from Proteus 4.2 XML format
+- `dexpi_export_json` - Export P&ID to JSON for version control
+- `dexpi_export_graphml` - Export topology as GraphML with sanitization for ML pipelines
+- `dexpi_validate_model` - Validate P&ID against engineering rules
+- `dexpi_validate_connections` - Validate piping connections using pyDEXPI native validation
+- `dexpi_validate_graph` - Validate P&ID graph structure using MLGraphLoader
+- `dexpi_check_connectivity` - Verify all equipment is properly connected
+- `dexpi_list_available_types` - Discover all available equipment, valve, and instrumentation types
+- `dexpi_describe_class` - Get comprehensive description of any pyDEXPI class including schema
+- `dexpi_list_class_attributes` - List attributes for a pyDEXPI class organized by type
+- `dexpi_init_project` - Initialize git-tracked project for DEXPI models
+- `dexpi_save_to_project` - Save DEXPI model to project with git commit
+- `dexpi_load_from_project` - Load DEXPI model from project repository
+- `dexpi_list_project_models` - List all DEXPI models in a project
 
-#### SFILES Flowsheet Tools
-- `sfiles_create_flowsheet` - Initialize BFD/PFD
-- `sfiles_add_unit` - Add unit operations
-- `sfiles_add_stream` - Connect units with streams
-- `sfiles_add_control` - Add control loops
-- `sfiles_to_string` - Export compact SFILES notation
-- `sfiles_validate_syntax` - Validate SFILES format
-
-#### Project Management Tools
-- `*_init_project` - Create git-tracked project
-- `*_save_to_project` - Save with version control
-- `*_load_from_project` - Load previous versions
-- `*_list_project_models` - List all drawings
+#### SFILES Flowsheet Tools (17 tools)
+- `sfiles_create_flowsheet` - Initialize BFD or PFD flowsheet
+- `sfiles_add_unit` - Add unit operations to flowsheet
+- `sfiles_add_stream` - Connect units with process streams
+- `sfiles_add_control` - Add control instrumentation to flowsheet
+- `sfiles_to_string` - Export flowsheet as compact SFILES notation (v1 or v2)
+- `sfiles_from_string` - Create flowsheet from SFILES string representation
+- `sfiles_export_networkx` - Export flowsheet as NetworkX graph JSON
+- `sfiles_export_graphml` - Export flowsheet topology as GraphML
+- `sfiles_validate_topology` - Validate flowsheet connectivity and structure
+- `sfiles_validate_syntax` - Validate SFILES syntax using round-trip conversion
+- `sfiles_parse_and_validate` - Parse SFILES string and validate against regex patterns
+- `sfiles_canonical_form` - Convert SFILES to canonical form for comparison
+- `sfiles_pattern_helper` - Get SFILES regex patterns and syntax examples
+- `sfiles_init_project` - Initialize git-tracked project for SFILES models
+- `sfiles_save_to_project` - Save SFILES flowsheet to project with git commit
+- `sfiles_load_from_project` - Load SFILES flowsheet from project repository
+- `sfiles_list_project_models` - List all SFILES models in a project
 
 ## Requirements
 
