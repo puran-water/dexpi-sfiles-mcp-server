@@ -97,13 +97,21 @@ This MCP (Model Context Protocol) server provides LLM-accessible tools for engin
 
 ## Installation
 
-See [SETUP.md](SETUP.md) for detailed installation instructions.
-
-Quick start:
+### Method 1: Using uv (Recommended)
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/engineering-mcp-server.git
-cd engineering-mcp-server
+git clone https://github.com/puran-water/dexpi-sfiles-mcp-server.git
+cd dexpi-sfiles-mcp-server
+
+# Run with uv (handles dependencies automatically)
+uv run python -m src.server
+```
+
+### Method 2: Traditional pip installation
+```bash
+# Clone the repository
+git clone https://github.com/puran-water/dexpi-sfiles-mcp-server.git
+cd dexpi-sfiles-mcp-server
 
 # Create virtual environment
 python -m venv .venv
@@ -114,34 +122,67 @@ pip install -r requirements.txt
 
 # Start the MCP server
 python -m src.server
-
-# Start the dashboard (optional)
-python -m src.dashboard.server
 ```
+
+### Method 3: Package installation (Future)
+```bash
+# Once published to PyPI
+pip install engineering-mcp-server
+engineering-mcp
+```
+
+See [SETUP.md](SETUP.md) for detailed installation instructions.
 
 ## Usage
 
-### With Claude Desktop
+### With Claude Code (Recommended)
 
-1. Add to your Claude Desktop configuration (`~/Library/Application Support/Claude/claude_desktop_config.json`):
+1. Create or update `.mcp.json` in your project root:
 ```json
 {
   "mcpServers": {
     "engineering-mcp": {
       "command": "python",
       "args": ["-m", "src.server"],
-      "cwd": "/path/to/engineering-mcp-server",
       "env": {
-        "PYTHONPATH": "/path/to/engineering-mcp-server"
+        "PYTHONPATH": "${workspaceFolder}/engineering-mcp-server"
       }
     }
   }
 }
 ```
 
-2. Restart Claude Desktop and use natural language to create drawings:
+2. Use natural language in Claude Code to create drawings:
 ```
-"Create a P&ID for a simple reactor system with feed tank, pump, heat exchanger, and reactor"
+"Create a P&ID for a reactor system with feed tank, pump, heat exchanger, and distillation column"
+```
+
+### With Codex CLI
+
+1. Add to your Codex configuration (`~/.codex/config.toml`):
+```toml
+[mcp_servers.engineering-mcp]
+command = "uv"
+args = ["--directory", "/path/to/engineering-mcp-server", "run", "python", "-m", "src.server"]
+```
+
+Or if installed via pip:
+```toml
+[mcp_servers.engineering-mcp]
+command = "python"
+args = ["-m", "src.server"]
+```
+
+2. Use Codex CLI to interact with the server:
+```bash
+codex "Create a BFD for an ammonia synthesis process"
+```
+
+### With uvx (Quick Start)
+
+For temporary usage without installation:
+```bash
+uvx --from engineering-mcp-server engineering-mcp
 ```
 
 ### Dashboard Visualization

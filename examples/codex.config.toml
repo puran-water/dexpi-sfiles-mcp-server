@@ -1,0 +1,21 @@
+# Example Codex CLI Configuration for Engineering MCP Server
+# Add this to your ~/.codex/config.toml
+
+# For development installation (using uv)
+[mcp_servers.engineering-mcp]
+command = "uv"
+args = ["--directory", "/path/to/engineering-mcp-server", "run", "python", "-m", "src.server"]
+
+# For pip installation
+# [mcp_servers.engineering-mcp]
+# command = "python"
+# args = ["-m", "src.server"]
+
+# For uvx quick start (no installation required)
+# [mcp_servers.engineering-mcp]
+# command = "uvx"
+# args = ["--from", "engineering-mcp-server", "engineering-mcp"]
+
+# Optional: Trust level for specific project directories
+# [projects."/path/to/your/engineering/project"]
+# trust_level = "trusted"
