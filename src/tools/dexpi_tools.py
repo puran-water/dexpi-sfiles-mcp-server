@@ -912,7 +912,7 @@ class DexpiTools:
         import json
         
         model_dict = self.json_serializer.model_to_dict(model)
-        json_content = json.dumps(model_dict, indent=4, ensure_ascii=False)
+        json_content = json.dumps(model_dict, indent=4, ensure_ascii=False, sort_keys=True)
         
         return {
             "status": "success",
@@ -1159,11 +1159,13 @@ class DexpiTools:
         # Create piping nodes for valve connections
         valve_inlet = PipingNode(
             id=f"{tag_name}_inlet",
-            nominalDiameterRepresentation="DN50"
+            nominalDiameterRepresentation="DN50",
+            nominalDiameterNumericalValueRepresentation="50"
         )
         valve_outlet = PipingNode(
             id=f"{tag_name}_outlet",
-            nominalDiameterRepresentation="DN50"
+            nominalDiameterRepresentation="DN50",
+            nominalDiameterNumericalValueRepresentation="50"
         )
         valve.nodes = [valve_inlet, valve_outlet]
         
@@ -1372,13 +1374,29 @@ class DexpiTools:
             
             # Look for connections in piping segments
             if model.conceptualModel and model.conceptualModel.pipingNetworkSystems:
-                for segment in model.conceptualModel.pipingNetworkSystems:
-                    if hasattr(segment, 'connections'):
-                        for conn in segment.connections:
-                            for nozzle in nozzles:
-                                if (hasattr(conn, 'sourceNode') and conn.sourceNode == nozzle) or \
-                                   (hasattr(conn, 'targetNode') and conn.targetNode == nozzle):
-                                    connected_nozzles += 1
+                for system in model.conceptualModel.pipingNetworkSystems:
+                    if not hasattr(system, 'segments'):
+                        continue
+                    for segment in system.segments:
+                        # Check segment-level connections (sourceItem/targetItem on segment)
+                        for nozzle in nozzles:
+                            nozzle_id = getattr(nozzle, 'id', None)
+                            # Check if nozzle is connected at segment level
+                            if (hasattr(segment, 'sourceItem') and (segment.sourceItem == nozzle or segment.sourceItem == nozzle_id)) or \
+                               (hasattr(segment, 'targetItem') and (segment.targetItem == nozzle or segment.targetItem == nozzle_id)):
+                                connected_nozzles += 1
+                        
+                        # Also check connection-level references
+                        if hasattr(segment, 'connections'):
+                            for conn in segment.connections:
+                                for nozzle in nozzles:
+                                    # Check both object references and ID references
+                                    nozzle_id = getattr(nozzle, 'id', None)
+                                    if (hasattr(conn, 'sourceNode') and conn.sourceNode == nozzle) or \
+                                       (hasattr(conn, 'targetNode') and conn.targetNode == nozzle) or \
+                                       (hasattr(conn, 'sourceItem') and conn.sourceItem == nozzle_id) or \
+                                       (hasattr(conn, 'targetItem') and conn.targetItem == nozzle_id):
+                                        connected_nozzles += 1
             
             if connected_nozzles == 0:
                 connectivity_report["unconnected_equipment"].append({

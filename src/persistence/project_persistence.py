@@ -15,6 +15,18 @@ import networkx as nx
 logger = logging.getLogger(__name__)
 
 
+def canonical_json_dump(data: Any, file_path: Path, **kwargs) -> None:
+    """Write JSON with sorted keys for deterministic output.
+    
+    Args:
+        data: Data to serialize
+        file_path: Path to write to
+        **kwargs: Additional arguments passed to json.dump
+    """
+    with open(file_path, "w") as f:
+        json.dump(data, f, indent=2, sort_keys=True, **kwargs)
+
+
 class ProjectPersistence:
     """Manages git-based persistence for engineering projects."""
     
@@ -48,8 +60,7 @@ class ProjectPersistence:
             "version": "1.0.0"
         }
         
-        with open(path / "project.json", "w") as f:
-            json.dump(metadata, f, indent=2)
+        canonical_json_dump(metadata, path / "project.json")
         
         # Create README
         readme_content = f"""# {project_name}
@@ -115,8 +126,7 @@ Created: {metadata['created']}
             "project_name": model.metadata.projectData.projectName if hasattr(model, 'metadata') and model.metadata else None,
             "drawing_number": model.metadata.drawingData.drawingNumber if hasattr(model, 'metadata') and model.metadata else None
         }
-        with open(meta_path, "w") as f:
-            json.dump(metadata, f, indent=2)
+        canonical_json_dump(metadata, meta_path)
         
         # Export GraphML for visualization
         try:
@@ -198,8 +208,7 @@ Created: {metadata['created']}
             "nodes": list(flowsheet.state.nodes(data=True)),
             "edges": list(flowsheet.state.edges(data=True))
         }
-        with open(state_path, "w") as f:
-            json.dump(state_data, f, indent=2)
+        canonical_json_dump(state_data, state_path)
         
         # Generate and save SFILES string
         try:
@@ -224,8 +233,7 @@ Created: {metadata['created']}
             "num_nodes": flowsheet.state.number_of_nodes(),
             "num_edges": flowsheet.state.number_of_edges()
         }
-        with open(meta_path, "w") as f:
-            json.dump(metadata, f, indent=2)
+        canonical_json_dump(metadata, meta_path)
         
         # Git commit
         if commit_message is None:
