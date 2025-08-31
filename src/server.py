@@ -29,9 +29,9 @@ class EngineeringDrawingMCPServer:
         self.dexpi_models: Dict[str, Any] = {}
         self.flowsheets: Dict[str, Any] = {}
         
-        # Initialize tool handlers
-        self.dexpi_tools = DexpiTools(self.dexpi_models)
-        self.sfiles_tools = SfilesTools(self.flowsheets)
+        # Initialize tool handlers with both stores for cross-conversion
+        self.dexpi_tools = DexpiTools(self.dexpi_models, self.flowsheets)
+        self.sfiles_tools = SfilesTools(self.flowsheets, self.dexpi_models)
         
         # Initialize converters and resources
         self.graph_converter = UnifiedGraphConverter()

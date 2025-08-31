@@ -24,9 +24,10 @@ logger = logging.getLogger(__name__)
 class DexpiTools:
     """Handles all DEXPI-related MCP tools."""
     
-    def __init__(self, model_store: Dict[str, DexpiModel]):
-        """Initialize with a reference to the model store."""
+    def __init__(self, model_store: Dict[str, DexpiModel], flowsheet_store: Dict[str, Any] = None):
+        """Initialize with references to both model stores."""
         self.models = model_store
+        self.flowsheets = flowsheet_store if flowsheet_store is not None else {}
         self.json_serializer = JsonSerializer()
         self.graph_loader = MLGraphLoader()
         self.introspector = DexpiIntrospector()
@@ -390,6 +391,18 @@ class DexpiTools:
                     },
                     "required": ["class_name", "category"]
                 }
+            ),
+            Tool(
+                name="dexpi_convert_from_sfiles",
+                description="Convert SFILES flowsheet to DEXPI P&ID model",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "flowsheet_id": {"type": "string", "description": "ID of SFILES flowsheet to convert"},
+                        "model_id": {"type": "string", "description": "Optional ID for the created DEXPI model"}
+                    },
+                    "required": ["flowsheet_id"]
+                }
             )
         ]
     
@@ -419,6 +432,7 @@ class DexpiTools:
             "dexpi_list_project_models": self._list_project_models,
             "dexpi_describe_class": self._describe_class,
             "dexpi_list_class_attributes": self._list_class_attributes,
+            "dexpi_convert_from_sfiles": self._convert_from_sfiles,
         }
         
         handler = handlers.get(name)
@@ -1549,3 +1563,49 @@ class DexpiTools:
             "status": "success",
             "attributes": attrs
         }
+    
+    async def _convert_from_sfiles(self, args: dict) -> dict:
+        """Convert SFILES flowsheet to DEXPI P&ID model."""
+        from ..converters.sfiles_dexpi_mapper import SfilesDexpiMapper
+        from Flowsheet_Class.flowsheet import Flowsheet
+        
+        flowsheet_id = args["flowsheet_id"]
+        model_id = args.get("model_id", None)
+        
+        # Use the flowsheet store from instance
+        if flowsheet_id not in self.flowsheets:
+            return {
+                "status": "error",
+                "error": f"Flowsheet {flowsheet_id} not found"
+            }
+        
+        flowsheet = self.flowsheets[flowsheet_id]
+        
+        # Convert to DEXPI
+        mapper = SfilesDexpiMapper()
+        try:
+            dexpi_model = mapper.sfiles_to_dexpi(flowsheet)
+            
+            # Store the model
+            if not model_id:
+                import uuid
+                model_id = str(uuid.uuid4())
+            
+            self.models[model_id] = dexpi_model
+            
+            return {
+                "status": "success",
+                "model_id": model_id,
+                "flowsheet_id": flowsheet_id,
+                "equipment_count": len(dexpi_model.conceptualModel.taggedPlantItems) if dexpi_model.conceptualModel else 0,
+                "segment_count": sum(
+                    len(sys.segments) if hasattr(sys, 'segments') else 0
+                    for sys in (dexpi_model.conceptualModel.pipingNetworkSystems or [])
+                    if dexpi_model.conceptualModel
+                )
+            }
+        except Exception as e:
+            return {
+                "status": "error",
+                "error": f"Conversion failed: {str(e)}"
+            }
