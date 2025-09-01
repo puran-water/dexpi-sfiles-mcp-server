@@ -43,11 +43,11 @@ This MCP (Model Context Protocol) server provides LLM-accessible tools for engin
 - **Visualization Dashboard** - Web-based rendering of data models using Cytoscape.js
 - **GraphML Export** - Standardized graph format for machine learning pipelines
 
-### MCP Tools Available (53 Total)
+### MCP Tools Available (47 Total)
 
 After consolidation and optimization, the server now provides streamlined tools organized by function:
 
-#### DEXPI P&ID Tools (18 tools)
+#### DEXPI P&ID Tools (14 tools)
 - `dexpi_create_pid` - Initialize P&ID with ISO 15926 compliant metadata
 - `dexpi_add_equipment` - Add equipment from 159 available types (dynamically discovered from pyDEXPI)
 - `dexpi_add_piping` - Create piping segments with material specifications
@@ -60,13 +60,9 @@ After consolidation and optimization, the server now provides streamlined tools 
 - `dexpi_import_proteus_xml` - Import P&ID from Proteus 4.2 XML format
 - `dexpi_export_json` - Export P&ID to JSON for version control
 - `dexpi_export_graphml` - Export topology as GraphML with sanitization for ML pipelines
-- `dexpi_check_connectivity` - Verify all equipment is properly connected
-- `dexpi_list_available_types` - Discover all available equipment, valve, and instrumentation types
-- `dexpi_describe_class` - Get comprehensive description of any pyDEXPI class including schema
-- `dexpi_list_class_attributes` - List attributes for a pyDEXPI class organized by type
 - `dexpi_convert_from_sfiles` - Convert SFILES flowsheet to DEXPI P&ID model
 
-#### SFILES Flowsheet Tools (14 tools)
+#### SFILES Flowsheet Tools (12 tools)
 - `sfiles_create_flowsheet` - Initialize BFD or PFD flowsheet
 - `sfiles_add_unit` - Add unit operations to flowsheet
 - `sfiles_add_stream` - Connect units with process streams
@@ -75,8 +71,6 @@ After consolidation and optimization, the server now provides streamlined tools 
 - `sfiles_from_string` - Create flowsheet from SFILES string representation
 - `sfiles_export_networkx` - Export flowsheet as NetworkX graph JSON
 - `sfiles_export_graphml` - Export flowsheet topology as GraphML
-- `sfiles_validate_topology` - Validate flowsheet connectivity and structure
-- `sfiles_validate_syntax` - Validate SFILES syntax using round-trip conversion
 - `sfiles_parse_and_validate` - Parse SFILES string and validate against regex patterns
 - `sfiles_canonical_form` - Convert SFILES to canonical form for comparison
 - `sfiles_pattern_helper` - Get SFILES regex patterns and syntax examples

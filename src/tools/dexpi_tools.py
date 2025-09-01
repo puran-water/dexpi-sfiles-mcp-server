@@ -262,65 +262,12 @@ class DexpiTools:
                     "required": ["model_id", "segment_id", "valve_type", "tag_name"]
                 }
             ),
-            Tool(
-                name="dexpi_list_available_types",
-                description="List all available equipment, valve, and instrumentation types",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "category": {
-                            "type": "string",
-                            "enum": ["all", "equipment", "valves", "piping", "instrumentation"],
-                            "default": "all"
-                        }
-                    }
-                }
-            ),
-            # Validation tools removed - now handled by unified ValidationTools
-            Tool(
-                name="dexpi_check_connectivity",
-                description="Check if all equipment is properly connected in the P&ID",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "model_id": {"type": "string"}
-                    },
-                    "required": ["model_id"]
-                }
-            ),
-            # Project tools removed - now handled by unified ProjectTools
-            Tool(
-                name="dexpi_describe_class",
-                description="Get detailed description of a pyDEXPI class including all attributes and schema",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "class_name": {"type": "string", "description": "Name of the class to describe"},
-                        "category": {
-                            "type": "string", 
-                            "enum": ["equipment", "piping", "instrumentation"],
-                            "description": "Category of the class (optional - will auto-detect if not provided)"
-                        }
-                    },
-                    "required": ["class_name"]
-                }
-            ),
-            Tool(
-                name="dexpi_list_class_attributes",
-                description="List all attributes for a specific pyDEXPI class organized by type",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "class_name": {"type": "string", "description": "Name of the class"},
-                        "category": {
-                            "type": "string",
-                            "enum": ["equipment", "piping", "instrumentation"],
-                            "description": "Category of the class"
-                        }
-                    },
-                    "required": ["class_name", "category"]
-                }
-            ),
+            # Schema tools removed - now handled by unified SchemaTools:
+            # - dexpi_list_available_types -> use schema_list_classes
+            # - dexpi_describe_class -> use schema_describe_class
+            # - dexpi_list_class_attributes -> use schema_describe_class
+            # Validation tools removed - now handled by unified ValidationTools:
+            # - dexpi_check_connectivity -> use validate_model
             Tool(
                 name="dexpi_convert_from_sfiles",
                 description="Convert SFILES flowsheet to DEXPI P&ID model",
@@ -351,10 +298,11 @@ class DexpiTools:
             "dexpi_import_proteus_xml": self._import_proteus_xml,
             "dexpi_add_valve": self._add_valve,
             "dexpi_insert_valve_in_segment": self._insert_valve_in_segment,
-            "dexpi_list_available_types": self._list_available_types,
-            "dexpi_check_connectivity": self._check_connectivity,
-            "dexpi_describe_class": self._describe_class,
-            "dexpi_list_class_attributes": self._list_class_attributes,
+            # Removed duplicate handlers - now handled by SchemaTools and ValidationTools:
+            # "dexpi_list_available_types": use schema_list_classes
+            # "dexpi_check_connectivity": use validate_model
+            # "dexpi_describe_class": use schema_describe_class
+            # "dexpi_list_class_attributes": use schema_describe_class
             "dexpi_convert_from_sfiles": self._convert_from_sfiles,
             # Removed duplicate handlers:
             # - dexpi_validate_connections (now in ValidationTools)

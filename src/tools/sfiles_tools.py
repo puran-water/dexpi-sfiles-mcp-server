@@ -176,33 +176,9 @@ class SfilesTools:
                     "required": ["flowsheet_id", "control_type", "control_name", "connected_unit"]
                 }
             ),
-            Tool(
-                name="sfiles_validate_topology",
-                description="Validate flowsheet topology and connectivity",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "flowsheet_id": {"type": "string"}
-                    },
-                    "required": ["flowsheet_id"]
-                }
-            ),
-            Tool(
-                name="sfiles_validate_syntax",
-                description="Validate SFILES syntax using round-trip conversion",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "sfiles_string": {"type": "string"},
-                        "version": {
-                            "type": "string",
-                            "enum": ["v1", "v2"],
-                            "default": "v2"
-                        }
-                    },
-                    "required": ["sfiles_string"]
-                }
-            ),
+            # Validation tools removed - now handled by unified ValidationTools:
+            # - sfiles_validate_topology -> use validate_model(scope="topology")
+            # - sfiles_validate_syntax -> use validate_model(scope="syntax")
             Tool(
                 name="sfiles_parse_and_validate",
                 description="Parse SFILES string and validate against regex patterns",
@@ -267,8 +243,9 @@ class SfilesTools:
             "sfiles_export_networkx": self._export_networkx,
             "sfiles_export_graphml": self._export_graphml,
             "sfiles_add_control": self._add_control,
-            "sfiles_validate_topology": self._validate_topology,
-            "sfiles_validate_syntax": self._validate_syntax,
+            # Removed duplicate handlers - now handled by ValidationTools:
+            # "sfiles_validate_topology": use validate_model
+            # "sfiles_validate_syntax": use validate_model
             "sfiles_parse_and_validate": self._parse_and_validate,
             "sfiles_canonical_form": self._canonical_form,
             "sfiles_pattern_helper": self._pattern_helper,

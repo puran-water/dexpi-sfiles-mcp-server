@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional, Type, Union, get_origin, get_args
 from datetime import datetime
 from pydantic import BaseModel
 from pydantic.fields import FieldInfo
+from pydantic_core import PydanticUndefined
 
 from pydexpi.toolkits import base_model_utils as bmt
 import pydexpi.dexpi_classes.equipment as equipment_module
@@ -255,7 +256,7 @@ class DexpiIntrospector:
                 schema["items"] = {"type": item_type}
         
         # Add default if present
-        if field_info.default is not None and field_info.default != ...:
+        if field_info.default is not None and field_info.default != ... and field_info.default != PydanticUndefined:
             # Don't include callable defaults (like list factories)
             if not callable(field_info.default):
                 schema["default"] = field_info.default
@@ -334,7 +335,7 @@ class DexpiIntrospector:
         
         required = []
         for field_name, field_info in cls.model_fields.items():
-            if field_info.is_required():
+            if field_info.is_required:
                 required.append(field_name)
         
         return required
