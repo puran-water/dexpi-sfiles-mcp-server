@@ -43,9 +43,9 @@ This MCP (Model Context Protocol) server provides LLM-accessible tools for engin
 - **Visualization Dashboard** - Web-based rendering of data models using Cytoscape.js
 - **GraphML Export** - Standardized graph format for machine learning pipelines
 
-### MCP Tools Available (40 Total)
+### MCP Tools Available (42 Total)
 
-#### DEXPI P&ID Tools (23 tools)
+#### DEXPI P&ID Tools (24 tools)
 - `dexpi_create_pid` - Initialize P&ID with ISO 15926 compliant metadata
 - `dexpi_add_equipment` - Add equipment from 159 available types (dynamically discovered from pyDEXPI)
 - `dexpi_add_piping` - Create piping segments with material specifications
@@ -69,8 +69,9 @@ This MCP (Model Context Protocol) server provides LLM-accessible tools for engin
 - `dexpi_save_to_project` - Save DEXPI model to project with git commit
 - `dexpi_load_from_project` - Load DEXPI model from project repository
 - `dexpi_list_project_models` - List all DEXPI models in a project
+- `dexpi_convert_from_sfiles` - Convert SFILES flowsheet to DEXPI P&ID model
 
-#### SFILES Flowsheet Tools (17 tools)
+#### SFILES Flowsheet Tools (18 tools)
 - `sfiles_create_flowsheet` - Initialize BFD or PFD flowsheet
 - `sfiles_add_unit` - Add unit operations to flowsheet
 - `sfiles_add_stream` - Connect units with process streams
@@ -88,6 +89,7 @@ This MCP (Model Context Protocol) server provides LLM-accessible tools for engin
 - `sfiles_save_to_project` - Save SFILES flowsheet to project with git commit
 - `sfiles_load_from_project` - Load SFILES flowsheet from project repository
 - `sfiles_list_project_models` - List all SFILES models in a project
+- `sfiles_convert_from_dexpi` - Convert DEXPI P&ID model to SFILES flowsheet
 
 ## Requirements
 
