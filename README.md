@@ -43,11 +43,11 @@ This MCP (Model Context Protocol) server provides LLM-accessible tools for engin
 - **Visualization Dashboard** - Web-based rendering of data models using Cytoscape.js
 - **GraphML Export** - Standardized graph format for machine learning pipelines
 
-### MCP Tools Available
+### MCP Tools Available (53 Total)
 
 After consolidation and optimization, the server now provides streamlined tools organized by function:
 
-#### DEXPI P&ID Tools (12 tools)
+#### DEXPI P&ID Tools (18 tools)
 - `dexpi_create_pid` - Initialize P&ID with ISO 15926 compliant metadata
 - `dexpi_add_equipment` - Add equipment from 159 available types (dynamically discovered from pyDEXPI)
 - `dexpi_add_piping` - Create piping segments with material specifications
@@ -66,7 +66,7 @@ After consolidation and optimization, the server now provides streamlined tools 
 - `dexpi_list_class_attributes` - List attributes for a pyDEXPI class organized by type
 - `dexpi_convert_from_sfiles` - Convert SFILES flowsheet to DEXPI P&ID model
 
-#### SFILES Flowsheet Tools (13 tools)
+#### SFILES Flowsheet Tools (14 tools)
 - `sfiles_create_flowsheet` - Initialize BFD or PFD flowsheet
 - `sfiles_add_unit` - Add unit operations to flowsheet
 - `sfiles_add_stream` - Connect units with process streams
