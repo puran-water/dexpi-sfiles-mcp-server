@@ -85,9 +85,11 @@ class SfilesDexpiMapper:
         
         # Convert units to equipment
         for node_id, node_data in flowsheet.state.nodes(data=True):
-            # Determine if it's equipment (not a control)
-            # Controls have "/" in the name following C-#/TYPE pattern
-            is_control = (isinstance(node_id, str) and "/" in node_id and node_id.startswith("C-"))
+            # Determine if it's a control unit
+            # Controls are marked with unit_type="Control" or have control_type attribute
+            is_control = (node_data.get('unit_type') == 'Control' or 
+                         'control_type' in node_data or
+                         (isinstance(node_id, str) and node_id.startswith("C-")))
             
             if not is_control:
                 # Infer unit type from node name or data
@@ -132,24 +134,30 @@ class SfilesDexpiMapper:
         
         # Convert controls to instrumentation
         for node_id, node_data in flowsheet.state.nodes(data=True):
-            # Check if it's a control (SFILES2 convention: C-#/TYPE or has control_type)
+            # Check if it's a control - using updated detection logic
             is_control = (node_data.get('unit_type') == 'Control' or 
                          'control_type' in node_data or
-                         (isinstance(node_id, str) and "/" in node_id and node_id.startswith("C-")))
+                         (isinstance(node_id, str) and node_id.startswith("C-")))
             
             if is_control:
-                # Extract control type from name if follows SFILES2 convention
-                if "/" in node_id:
-                    control_type = node_id.split("/")[-1]  # Extract type after slash
-                else:
-                    control_type = node_data.get('control_type', 'FC')
+                # Get control type from node data (stored as metadata)
+                control_type = node_data.get('control_type', 'FC')
                 
-                # Find connected unit by checking edges
+                # Find connected unit by checking edges with signal tags
                 connected_unit = None
-                for u, v in flowsheet.state.edges():
-                    if v == node_id:  # Control is target of measurement edge
+                edge_attrs = nx.get_edge_attributes(flowsheet.state, 'tags')
+                for (u, v), tags in edge_attrs.items():
+                    # Look for measurement signal edges going to the control
+                    if v == node_id and tags.get('signal') == ["not_next_unitop"]:
                         connected_unit = u
                         break
+                
+                # If no signal edge found, fall back to any edge
+                if not connected_unit:
+                    for u, v in flowsheet.state.edges():
+                        if v == node_id:
+                            connected_unit = u
+                            break
                 
                 if connected_unit and connected_unit in equipment_map:
                     instrumentation = self._create_instrumentation_from_control(
@@ -214,19 +222,19 @@ class SfilesDexpiMapper:
                 control_type = self._get_control_type_from_instrumentation(pif)
                 original_tag = getattr(pif, 'tagName', f"control_{idx+1}")
                 
-                # Format control name to SFILES2 convention (C-#/TYPE)
+                # For canonical SFILES, use simple C-# notation
+                # The control type is stored as metadata
                 import re
                 num_match = re.search(r'\d+', original_tag)
                 num = num_match.group() if num_match else str(idx+1)
-                tag_name = f"C-{num}/{control_type}"
+                tag_name = f"C-{num}"
                 
                 # Add control as a unit with proper naming
                 flowsheet.add_unit(
                     unique_name=tag_name,
-                    unit_type="Control"
+                    unit_type="Control",
+                    control_type=control_type
                 )
-                # Add control_type as node attribute
-                flowsheet.state.nodes[tag_name]['control_type'] = control_type
                 
                 # Find connected equipment and add signal edge
                 connected_equipment = self._find_instrumentation_target(pif, model)
@@ -234,7 +242,8 @@ class SfilesDexpiMapper:
                     flowsheet.add_stream(
                         node1=node_map[connected_equipment],
                         node2=tag_name,
-                        tags={"signal": ["not_next_unitop"]}  # Control measurement signal
+                        tags={"signal": ["not_next_unitop"], "he": [], "col": []},
+                        signal_type="measurement"
                     )
         
         return flowsheet

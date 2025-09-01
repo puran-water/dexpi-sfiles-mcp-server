@@ -346,8 +346,8 @@ class SfilesTools:
         flowsheet.type = args.get("type", "PFD")
         flowsheet.description = args.get("description", "")
         
-        # Initialize with empty SFILES string that we'll build incrementally
-        flowsheet.sfiles = ""
+        # The flowsheet's NetworkX graph is already initialized as self.state
+        # We'll build it using add_unit() and add_stream() methods
         
         # Store flowsheet
         self.flowsheets[flowsheet_id] = flowsheet
@@ -360,67 +360,54 @@ class SfilesTools:
         }
     
     async def _add_unit(self, args: dict) -> dict:
-        """Add a unit operation to flowsheet by rebuilding from SFILES."""
+        """Add a unit operation to flowsheet using native graph methods."""
         flowsheet_id = args["flowsheet_id"]
         if flowsheet_id not in self.flowsheets:
             raise ValueError(f"Flowsheet {flowsheet_id} not found")
         
-        old_flowsheet = self.flowsheets[flowsheet_id]
+        flowsheet = self.flowsheets[flowsheet_id]
         unit_name = args["unit_name"]
         unit_type = args["unit_type"]
         parameters = args.get("parameters", {})
         
-        # Get current SFILES string or start fresh
-        current_sfiles = getattr(old_flowsheet, 'sfiles', '') or ''
-        
-        # Build new SFILES by appending unit
-        # Special handling for raw/prod
-        if unit_type in ['raw', 'prod', 'IO']:
-            new_unit = f"({unit_type})"
+        # Generate unique name for the unit
+        # Ensure all units have proper numbering for SFILES compatibility
+        if not unit_name or unit_name == unit_type:
+            # Count existing units of this type
+            existing_units = [n for n in flowsheet.state.nodes if unit_type in n]
+            unit_number = len(existing_units)
+            unique_name = f"{unit_type}-{unit_number}"
         else:
-            new_unit = f"({unit_type})"
+            # Ensure the name has proper format with a number
+            if '-' not in unit_name:
+                # Add numbering if not present
+                existing_units = [n for n in flowsheet.state.nodes if unit_name in n]
+                unit_number = len(existing_units)
+                unique_name = f"{unit_name}-{unit_number}"
+            else:
+                unique_name = unit_name
         
-        # Append to SFILES string
-        if current_sfiles:
-            # If there's already content, append
-            new_sfiles = current_sfiles + new_unit
-        else:
-            # Start fresh
-            new_sfiles = new_unit
+        # Add unit using native Flowsheet method
+        # This properly adds it to the NetworkX graph
+        flowsheet.add_unit(
+            unique_name=unique_name,
+            unit_type=unit_type,
+            **parameters
+        )
         
-        # Create new flowsheet from SFILES
-        try:
-            new_flowsheet = Flowsheet()
-            if new_sfiles:  # Only parse if not empty
-                new_flowsheet.create_from_sfiles(new_sfiles)
-            
-            # Preserve metadata
-            new_flowsheet.name = old_flowsheet.name
-            new_flowsheet.type = old_flowsheet.type
-            new_flowsheet.description = old_flowsheet.description
-            
-            # Store the SFILES for next iteration
-            new_flowsheet.sfiles = new_sfiles
-            
-            # Replace flowsheet
-            self.flowsheets[flowsheet_id] = new_flowsheet
-            
-            return {
-                "status": "success",
-                "flowsheet_id": flowsheet_id,
-                "unit_name": unit_name,
-                "unit_type": unit_type,
-                "sfiles": new_sfiles
-            }
-        except Exception as e:
-            raise ValueError(f"Failed to add unit: {str(e)}")
+        return {
+            "status": "success",
+            "flowsheet_id": flowsheet_id,
+            "unit_name": unique_name,
+            "unit_type": unit_type,
+            "num_units": flowsheet.state.number_of_nodes()
+        }
     
     async def _add_stream(self, args: dict) -> dict:
-        """Add a stream between units.
+        """Add a stream between units using native graph methods.
         
-        Note: In SFILES, streams are implicit in the sequence of units.
-        This method validates that units can be connected but doesn't
-        modify the SFILES string directly.
+        Supports splits (multiple streams from one unit) and 
+        merges (multiple streams to one unit).
         """
         flowsheet_id = args["flowsheet_id"]
         if flowsheet_id not in self.flowsheets:
@@ -430,24 +417,33 @@ class SfilesTools:
         from_unit = args["from_unit"]
         to_unit = args["to_unit"]
         stream_name = args.get("stream_name", f"{from_unit}_to_{to_unit}")
-        tags = args.get("tags", {})
+        tags = args.get("tags", {"he": [], "col": []})
         properties = args.get("properties", {})
         
-        # For now, just verify the flowsheet has been properly built
-        # Streams in SFILES are implicit in the unit ordering
-        # The actual connections are established when parsing the SFILES string
+        # Ensure both units exist in the flowsheet
+        if from_unit not in flowsheet.state.nodes:
+            raise ValueError(f"Source unit {from_unit} not found in flowsheet")
+        if to_unit not in flowsheet.state.nodes:
+            raise ValueError(f"Target unit {to_unit} not found in flowsheet")
         
-        # Store stream metadata for reference (but it won't affect SFILES directly)
-        if not hasattr(flowsheet, '_stream_metadata'):
-            flowsheet._stream_metadata = []
+        # Add stream using native Flowsheet method
+        # This properly adds an edge to the NetworkX graph
+        flowsheet.add_stream(
+            node1=from_unit,
+            node2=to_unit,
+            tags=tags,
+            stream_name=stream_name,
+            **properties
+        )
         
-        flowsheet._stream_metadata.append({
-            "from": from_unit,
-            "to": to_unit,
-            "name": stream_name,
-            "tags": tags,
-            "properties": properties
-        })
+        # Check if this creates a cycle (recycle)
+        import networkx as nx
+        if not nx.is_directed_acyclic_graph(flowsheet.state):
+            # Mark this as a recycle stream
+            cycles = list(nx.simple_cycles(flowsheet.state))
+            is_recycle = any(from_unit in cycle and to_unit in cycle for cycle in cycles)
+        else:
+            is_recycle = False
         
         return {
             "status": "success",
@@ -455,7 +451,8 @@ class SfilesTools:
             "stream_name": stream_name,
             "from": from_unit,
             "to": to_unit,
-            "note": "Stream connections in SFILES are implicit in unit ordering"
+            "is_recycle": is_recycle,
+            "num_streams": flowsheet.state.number_of_edges()
         }
     
     async def _to_string(self, args: dict) -> dict:
@@ -556,92 +553,80 @@ class SfilesTools:
         }
     
     async def _add_control(self, args: dict) -> dict:
-        """Add control instrumentation by rebuilding SFILES.
+        """Add control instrumentation using signal edges.
         
-        Note: Controls with signal connections require special handling.
-        For simplicity, we add them inline in the flowsheet sequence.
+        Controls are added as separate units with signal connections
+        to produce proper canonical SFILES with signal cycles.
         """
         flowsheet_id = args["flowsheet_id"]
         if flowsheet_id not in self.flowsheets:
             raise ValueError(f"Flowsheet {flowsheet_id} not found")
         
-        old_flowsheet = self.flowsheets[flowsheet_id]
+        flowsheet = self.flowsheets[flowsheet_id]
         control_type = args["control_type"]
         control_name = args["control_name"]
         connected_unit = args["connected_unit"]
         signal_to = args.get("signal_to")
         
-        # Format control name according to SFILES2 convention (e.g., C-1/FC)
-        # If control_name doesn't follow the convention, create it
+        # Format control name according to SFILES2 convention
+        # Use (C) as the control unit name for proper signal cycle notation
+        # The control type will be stored as an attribute
         if "/" not in control_name:
-            # Extract number from control_name if present, otherwise use default
+            # Extract number from control_name if present
             import re
             num_match = re.search(r'\d+', control_name)
-            num = num_match.group() if num_match else "1"
-            formatted_name = f"C-{num}/{control_type}"
+            num = num_match.group() if num_match else str(len([n for n in flowsheet.state.nodes if 'C' in n]) + 1)
+            # For canonical SFILES, use simple (C) notation
+            # The type is stored as metadata
+            unique_name = f"C-{num}"
         else:
-            formatted_name = control_name
+            # Parse existing format like C-1/FC
+            parts = control_name.split('/')
+            unique_name = parts[0]
         
-        # Get current SFILES string
-        current_sfiles = getattr(old_flowsheet, 'sfiles', '') or ''
+        # Ensure connected unit exists
+        if connected_unit not in flowsheet.state.nodes:
+            raise ValueError(f"Connected unit {connected_unit} not found in flowsheet")
         
-        # For controls, we'll add them inline after their connected unit
-        # This creates a simple linear control structure
-        # More complex signal connections would require v2 notation
-        control_unit = f"({formatted_name})"
+        # Add control as a unit
+        flowsheet.add_unit(
+            unique_name=unique_name,
+            unit_type="Control",
+            control_type=control_type
+        )
         
-        # Find the connected unit in the SFILES and insert control after it
-        if connected_unit in current_sfiles:
-            # Find the unit pattern
-            unit_pattern = f"({connected_unit})"
-            if unit_pattern in current_sfiles:
-                # Insert control after the connected unit
-                new_sfiles = current_sfiles.replace(unit_pattern, unit_pattern + control_unit)
-            else:
-                # Try without parentheses (for special units)
-                new_sfiles = current_sfiles + control_unit
-        else:
-            # Just append if connected unit not found
-            new_sfiles = current_sfiles + control_unit
+        # Add signal edge from connected unit to control
+        # This creates the measurement signal connection
+        flowsheet.add_stream(
+            node1=connected_unit,
+            node2=unique_name,
+            tags={"signal": ["not_next_unitop"], "he": [], "col": []},
+            signal_type="measurement"
+        )
         
-        # Create new flowsheet from SFILES
-        try:
-            new_flowsheet = Flowsheet()
-            if new_sfiles:
-                new_flowsheet.create_from_sfiles(new_sfiles)
+        # If signal_to is specified, add actuation signal
+        if signal_to:
+            if signal_to not in flowsheet.state.nodes:
+                raise ValueError(f"Signal target unit {signal_to} not found in flowsheet")
             
-            # Preserve metadata
-            new_flowsheet.name = old_flowsheet.name
-            new_flowsheet.type = old_flowsheet.type
-            new_flowsheet.description = old_flowsheet.description
-            
-            # Store the SFILES for next iteration
-            new_flowsheet.sfiles = new_sfiles
-            
-            # Store control metadata
-            if not hasattr(new_flowsheet, '_control_metadata'):
-                new_flowsheet._control_metadata = []
-            
-            new_flowsheet._control_metadata.append({
-                "name": formatted_name,
-                "type": control_type,
-                "connected_unit": connected_unit,
-                "signal_to": signal_to
-            })
-            
-            # Replace flowsheet
-            self.flowsheets[flowsheet_id] = new_flowsheet
-            
-            return {
-                "status": "success",
-                "flowsheet_id": flowsheet_id,
-                "control_name": formatted_name,
-                "control_type": control_type,
-                "connected_unit": connected_unit,
-                "sfiles": new_sfiles
-            }
-        except Exception as e:
-            raise ValueError(f"Failed to add control: {str(e)}")
+            # Add actuation signal from control to target
+            flowsheet.add_stream(
+                node1=unique_name,
+                node2=signal_to,
+                tags={"signal": ["not_next_unitop"], "he": [], "col": []},
+                signal_type="actuation"
+            )
+        
+        return {
+            "status": "success",
+            "flowsheet_id": flowsheet_id,
+            "control_name": unique_name,
+            "control_type": control_type,
+            "connected_unit": connected_unit,
+            "signal_to": signal_to,
+            "num_units": flowsheet.state.number_of_nodes(),
+            "num_edges": flowsheet.state.number_of_edges()
+        }
     
     async def _validate_topology(self, args: dict) -> dict:
         """Validate flowsheet topology."""
@@ -982,7 +967,10 @@ class SfilesTools:
     
     async def _convert_from_dexpi(self, args: dict) -> dict:
         """Convert DEXPI P&ID model to SFILES flowsheet."""
-        from ..converters.sfiles_dexpi_mapper import SfilesDexpiMapper
+        try:
+            from ..converters.sfiles_dexpi_mapper import SfilesDexpiMapper
+        except ImportError:
+            from converters.sfiles_dexpi_mapper import SfilesDexpiMapper
         
         model_id = args["model_id"]
         flowsheet_id = args.get("flowsheet_id", None)

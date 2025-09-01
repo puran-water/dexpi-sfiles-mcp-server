@@ -1566,7 +1566,10 @@ class DexpiTools:
     
     async def _convert_from_sfiles(self, args: dict) -> dict:
         """Convert SFILES flowsheet to DEXPI P&ID model."""
-        from ..converters.sfiles_dexpi_mapper import SfilesDexpiMapper
+        try:
+            from ..converters.sfiles_dexpi_mapper import SfilesDexpiMapper
+        except ImportError:
+            from converters.sfiles_dexpi_mapper import SfilesDexpiMapper
         from Flowsheet_Class.flowsheet import Flowsheet
         
         flowsheet_id = args["flowsheet_id"]
