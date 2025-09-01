@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "engineering-drawing-server": {
+    "engineering-mcp": {
       "command": "python",
       "args": ["-m", "src.server"],
       "env": {

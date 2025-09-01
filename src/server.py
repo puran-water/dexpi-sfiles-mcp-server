@@ -13,6 +13,8 @@ from mcp.types import TextContent
 
 from .tools.dexpi_tools import DexpiTools
 from .tools.sfiles_tools import SfilesTools
+from .tools.project_tools import ProjectTools
+from .tools.validation_tools import ValidationTools
 from .resources.graph_resources import GraphResourceProvider
 from .converters.graph_converter import UnifiedGraphConverter
 
@@ -32,6 +34,8 @@ class EngineeringDrawingMCPServer:
         # Initialize tool handlers with both stores for cross-conversion
         self.dexpi_tools = DexpiTools(self.dexpi_models, self.flowsheets)
         self.sfiles_tools = SfilesTools(self.flowsheets, self.dexpi_models)
+        self.project_tools = ProjectTools(self.dexpi_models, self.flowsheets)
+        self.validation_tools = ValidationTools(self.dexpi_models, self.flowsheets)
         
         # Initialize converters and resources
         self.graph_converter = UnifiedGraphConverter()
@@ -42,7 +46,7 @@ class EngineeringDrawingMCPServer:
         )
         
         # Create MCP server instance
-        self.server = Server("engineering-drawing-server")
+        self.server = Server("engineering-mcp")
         
         # Register handlers
         self._register_handlers()
@@ -56,6 +60,8 @@ class EngineeringDrawingMCPServer:
             tools = []
             tools.extend(self.dexpi_tools.get_tools())
             tools.extend(self.sfiles_tools.get_tools())
+            tools.extend(self.project_tools.get_tools())
+            tools.extend(self.validation_tools.get_tools())
             return tools
         
         @self.server.call_tool()
@@ -66,6 +72,10 @@ class EngineeringDrawingMCPServer:
                     result = await self.dexpi_tools.handle_tool(name, arguments)
                 elif name.startswith("sfiles_"):
                     result = await self.sfiles_tools.handle_tool(name, arguments)
+                elif name.startswith("project_"):
+                    result = await self.project_tools.handle_tool(name, arguments)
+                elif name.startswith("validate_"):
+                    result = await self.validation_tools.handle_tool(name, arguments)
                 else:
                     raise ValueError(f"Unknown tool: {name}")
                 
@@ -86,7 +96,7 @@ class EngineeringDrawingMCPServer:
             return await self.resource_provider.list_resources()
         
         @self.server.read_resource()
-        async def handle_read_resource(uri: str) -> str:
+        async def handle_read_resource(uri: str) -> list:
             """Read a specific resource."""
             return await self.resource_provider.read_resource(uri)
     
@@ -99,7 +109,7 @@ class EngineeringDrawingMCPServer:
                 read_stream,
                 write_stream,
                 InitializationOptions(
-                    server_name="engineering-drawing-server",
+                    server_name="engineering-mcp",
                     server_version="0.1.0",
                     capabilities=self.server.get_capabilities(
                         notification_options=NotificationOptions(),

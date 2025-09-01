@@ -8,6 +8,7 @@ from uuid import uuid4
 from mcp import Tool
 from Flowsheet_Class.flowsheet import Flowsheet
 import networkx as nx
+from ..utils.response import success_response, error_response, validation_response, create_issue
 
 logger = logging.getLogger(__name__)
 
@@ -240,57 +241,7 @@ class SfilesTools:
                     }
                 }
             ),
-            Tool(
-                name="sfiles_init_project",
-                description="Initialize a new git project for storing DEXPI and SFILES models",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "project_path": {"type": "string", "description": "Path where project should be created"},
-                        "project_name": {"type": "string", "description": "Name of the project"},
-                        "description": {"type": "string", "description": "Optional project description", "default": ""}
-                    },
-                    "required": ["project_path", "project_name"]
-                }
-            ),
-            Tool(
-                name="sfiles_save_to_project",
-                description="Save SFILES flowsheet to a git project with version control",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "flowsheet_id": {"type": "string", "description": "Flowsheet ID to save"},
-                        "project_path": {"type": "string", "description": "Path to project root"},
-                        "flowsheet_name": {"type": "string", "description": "Name for saved flowsheet (without extension)"},
-                        "commit_message": {"type": "string", "description": "Optional git commit message"}
-                    },
-                    "required": ["flowsheet_id", "project_path", "flowsheet_name"]
-                }
-            ),
-            Tool(
-                name="sfiles_load_from_project",
-                description="Load SFILES flowsheet from a git project",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "project_path": {"type": "string", "description": "Path to project root"},
-                        "flowsheet_name": {"type": "string", "description": "Name of flowsheet to load (without extension)"},
-                        "flowsheet_id": {"type": "string", "description": "Optional ID for loaded flowsheet"}
-                    },
-                    "required": ["project_path", "flowsheet_name"]
-                }
-            ),
-            Tool(
-                name="sfiles_list_project_models",
-                description="List all DEXPI and SFILES models in a project",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "project_path": {"type": "string", "description": "Path to project root"}
-                    },
-                    "required": ["project_path"]
-                }
-            ),
+            # Project tools removed - now handled by unified ProjectTools
             Tool(
                 name="sfiles_convert_from_dexpi",
                 description="Convert DEXPI P&ID model to SFILES flowsheet",
@@ -321,11 +272,12 @@ class SfilesTools:
             "sfiles_parse_and_validate": self._parse_and_validate,
             "sfiles_canonical_form": self._canonical_form,
             "sfiles_pattern_helper": self._pattern_helper,
-            "sfiles_init_project": self._init_project,
-            "sfiles_save_to_project": self._save_to_project,
-            "sfiles_load_from_project": self._load_from_project,
-            "sfiles_list_project_models": self._list_project_models,
             "sfiles_convert_from_dexpi": self._convert_from_dexpi,
+            # Removed duplicate handlers:
+            # - sfiles_init_project (now in ProjectTools)
+            # - sfiles_save_to_project (now in ProjectTools)
+            # - sfiles_load_from_project (now in ProjectTools)
+            # - sfiles_list_project_models (now in ProjectTools)
         }
         
         handler = handlers.get(name)
@@ -352,12 +304,11 @@ class SfilesTools:
         # Store flowsheet
         self.flowsheets[flowsheet_id] = flowsheet
         
-        return {
-            "status": "success",
+        return success_response({
             "flowsheet_id": flowsheet_id,
             "name": args["name"],
             "type": args.get("type", "PFD")
-        }
+        })
     
     async def _add_unit(self, args: dict) -> dict:
         """Add a unit operation to flowsheet using native graph methods."""
@@ -395,13 +346,12 @@ class SfilesTools:
             **parameters
         )
         
-        return {
-            "status": "success",
+        return success_response({
             "flowsheet_id": flowsheet_id,
             "unit_name": unique_name,
             "unit_type": unit_type,
             "num_units": flowsheet.state.number_of_nodes()
-        }
+        })
     
     async def _add_stream(self, args: dict) -> dict:
         """Add a stream between units using native graph methods.
@@ -445,15 +395,14 @@ class SfilesTools:
         else:
             is_recycle = False
         
-        return {
-            "status": "success",
+        return success_response({
             "flowsheet_id": flowsheet_id,
             "stream_name": stream_name,
             "from": from_unit,
             "to": to_unit,
             "is_recycle": is_recycle,
             "num_streams": flowsheet.state.number_of_edges()
-        }
+        })
     
     async def _to_string(self, args: dict) -> dict:
         """Convert flowsheet to SFILES string."""
@@ -485,12 +434,11 @@ class SfilesTools:
                 raise ValueError("Cannot convert empty flowsheet to SFILES")
             raise ValueError(f"SFILES conversion failed: {str(e)}")
         
-        return {
-            "status": "success",
+        return success_response({
             "flowsheet_id": flowsheet_id,
             "version": version,
             "sfiles": sfiles_string
-        }
+        })
     
     async def _from_string(self, args: dict) -> dict:
         """Create flowsheet from SFILES string."""
@@ -508,12 +456,11 @@ class SfilesTools:
         num_units = flowsheet.state.number_of_nodes()
         num_streams = flowsheet.state.number_of_edges()
         
-        return {
-            "status": "success",
+        return success_response({
             "flowsheet_id": flowsheet_id,
             "num_units": num_units,
             "num_streams": num_streams
-        }
+        })
     
     async def _export_networkx(self, args: dict) -> dict:
         """Export flowsheet as NetworkX graph."""
@@ -526,11 +473,10 @@ class SfilesTools:
         # Convert NetworkX graph to node-link format
         graph_data = nx.node_link_data(flowsheet.state)
         
-        return {
-            "status": "success",
+        return success_response({
             "flowsheet_id": flowsheet_id,
             "graph": graph_data
-        }
+        })
     
     async def _export_graphml(self, args: dict) -> dict:
         """Export flowsheet as GraphML."""

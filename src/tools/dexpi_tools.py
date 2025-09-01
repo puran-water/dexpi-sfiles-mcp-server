@@ -17,6 +17,7 @@ from pydexpi.dexpi_classes.equipment import Tank, Pump, Compressor, Nozzle, Heat
 from pydexpi.dexpi_classes.piping import PipingNetworkSegment, Pipe, PipingNode
 from pydexpi.dexpi_classes.instrumentation import ProcessInstrumentationFunction
 from .dexpi_introspector import DexpiIntrospector
+from ..utils.response import success_response, error_response, validation_response, create_issue
 
 logger = logging.getLogger(__name__)
 
@@ -275,29 +276,7 @@ class DexpiTools:
                     }
                 }
             ),
-            Tool(
-                name="dexpi_validate_connections",
-                description="Validate all piping connections in the P&ID model using pyDEXPI's native validation",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "model_id": {"type": "string"}
-                    },
-                    "required": ["model_id"]
-                }
-            ),
-            Tool(
-                name="dexpi_validate_graph",
-                description="Validate P&ID graph structure using MLGraphLoader validation",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "model_id": {"type": "string"},
-                        "include_details": {"type": "boolean", "default": True}
-                    },
-                    "required": ["model_id"]
-                }
-            ),
+            # Validation tools removed - now handled by unified ValidationTools
             Tool(
                 name="dexpi_check_connectivity",
                 description="Check if all equipment is properly connected in the P&ID",
@@ -309,57 +288,7 @@ class DexpiTools:
                     "required": ["model_id"]
                 }
             ),
-            Tool(
-                name="dexpi_init_project",
-                description="Initialize a new git project for storing DEXPI and SFILES models",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "project_path": {"type": "string", "description": "Path where project should be created"},
-                        "project_name": {"type": "string", "description": "Name of the project"},
-                        "description": {"type": "string", "description": "Optional project description", "default": ""}
-                    },
-                    "required": ["project_path", "project_name"]
-                }
-            ),
-            Tool(
-                name="dexpi_save_to_project",
-                description="Save DEXPI model to a git project with version control",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "model_id": {"type": "string", "description": "Model ID to save"},
-                        "project_path": {"type": "string", "description": "Path to project root"},
-                        "model_name": {"type": "string", "description": "Name for saved model (without extension)"},
-                        "commit_message": {"type": "string", "description": "Optional git commit message"}
-                    },
-                    "required": ["model_id", "project_path", "model_name"]
-                }
-            ),
-            Tool(
-                name="dexpi_load_from_project",
-                description="Load DEXPI model from a git project",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "project_path": {"type": "string", "description": "Path to project root"},
-                        "model_name": {"type": "string", "description": "Name of model to load (without extension)"},
-                        "model_id": {"type": "string", "description": "Optional ID for loaded model"}
-                    },
-                    "required": ["project_path", "model_name"]
-                }
-            ),
-            Tool(
-                name="dexpi_list_project_models",
-                description="List all DEXPI and SFILES models in a project",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "project_path": {"type": "string", "description": "Path to project root"}
-                    },
-                    "required": ["project_path"]
-                }
-            ),
+            # Project tools removed - now handled by unified ProjectTools
             Tool(
                 name="dexpi_describe_class",
                 description="Get detailed description of a pyDEXPI class including all attributes and schema",
@@ -423,16 +352,17 @@ class DexpiTools:
             "dexpi_add_valve": self._add_valve,
             "dexpi_insert_valve_in_segment": self._insert_valve_in_segment,
             "dexpi_list_available_types": self._list_available_types,
-            "dexpi_validate_connections": self._validate_connections,
-            "dexpi_validate_graph": self._validate_graph,
             "dexpi_check_connectivity": self._check_connectivity,
-            "dexpi_save_to_project": self._save_to_project,
-            "dexpi_load_from_project": self._load_from_project,
-            "dexpi_init_project": self._init_project,
-            "dexpi_list_project_models": self._list_project_models,
             "dexpi_describe_class": self._describe_class,
             "dexpi_list_class_attributes": self._list_class_attributes,
             "dexpi_convert_from_sfiles": self._convert_from_sfiles,
+            # Removed duplicate handlers:
+            # - dexpi_validate_connections (now in ValidationTools)
+            # - dexpi_validate_graph (now in ValidationTools)
+            # - dexpi_save_to_project (now in ProjectTools)
+            # - dexpi_load_from_project (now in ProjectTools)
+            # - dexpi_init_project (now in ProjectTools)
+            # - dexpi_list_project_models (now in ProjectTools)
         }
         
         handler = handlers.get(name)
@@ -459,12 +389,11 @@ class DexpiTools:
         # Store model
         self.models[model_id] = model
         
-        return {
-            "status": "success",
+        return success_response({
             "model_id": model_id,
             "project_name": args["project_name"],
             "drawing_number": args["drawing_number"]
-        }
+        })
     
     async def _add_equipment(self, args: dict) -> dict:
         """Add equipment to P&ID model with mandatory nozzles."""
@@ -540,13 +469,12 @@ class DexpiTools:
         
         model.conceptualModel.taggedPlantItems.append(equipment)
         
-        return {
-            "status": "success",
+        return success_response({
             "equipment_type": equipment_type,
             "tag_name": tag_name,
             "model_id": model_id,
             "nozzles_created": len(nozzles)
-        }
+        })
     
     async def _add_piping(self, args: dict) -> dict:
         """Add piping segment to model."""
@@ -738,8 +666,7 @@ class DexpiTools:
             ProcessInstrumentationFunction(tagName=control_valve_tag, instrumentationType="ControlValve")
         ])
         
-        return {
-            "status": "success",
+        return success_response({
             "loop_tag": loop_tag,
             "controlled_variable": controlled_variable,
             "components": {
@@ -752,7 +679,7 @@ class DexpiTools:
                 f"{controller_tag} -> {control_valve_tag} (control)"
             ],
             "model_id": model_id
-        }
+        })
     
     async def _connect_components(self, args: dict) -> dict:
         """Connect components with piping using pyDEXPI's native toolkit."""
@@ -867,15 +794,14 @@ class DexpiTools:
                 "message": str(e)
             }
         
-        return {
-            "status": "success",
+        return success_response({
             "from": from_component,
             "to": to_component,
             "line_number": line_number,
             "pipe_class": pipe_class,
             "model_id": model_id,
             "validation": validation_result
-        }
+        })
     
     async def _validate_model(self, args: dict) -> dict:
         """Validate the P&ID model."""
@@ -907,12 +833,15 @@ class DexpiTools:
             except Exception as e:
                 issues.append(f"Graph validation failed: {str(e)}")
         
-        return {
-            "status": "success" if not issues else "warning",
-            "validation_level": validation_level,
-            "issues": issues,
-            "model_id": model_id
-        }
+        # Use validation_response for structured validation output
+        status = "ok" if not issues else "warning"
+        validation_issues = [create_issue("warning", issue) for issue in issues]
+        
+        return validation_response(
+            status=status,
+            issues=validation_issues,
+            metrics={"validation_level": validation_level, "model_id": model_id}
+        )
     
     async def _export_json(self, args: dict) -> dict:
         """Export model as JSON."""
@@ -928,11 +857,10 @@ class DexpiTools:
         model_dict = self.json_serializer.model_to_dict(model)
         json_content = json.dumps(model_dict, indent=4, ensure_ascii=False, sort_keys=True)
         
-        return {
-            "status": "success",
+        return success_response({
             "model_id": model_id,
             "json": json_content
-        }
+        })
     
     async def _export_graphml(self, args: dict) -> dict:
         """Export model as GraphML."""
@@ -950,12 +878,11 @@ class DexpiTools:
         # Convert to GraphML with proper sanitization
         graphml_content = converter.dexpi_to_graphml(model, include_msr=include_msr)
         
-        return {
-            "status": "success",
+        return success_response({
             "model_id": model_id,
             "include_msr": include_msr,
             "graphml": graphml_content
-        }
+        })
     
     async def _import_json(self, args: dict) -> dict:
         """Import model from JSON."""
@@ -976,11 +903,10 @@ class DexpiTools:
         # Store model
         self.models[model_id] = model
         
-        return {
-            "status": "success",
+        return success_response({
             "model_id": model_id,
             "project_name": model.metadata.projectData.projectName if model.metadata else "Unknown"
-        }
+        })
     
     async def _import_proteus_xml(self, args: dict) -> dict:
         """Import model from Proteus XML using pyDEXPI's ProteusSerializer."""
@@ -1017,8 +943,7 @@ class DexpiTools:
                 if model.conceptualModel.processInstrumentationFunctions:
                     instrumentation_count = len(model.conceptualModel.processInstrumentationFunctions)
             
-            return {
-                "status": "success",
+            return success_response({
                 "model_id": model_id,
                 "project_name": project_name,
                 "drawing_number": drawing_number,
@@ -1028,13 +953,13 @@ class DexpiTools:
                     "instrumentation_functions": instrumentation_count
                 },
                 "note": "Graphics elements are not parsed by pyDEXPI's ProteusSerializer"
-            }
+            })
         except Exception as e:
-            return {
-                "status": "error",
-                "error": f"Failed to import Proteus XML: {str(e)}",
-                "details": "Ensure the file is a valid Proteus 4.2 XML file"
-            }
+            return error_response(
+                f"Failed to import Proteus XML: {str(e)}",
+                code="IMPORT_ERROR",
+                details={"hint": "Ensure the file is a valid Proteus 4.2 XML file"}
+            )
     
     async def _add_valve(self, args: dict) -> dict:
         """Add valve to P&ID model."""
@@ -1430,8 +1355,7 @@ class DexpiTools:
         total_equipment = len(all_equipment)
         fully_connected = len(connectivity_report["connected_equipment"])
         
-        return {
-            "status": "success",
+        return success_response({
             "model_id": model_id,
             "connectivity": connectivity_report,
             "summary": {
@@ -1441,66 +1365,14 @@ class DexpiTools:
                 "unconnected": len(connectivity_report["unconnected_equipment"]),
                 "connectivity_percentage": (fully_connected / total_equipment * 100) if total_equipment > 0 else 0
             }
-        }
+        })
     
-    async def _save_to_project(self, args: dict) -> dict:
-        """Save DEXPI model to a git project."""
-        from ..persistence import ProjectPersistence
-        
-        model_id = args["model_id"]
-        if model_id not in self.models:
-            raise ValueError(f"Model {model_id} not found")
-        
-        project_path = args["project_path"]
-        model_name = args.get("model_name", f"PID-{model_id[:8]}")
-        commit_message = args.get("commit_message")
-        
-        persistence = ProjectPersistence()
-        model = self.models[model_id]
-        
-        saved_paths = persistence.save_dexpi(
-            model=model,
-            project_path=project_path,
-            model_name=model_name,
-            commit_message=commit_message
-        )
-        
-        return {
-            "status": "success",
-            "model_id": model_id,
-            "model_name": model_name,
-            "project_path": project_path,
-            "saved_files": saved_paths
-        }
-    
-    async def _load_from_project(self, args: dict) -> dict:
-        """Load DEXPI model from a git project."""
-        from ..persistence import ProjectPersistence
-        
-        project_path = args["project_path"]
-        model_name = args["model_name"]
-        
-        persistence = ProjectPersistence()
-        model = persistence.load_dexpi(project_path, model_name)
-        
-        # Store in memory with new ID
-        model_id = str(uuid4())
-        self.models[model_id] = model
-        
-        return {
-            "status": "success",
-            "model_id": model_id,
-            "model_name": model_name,
-            "project_path": project_path,
-            "project_name": model.metadata.projectData.projectName if hasattr(model, 'metadata') and model.metadata else None,
-            "drawing_number": model.metadata.drawingData.drawingNumber if hasattr(model, 'metadata') and model.metadata else None
-        }
-    
-    async def _init_project(self, args: dict) -> dict:
-        """Initialize a new git project for engineering models."""
-        from ..persistence import ProjectPersistence
-        
-        project_path = args["project_path"]
+    # Project tool handlers removed - now handled by unified ProjectTools
+    # The following methods are deprecated:
+    # - _save_to_project
+    # - _load_from_project  
+    # - _init_project
+    # - _list_project_models
         project_name = args["project_name"]
         description = args.get("description", "")
         
