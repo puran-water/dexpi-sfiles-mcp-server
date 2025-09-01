@@ -43,9 +43,11 @@ This MCP (Model Context Protocol) server provides LLM-accessible tools for engin
 - **Visualization Dashboard** - Web-based rendering of data models using Cytoscape.js
 - **GraphML Export** - Standardized graph format for machine learning pipelines
 
-### MCP Tools Available (42 Total)
+### MCP Tools Available
 
-#### DEXPI P&ID Tools (24 tools)
+After consolidation and optimization, the server now provides streamlined tools organized by function:
+
+#### DEXPI P&ID Tools (12 tools)
 - `dexpi_create_pid` - Initialize P&ID with ISO 15926 compliant metadata
 - `dexpi_add_equipment` - Add equipment from 159 available types (dynamically discovered from pyDEXPI)
 - `dexpi_add_piping` - Create piping segments with material specifications
@@ -58,20 +60,13 @@ This MCP (Model Context Protocol) server provides LLM-accessible tools for engin
 - `dexpi_import_proteus_xml` - Import P&ID from Proteus 4.2 XML format
 - `dexpi_export_json` - Export P&ID to JSON for version control
 - `dexpi_export_graphml` - Export topology as GraphML with sanitization for ML pipelines
-- `dexpi_validate_model` - Validate P&ID against engineering rules
-- `dexpi_validate_connections` - Validate piping connections using pyDEXPI native validation
-- `dexpi_validate_graph` - Validate P&ID graph structure using MLGraphLoader
 - `dexpi_check_connectivity` - Verify all equipment is properly connected
 - `dexpi_list_available_types` - Discover all available equipment, valve, and instrumentation types
 - `dexpi_describe_class` - Get comprehensive description of any pyDEXPI class including schema
 - `dexpi_list_class_attributes` - List attributes for a pyDEXPI class organized by type
-- `dexpi_init_project` - Initialize git-tracked project for DEXPI models
-- `dexpi_save_to_project` - Save DEXPI model to project with git commit
-- `dexpi_load_from_project` - Load DEXPI model from project repository
-- `dexpi_list_project_models` - List all DEXPI models in a project
 - `dexpi_convert_from_sfiles` - Convert SFILES flowsheet to DEXPI P&ID model
 
-#### SFILES Flowsheet Tools (18 tools)
+#### SFILES Flowsheet Tools (13 tools)
 - `sfiles_create_flowsheet` - Initialize BFD or PFD flowsheet
 - `sfiles_add_unit` - Add unit operations to flowsheet
 - `sfiles_add_stream` - Connect units with process streams
@@ -85,11 +80,38 @@ This MCP (Model Context Protocol) server provides LLM-accessible tools for engin
 - `sfiles_parse_and_validate` - Parse SFILES string and validate against regex patterns
 - `sfiles_canonical_form` - Convert SFILES to canonical form for comparison
 - `sfiles_pattern_helper` - Get SFILES regex patterns and syntax examples
-- `sfiles_init_project` - Initialize git-tracked project for SFILES models
-- `sfiles_save_to_project` - Save SFILES flowsheet to project with git commit
-- `sfiles_load_from_project` - Load SFILES flowsheet from project repository
-- `sfiles_list_project_models` - List all SFILES models in a project
 - `sfiles_convert_from_dexpi` - Convert DEXPI P&ID model to SFILES flowsheet
+
+#### Project Management Tools (4 tools)
+- `project_init` - Initialize git-tracked project for engineering models
+- `project_save` - Save model to project with automatic git commit
+- `project_load` - Load model from project repository
+- `project_list` - List all models in a project
+
+#### Validation Tools (2 tools)
+- `validate_model` - Comprehensive validation of model syntax, topology, and constraints
+- `validate_round_trip` - Validate round-trip conversion integrity
+
+#### Schema Introspection Tools (4 tools)
+- `schema_list_classes` - List all available classes in DEXPI or SFILES schemas
+- `schema_describe_class` - Get detailed information about a specific class
+- `schema_find_class` - Search for classes by partial name or pattern
+- `schema_get_hierarchy` - Get the inheritance hierarchy for a class or category
+
+#### Graph Analytics Tools (5 tools)
+- `graph_analyze_topology` - Analyze paths, cycles, bottlenecks, and connectivity
+- `graph_find_paths` - Find paths between nodes in the graph
+- `graph_detect_patterns` - Detect common patterns like heat integration, recycle loops
+- `graph_calculate_metrics` - Calculate graph metrics like diameter, density, clustering
+- `graph_compare_models` - Compare graph structures of two models
+
+#### Search and Query Tools (6 tools)
+- `search_by_tag` - Find equipment, instruments, or nodes by tag pattern
+- `search_by_type` - Find all components of a specific type
+- `search_by_attributes` - Search for components by attribute values
+- `search_connected` - Find all components connected to a specific node
+- `query_model_statistics` - Get statistical summary of model contents
+- `search_by_stream` - Search for streams by properties or connected units
 
 ## Requirements
 

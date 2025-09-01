@@ -15,6 +15,9 @@ from .tools.dexpi_tools import DexpiTools
 from .tools.sfiles_tools import SfilesTools
 from .tools.project_tools import ProjectTools
 from .tools.validation_tools import ValidationTools
+from .tools.schema_tools import SchemaTools
+from .tools.graph_tools import GraphTools
+from .tools.search_tools import SearchTools
 from .resources.graph_resources import GraphResourceProvider
 from .converters.graph_converter import UnifiedGraphConverter
 
@@ -36,6 +39,9 @@ class EngineeringDrawingMCPServer:
         self.sfiles_tools = SfilesTools(self.flowsheets, self.dexpi_models)
         self.project_tools = ProjectTools(self.dexpi_models, self.flowsheets)
         self.validation_tools = ValidationTools(self.dexpi_models, self.flowsheets)
+        self.schema_tools = SchemaTools()
+        self.graph_tools = GraphTools(self.dexpi_models, self.flowsheets)
+        self.search_tools = SearchTools(self.dexpi_models, self.flowsheets)
         
         # Initialize converters and resources
         self.graph_converter = UnifiedGraphConverter()
@@ -62,6 +68,9 @@ class EngineeringDrawingMCPServer:
             tools.extend(self.sfiles_tools.get_tools())
             tools.extend(self.project_tools.get_tools())
             tools.extend(self.validation_tools.get_tools())
+            tools.extend(self.schema_tools.get_tools())
+            tools.extend(self.graph_tools.get_tools())
+            tools.extend(self.search_tools.get_tools())
             return tools
         
         @self.server.call_tool()
@@ -76,6 +85,12 @@ class EngineeringDrawingMCPServer:
                     result = await self.project_tools.handle_tool(name, arguments)
                 elif name.startswith("validate_"):
                     result = await self.validation_tools.handle_tool(name, arguments)
+                elif name.startswith("schema_"):
+                    result = await self.schema_tools.handle_tool(name, arguments)
+                elif name.startswith("graph_"):
+                    result = await self.graph_tools.handle_tool(name, arguments)
+                elif name.startswith("search_") or name == "query_model_statistics":
+                    result = await self.search_tools.handle_tool(name, arguments)
                 else:
                     raise ValueError(f"Unknown tool: {name}")
                 
