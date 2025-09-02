@@ -8,10 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.3.0] - 2025-01-30
 
 ### Added
-- **High-Value Batch Tools for LLM Optimization**:
+- **Batch Tools for LLM Optimization**:
   - `model_batch_apply`: Execute multiple operations atomically
   - `rules_apply`: Structured validation output for LLMs
-  - `graph_connect`: Smart autowiring with automatic valve insertion
+  - `graph_connect`: Autowiring with automatic valve insertion
 - **Response Format Normalization**: 
   - `is_success()` helper for handling mixed response formats
   - Standardized `success_response()` and `error_response()` utilities
@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Leveraging `piping_toolkit` for segment manipulation
 
 ### Fixed
-- **Critical Bugs**:
+- **Bugs**:
   - Fixed Proteus serializer initialization (was undefined)
   - Corrected `metadata` to `metaData` attribute access
   - Fixed `pipingClassArtefact` to `pipingClassCode` 
