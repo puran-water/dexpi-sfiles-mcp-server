@@ -3,6 +3,14 @@
 from typing import Any, Dict, List, Optional, Union
 
 
+def is_success(result: Dict[str, Any]) -> bool:
+    """Check if operation succeeded regardless of response format.
+    
+    Handles both new format {"ok": true} and legacy {"status": "success"}.
+    """
+    return bool(result.get("ok") or result.get("status") == "success")
+
+
 def success_response(
     data: Any,
     warnings: Optional[List[str]] = None

@@ -43,9 +43,14 @@ This MCP (Model Context Protocol) server provides LLM-accessible tools for engin
 - **Visualization Dashboard** - Web-based rendering of data models using Cytoscape.js
 - **GraphML Export** - Standardized graph format for machine learning pipelines
 
-### MCP Tools Available (47 Total)
+### MCP Tools Available (50 Total - Consolidating to 12)
 
-After consolidation and optimization, the server now provides streamlined tools organized by function:
+**🚀 New in v0.3.0:** High-value batch tools that reduce LLM calls from 50+ to 1-3:
+- **model_batch_apply** - Execute multiple operations atomically
+- **rules_apply** - Structured validation for LLMs  
+- **graph_connect** - Smart autowiring with inline valve insertion
+
+After testing and validation, legacy tools will be deprecated in favor of the consolidated set:
 
 #### DEXPI P&ID Tools (14 tools)
 - `dexpi_create_pid` - Initialize P&ID with ISO 15926 compliant metadata

@@ -5,6 +5,42 @@ All notable changes to the Engineering MCP Server are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2025-01-30
+
+### Added
+- **High-Value Batch Tools for LLM Optimization**:
+  - `model_batch_apply`: Execute multiple operations atomically
+  - `rules_apply`: Structured validation output for LLMs
+  - `graph_connect`: Smart autowiring with automatic valve insertion
+- **Response Format Normalization**: 
+  - `is_success()` helper for handling mixed response formats
+  - Standardized `success_response()` and `error_response()` utilities
+- **Dynamic Nozzle Creation**: Automatic creation of equipment nozzles for multiple connections
+- **Native pyDEXPI Integration**:
+  - Using `piping_toolkit.insert_item_to_segment()` for proper valve insertion
+  - Leveraging `piping_toolkit` for segment manipulation
+
+### Fixed
+- **Critical Bugs**:
+  - Fixed Proteus serializer initialization (was undefined)
+  - Corrected `metadata` to `metaData` attribute access
+  - Fixed `pipingClassArtefact` to `pipingClassCode` 
+  - Resolved routing order - batch tools now checked before prefix matching
+  - Fixed pattern matching for wildcards (e.g., "P-*")
+  - Server error handling now uses standardized response format
+- **Inline Valve Insertion**:
+  - Proper use of pyDEXPI toolkit functions with correct parameters
+  - Fixed segment connection tracking with `segment_id`
+  - Resolved "list index out of range" errors in valve insertion
+
+### Changed
+- Removed unimplemented strategies from `graph_connect` enum
+- Updated tool routing to prioritize batch tools
+
+### Preparing for Deprecation
+- 35+ legacy tools to be deprecated in favor of 12 consolidated tools
+- Transition plan documented in HIGH_ROI_IMPLEMENTATION_PLAN.md
+
 ## [1.1.0] - 2025-01-30
 
 ### Added

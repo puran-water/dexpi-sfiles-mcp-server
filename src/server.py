@@ -18,6 +18,7 @@ from .tools.validation_tools import ValidationTools
 from .tools.schema_tools import SchemaTools
 from .tools.graph_tools import GraphTools
 from .tools.search_tools import SearchTools
+from .tools.batch_tools import BatchTools
 from .resources.graph_resources import GraphResourceProvider
 from .converters.graph_converter import UnifiedGraphConverter
 
@@ -42,6 +43,13 @@ class EngineeringDrawingMCPServer:
         self.schema_tools = SchemaTools()
         self.graph_tools = GraphTools(self.dexpi_models, self.flowsheets)
         self.search_tools = SearchTools(self.dexpi_models, self.flowsheets)
+        self.batch_tools = BatchTools(
+            self.dexpi_tools, 
+            self.sfiles_tools, 
+            self.validation_tools, 
+            self.dexpi_models, 
+            self.flowsheets
+        )
         
         # Initialize converters and resources
         self.graph_converter = UnifiedGraphConverter()
@@ -71,13 +79,17 @@ class EngineeringDrawingMCPServer:
             tools.extend(self.schema_tools.get_tools())
             tools.extend(self.graph_tools.get_tools())
             tools.extend(self.search_tools.get_tools())
+            tools.extend(self.batch_tools.get_tools())
             return tools
         
         @self.server.call_tool()
         async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
             """Route tool calls to appropriate handlers."""
             try:
-                if name.startswith("dexpi_"):
+                # Check explicit batch tools first (before prefix matching)
+                if name in ["model_batch_apply", "rules_apply", "graph_connect"]:
+                    result = await self.batch_tools.handle_tool(name, arguments)
+                elif name.startswith("dexpi_"):
                     result = await self.dexpi_tools.handle_tool(name, arguments)
                 elif name.startswith("sfiles_"):
                     result = await self.sfiles_tools.handle_tool(name, arguments)
@@ -98,11 +110,12 @@ class EngineeringDrawingMCPServer:
             
             except Exception as e:
                 logger.error(f"Error executing tool {name}: {e}")
-                error_result = {
-                    "error": str(e),
-                    "tool": name,
-                    "arguments": arguments
-                }
+                from .utils.response import error_response
+                error_result = error_response(
+                    message=str(e),
+                    code="TOOL_EXECUTION_ERROR",
+                    details={"tool": name, "arguments": arguments}
+                )
                 return [TextContent(type="text", text=json.dumps(error_result, indent=2))]
         
         @self.server.list_resources()

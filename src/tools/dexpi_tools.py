@@ -30,6 +30,7 @@ class DexpiTools:
         self.models = model_store
         self.flowsheets = flowsheet_store if flowsheet_store is not None else {}
         self.json_serializer = JsonSerializer()
+        self.proteus_serializer = ProteusSerializer()
         self.graph_loader = MLGraphLoader()
         self.introspector = DexpiIntrospector()
     
@@ -435,7 +436,7 @@ class DexpiTools:
         # Create piping segment
         segment = PipingNetworkSegment(
             id=args["segment_id"],
-            pipingClassArtefact=args.get("pipe_class", "CS150")
+            pipingClassCode=args.get("pipe_class", "CS150")
         )
         
         # Create a pipe within the segment
@@ -444,23 +445,38 @@ class DexpiTools:
             material=args.get("material", "Carbon Steel")
         )
         
-        segment.pipingNetworkSegmentItems = [pipe]
+        # Use connections instead of pipingNetworkSegmentItems (which doesn't exist)
+        from pydexpi.dexpi_classes.piping import PipingConnection, PipingNetworkSystem
+        segment.connections = [PipingConnection(pipingItem=pipe)]
         
-        # Add to model
+        # Add to model within a PipingNetworkSystem
         if not model.conceptualModel:
             model.conceptualModel = ConceptualModel()
         
         if not model.conceptualModel.pipingNetworkSystems:
-            model.conceptualModel.pipingNetworkSystems = []
+            # Create a new piping network system
+            system = PipingNetworkSystem(
+                id=f"PNS_{args['segment_id']}",
+                segments=[segment]
+            )
+            model.conceptualModel.pipingNetworkSystems = [system]
+        else:
+            # Add to existing system
+            if hasattr(model.conceptualModel.pipingNetworkSystems[0], 'segments'):
+                model.conceptualModel.pipingNetworkSystems[0].segments.append(segment)
+            else:
+                # Create new system if first one is invalid
+                system = PipingNetworkSystem(
+                    id=f"PNS_{args['segment_id']}",
+                    segments=[segment]
+                )
+                model.conceptualModel.pipingNetworkSystems.append(system)
         
-        model.conceptualModel.pipingNetworkSystems.append(segment)
-        
-        return {
-            "status": "success",
+        return success_response({
             "segment_id": args["segment_id"],
             "pipe_class": args.get("pipe_class", "CS150"),
             "model_id": model_id
-        }
+        })
     
     async def _add_instrumentation(self, args: dict) -> dict:
         """Add instrumentation to model with enhanced signal support."""
@@ -667,19 +683,41 @@ class DexpiTools:
         if not to_equipment:
             raise ValueError(f"Equipment '{to_component}' not found")
         
-        # Get nozzles from equipment
-        from_nozzle = None
-        to_nozzle = None
-        
-        if hasattr(from_equipment, 'nozzles') and from_equipment.nozzles:
-            from_nozzle = from_equipment.nozzles[-1]  # Use last nozzle as outlet
-        if hasattr(to_equipment, 'nozzles') and to_equipment.nozzles:
-            to_nozzle = to_equipment.nozzles[0]  # Use first nozzle as inlet
-        
-        if not from_nozzle:
-            raise ValueError(f"Equipment '{from_component}' has no nozzles")
-        if not to_nozzle:
-            raise ValueError(f"Equipment '{to_component}' has no nozzles")
+        # Helper to check if a nozzle is already used in a piping connection
+        def _nozzle_is_connected(noz) -> bool:
+            try:
+                return hasattr(noz, 'pipingConnection') and noz.pipingConnection is not None
+            except Exception:
+                return False
+
+        # Helper to find an available nozzle or create a new one
+        def _get_or_create_nozzle(equipment, tag_prefix: str, prefer_end: str = "last"):
+            if not hasattr(equipment, 'nozzles') or equipment.nozzles is None:
+                equipment.nozzles = []
+
+            # Try to reuse an existing unconnected nozzle
+            # Prefer order based on expected flow direction
+            ordered = (
+                list(equipment.nozzles)[::-1] if prefer_end == "last" else list(equipment.nozzles)
+            )
+            for noz in ordered:
+                if not _nozzle_is_connected(noz):
+                    return noz
+
+            # If all existing nozzles are used, create a new one
+            next_index = len(equipment.nozzles) + 1
+            new_nozzle = Nozzle(
+                id=f"nozzle_{tag_prefix}_{equipment.tagName}_{next_index}",
+                subTagName=f"{tag_prefix}{next_index}"
+            )
+            equipment.nozzles.append(new_nozzle)
+            return new_nozzle
+
+        # Get source (from) nozzle: prefer last (often outlet)
+        from_nozzle = _get_or_create_nozzle(from_equipment, tag_prefix="N_OUT_", prefer_end="last")
+
+        # Get target (to) nozzle: prefer first (often inlet). Create new if needed.
+        to_nozzle = _get_or_create_nozzle(to_equipment, tag_prefix="N_IN_", prefer_end="first")
         
         # Use pyDEXPI piping_toolkit to create connections properly
         from pydexpi.toolkits import piping_toolkit as pt
@@ -694,7 +732,7 @@ class DexpiTools:
         # Create piping network segment with the pipe in connections
         segment = PipingNetworkSegment(
             id=f"segment_{line_number}",
-            pipingClassArtefact=pipe_class
+            pipingClassCode=pipe_class
         )
         
         # Pipe goes in connections list, not items list
@@ -746,6 +784,7 @@ class DexpiTools:
             "from": from_component,
             "to": to_component,
             "line_number": line_number,
+            "segment_id": f"segment_{line_number}",  # Add segment_id for inline valve insertion
             "pipe_class": pipe_class,
             "model_id": model_id,
             "validation": validation_result
@@ -763,7 +802,7 @@ class DexpiTools:
         issues = []
         
         # Basic validation
-        if not model.metadata:
+        if not model.metaData:
             issues.append("Missing metadata")
         
         if not model.conceptualModel:
@@ -853,7 +892,7 @@ class DexpiTools:
         
         return success_response({
             "model_id": model_id,
-            "project_name": model.metadata.projectData.projectName if model.metadata else "Unknown"
+            "project_name": model.metaData.projectData.projectName if model.metaData else "Unknown"
         })
     
     async def _import_proteus_xml(self, args: dict) -> dict:
@@ -978,7 +1017,7 @@ class DexpiTools:
         # Create a piping segment for the valve
         segment = PipingNetworkSegment(
             id=f"segment_valve_{tag_name}",
-            pipingClassArtefact=piping_class
+            pipingClassCode=piping_class
         )
         # Valves are PipingNetworkSegmentItems, so they go in items
         segment.items = [valve]
@@ -995,7 +1034,7 @@ class DexpiTools:
         }
     
     async def _insert_valve_in_segment(self, args: dict) -> dict:
-        """Insert valve inline within an existing piping segment."""
+        """Insert valve inline within an existing piping segment using pyDEXPI's piping_toolkit."""
         model_id = args["model_id"]
         if model_id not in self.models:
             raise ValueError(f"Model {model_id} not found")
@@ -1006,15 +1045,16 @@ class DexpiTools:
         tag_name = args["tag_name"]
         at_position = args.get("at_position", 0.5)
         
-        # Import required classes
+        # Import required classes and toolkit
         from pydexpi.dexpi_classes import piping as piping_module
         from pydexpi.dexpi_classes.piping import (
             PipingNetworkSegment,
             PipingNode,
             Pipe
         )
+        from pydexpi.toolkits import piping_toolkit as pt
         
-        # Find the segment to split
+        # Find the segment to modify
         target_segment = None
         system = None
         
@@ -1037,10 +1077,10 @@ class DexpiTools:
         if not valve_class:
             raise ValueError(f"Unknown valve type: {valve_type}")
         
-        # Create valve instance
+        # Create valve instance with nodes
         valve = valve_class(
-            pipingComponentName=tag_name,
-            pipingClassCode=target_segment.pipingClassArtefact or "CS150"
+            id=f"valve_{tag_name}",
+            tagName=tag_name
         )
         
         # Create piping nodes for valve connections
@@ -1056,27 +1096,55 @@ class DexpiTools:
         )
         valve.nodes = [valve_inlet, valve_outlet]
         
-        # Strategy: Keep the existing segment but add the valve to its items
-        # The valve will be inline within the segment
-        if not target_segment.items:
-            target_segment.items = []
+        # Create a new pipe connection for the valve
+        new_pipe = Pipe(
+            id=f"pipe_after_{tag_name}",
+            tagName=f"pipe_after_{tag_name}"
+        )
         
-        # Insert valve at the specified position in the items list
-        insert_index = int(len(target_segment.items) * at_position)
-        target_segment.items.insert(insert_index, valve)
+        # Use pyDEXPI's insert_item_to_segment function
+        # This properly handles all the connections and updates
+        if target_segment.connections and len(target_segment.connections) > 0:
+            # Segment has connections - it's already connected to equipment
+            # We need to insert the valve inline
+            
+            # For a connected segment with just a pipe and no items yet,
+            # we insert at position 0 (the first/only connection)
+            if not target_segment.items or len(target_segment.items) == 0:
+                # No items yet - insert valve at the beginning
+                insert_position = 0
+            else:
+                # Has items - insert relative to existing items count
+                insert_position = min(int(len(target_segment.items) * at_position), 
+                                     len(target_segment.items))
+            
+            # Use insert_item_to_segment which works with connected segments
+            pt.insert_item_to_segment(
+                the_segment=target_segment,
+                position=insert_position,  # Position in connections list
+                the_item=valve,
+                the_connection=new_pipe,
+                item_source_node_index=0,  # Inlet is node 0
+                item_target_node_index=1,  # Outlet is node 1
+                insert_before=True  # Insert before the position
+            )
+            
+            message = f"Valve inserted inline in segment"
+        else:
+            # If segment has no connections yet, just add the valve as an item
+            if not target_segment.items:
+                target_segment.items = []
+            target_segment.items.append(valve)
+            message = "Valve added to segment (segment had no connections)"
         
-        # If the segment has pipes in connections, ensure they're preserved
-        # This maintains the segment's connectivity
-        
-        return {
-            "status": "success",
+        return success_response({
             "valve_type": valve_type,
             "tag_name": tag_name,
             "segment_id": segment_id,
             "insertion_position": at_position,
             "model_id": model_id,
-            "note": "Valve inserted inline within segment"
-        }
+            "message": message
+        })
     
     async def _list_available_types(self, args: dict) -> dict:
         """List all available element types."""
