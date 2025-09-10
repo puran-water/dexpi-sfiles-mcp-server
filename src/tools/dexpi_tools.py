@@ -669,21 +669,37 @@ class DexpiTools:
             PipingNode
         )
         
-        # Find equipment by tag name
-        from_equipment = None
-        to_equipment = None
+        # Helper function to find any component (equipment or valve) by tag name
+        def _find_component_by_tag(tag_name: str):
+            """Search for a component in both equipment and piping systems."""
+            # First search in taggedPlantItems (equipment)
+            if model.conceptualModel and model.conceptualModel.taggedPlantItems:
+                for item in model.conceptualModel.taggedPlantItems:
+                    if hasattr(item, 'tagName') and item.tagName == tag_name:
+                        return item
+            
+            # Then search in pipingNetworkSystems for valves and other piping components
+            if model.conceptualModel and model.conceptualModel.pipingNetworkSystems:
+                for system in model.conceptualModel.pipingNetworkSystems:
+                    if hasattr(system, 'segments'):
+                        for segment in system.segments:
+                            if hasattr(segment, 'items'):
+                                for item in segment.items:
+                                    # Check both tagName and pipingComponentName
+                                    if (hasattr(item, 'tagName') and item.tagName == tag_name) or \
+                                       (hasattr(item, 'pipingComponentName') and item.pipingComponentName == tag_name):
+                                        return item
+            
+            return None
         
-        if model.conceptualModel and model.conceptualModel.taggedPlantItems:
-            for item in model.conceptualModel.taggedPlantItems:
-                if hasattr(item, 'tagName') and item.tagName == from_component:
-                    from_equipment = item
-                if hasattr(item, 'tagName') and item.tagName == to_component:
-                    to_equipment = item
+        # Find components (equipment or valves) by tag name
+        from_equipment = _find_component_by_tag(from_component)
+        to_equipment = _find_component_by_tag(to_component)
         
         if not from_equipment:
-            raise ValueError(f"Equipment '{from_component}' not found")
+            raise ValueError(f"Component '{from_component}' not found (searched equipment and valves)")
         if not to_equipment:
-            raise ValueError(f"Equipment '{to_component}' not found")
+            raise ValueError(f"Component '{to_component}' not found (searched equipment and valves)")
         
         # Helper to check if a nozzle is already used in a piping connection
         def _nozzle_is_connected(noz) -> bool:
@@ -989,9 +1005,10 @@ class DexpiTools:
         if not valve_class:
             raise ValueError(f"Unknown valve type: {valve_type}")
         
-        # Create valve instance
+        # Create valve instance with tagName for consistency
         # Don't pass operation parameter since it causes validation errors
         valve_kwargs = {
+            "tagName": tag_name,  # Use tagName for consistency with equipment
             "pipingComponentName": tag_name,
             "pipingClassCode": piping_class
         }

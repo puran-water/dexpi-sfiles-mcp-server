@@ -354,28 +354,71 @@ class BatchTools:
                                         components_inserted.append(valve_tag)
             
             elif strategy == "by_port_type":
-                # Connect by matching port types
+                # Connect by matching port types intelligently (outlet to inlet, one-to-one)
                 from_selector = rules["from_selector"]
                 to_selector = rules["to_selector"]
+                insert_components = rules.get("insert_components", [])
+                line_class = rules.get("line_class", "CS150")
                 
-                # Find open ports (simplified implementation)
-                sources = self._find_open_ports(model, from_selector)
-                target = self._find_equipment(model, to_selector)
+                # Find source and target equipment
+                source_equipment = self._find_equipment(model, from_selector)
+                target_equipment = self._find_equipment(model, to_selector)
                 
-                for source in sources:
-                    # Create connection
+                if source_equipment and target_equipment:
+                    # Create single connection (not multiple)
+                    line_number = f"L-{source_equipment['tag']}-{target_equipment['tag']}"
+                    
                     connect_result = await self.dexpi_tools.handle_tool(
                         "dexpi_connect_components",
                         {
                             "model_id": model_id,
-                            "from_component": source["equipment"],
-                            "to_component": target["tag"],
-                            "pipe_class": rules.get("line_class", "CS150")
+                            "from_component": source_equipment["tag"],
+                            "to_component": target_equipment["tag"],
+                            "line_number": line_number,
+                            "pipe_class": line_class
                         }
                     )
                     
                     if is_success(connect_result):
-                        connections_made.append(f"{source['equipment']} -> {target['tag']}")
+                        connections_made.append(f"{source_equipment['tag']} -> {target_equipment['tag']}")
+                        
+                        # Get segment_id from connection result for inline insertion
+                        segment_id = connect_result.get("data", {}).get("segment_id")
+                        
+                        # Insert inline components if requested
+                        if segment_id and insert_components:
+                            for idx, component_type in enumerate(insert_components):
+                                position = (idx + 1) / (len(insert_components) + 1)  # Distribute evenly
+                                
+                                if component_type == "check_valve":
+                                    valve_tag = f"CHK-{line_number}"
+                                    insert_result = await self.dexpi_tools.handle_tool(
+                                        "dexpi_insert_valve_in_segment",
+                                        {
+                                            "model_id": model_id,
+                                            "segment_id": segment_id,
+                                            "valve_type": "CheckValve",
+                                            "tag_name": valve_tag,
+                                            "at_position": position
+                                        }
+                                    )
+                                    if is_success(insert_result):
+                                        components_inserted.append(valve_tag)
+                                
+                                elif component_type == "isolation_valve":
+                                    valve_tag = f"ISO-{line_number}"
+                                    insert_result = await self.dexpi_tools.handle_tool(
+                                        "dexpi_insert_valve_in_segment",
+                                        {
+                                            "model_id": model_id,
+                                            "segment_id": segment_id,
+                                            "valve_type": "GateValve",
+                                            "tag_name": valve_tag,
+                                            "at_position": position
+                                        }
+                                    )
+                                    if is_success(insert_result):
+                                        components_inserted.append(valve_tag)
             
             else:
                 return error_response(f"Strategy not implemented: {strategy}")
