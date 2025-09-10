@@ -228,7 +228,7 @@ class DexpiTools:
             ),
             Tool(
                 name="dexpi_add_valve",
-                description="Add valve to the P&ID model",
+                description="[DEPRECATED] Add valve to the P&ID model - Use dexpi_add_valve_between_components instead",
                 inputSchema={
                     "type": "object",
                     "properties": {
@@ -243,6 +243,27 @@ class DexpiTools:
                         "operation": {"type": "string", "description": "Operation mode (optional - uses pyDEXPI defaults)"}
                     },
                     "required": ["model_id", "valve_type", "tag_name"]
+                }
+            ),
+            Tool(
+                name="dexpi_add_valve_between_components",
+                description="Add a valve between two components by connecting them and inserting the valve",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "model_id": {"type": "string"},
+                        "from_component": {"type": "string", "description": "Tag of source component"},
+                        "to_component": {"type": "string", "description": "Tag of target component"},
+                        "valve_type": {
+                            "type": "string",
+                            "enum": valve_types  # Dynamic from introspector
+                        },
+                        "valve_tag": {"type": "string", "description": "Tag for the valve"},
+                        "line_number": {"type": "string", "description": "Optional line number (auto-generated if not provided)"},
+                        "pipe_class": {"type": "string", "default": "CS150"},
+                        "at_position": {"type": "number", "default": 0.5, "description": "Position along segment (0.0 to 1.0)"}
+                    },
+                    "required": ["model_id", "from_component", "to_component", "valve_type", "valve_tag"]
                 }
             ),
             Tool(
@@ -298,6 +319,7 @@ class DexpiTools:
             "dexpi_import_json": self._import_json,
             "dexpi_import_proteus_xml": self._import_proteus_xml,
             "dexpi_add_valve": self._add_valve,
+            "dexpi_add_valve_between_components": self._add_valve_between_components,
             "dexpi_insert_valve_in_segment": self._insert_valve_in_segment,
             # Removed duplicate handlers - now handled by SchemaTools and ValidationTools:
             # "dexpi_list_available_types": use schema_list_classes
@@ -985,7 +1007,21 @@ class DexpiTools:
             )
     
     async def _add_valve(self, args: dict) -> dict:
-        """Add valve to P&ID model."""
+        """
+        Add valve to P&ID model.
+        
+        DEPRECATED: This creates an isolated valve that cannot be connected properly.
+        Use 'dexpi_add_valve_between_components' or 'dexpi_insert_valve_in_segment' instead.
+        """
+        import warnings
+        warnings.warn(
+            "dexpi_add_valve is deprecated. Valves cannot be connected as standalone components. "
+            "Use 'dexpi_add_valve_between_components' to add a valve between two components, "
+            "or connect components first then use 'dexpi_insert_valve_in_segment'.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        
         model_id = args["model_id"]
         if model_id not in self.models:
             raise ValueError(f"Model {model_id} not found")
@@ -1067,6 +1103,60 @@ class DexpiTools:
             "tag_name": tag_name,
             "model_id": model_id,
             "operation": operation
+        })
+    
+    async def _add_valve_between_components(self, args: dict) -> dict:
+        """Add a valve between two components by connecting them first, then inserting the valve."""
+        model_id = args["model_id"]
+        if model_id not in self.models:
+            raise ValueError(f"Model {model_id} not found")
+        
+        from_component = args["from_component"]
+        to_component = args["to_component"]
+        valve_type = args["valve_type"]
+        valve_tag = args["valve_tag"]
+        line_number = args.get("line_number", f"{from_component}_to_{to_component}")
+        pipe_class = args.get("pipe_class", "CS150")
+        at_position = args.get("at_position", 0.5)  # Position along the segment for valve
+        
+        # Step 1: Connect the two components first to create a segment
+        connect_result = await self._connect_components({
+            "model_id": model_id,
+            "from_component": from_component,
+            "to_component": to_component,
+            "line_number": line_number,
+            "pipe_class": pipe_class
+        })
+        
+        if not connect_result.get("ok"):
+            return error_response(f"Failed to connect components: {connect_result.get('error', 'Unknown error')}")
+        
+        # Step 2: Get the segment_id from the connection
+        segment_id = connect_result.get("data", {}).get("segment_id")
+        if not segment_id:
+            return error_response("Failed to get segment_id from connection")
+        
+        # Step 3: Insert the valve into the created segment
+        insert_result = await self._insert_valve_in_segment({
+            "model_id": model_id,
+            "segment_id": segment_id,
+            "valve_type": valve_type,
+            "tag_name": valve_tag,
+            "at_position": at_position
+        })
+        
+        if not insert_result.get("ok"):
+            return error_response(f"Failed to insert valve: {insert_result.get('error', 'Unknown error')}")
+        
+        return success_response({
+            "from_component": from_component,
+            "to_component": to_component,
+            "valve_tag": valve_tag,
+            "valve_type": valve_type,
+            "line_number": line_number,
+            "segment_id": segment_id,
+            "model_id": model_id,
+            "message": f"Successfully connected {from_component} to {to_component} with {valve_tag} valve"
         })
     
     async def _insert_valve_in_segment(self, args: dict) -> dict:
