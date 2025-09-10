@@ -43,20 +43,41 @@ This MCP (Model Context Protocol) server provides LLM-accessible tools for engin
 - **Visualization Dashboard** - Web-based rendering of data models using Cytoscape.js
 - **GraphML Export** - Standardized graph format for machine learning pipelines
 
-### MCP Tools Available (50 Total - Consolidating to 12)
+### Tool Consolidation Strategy (v0.4.0)
 
-**New in v0.3.0:** Batch tools that reduce LLM calls from 50+ to 1-3:
-- **model_batch_apply** - Execute multiple operations atomically
-- **rules_apply** - Structured validation for LLMs  
-- **graph_connect** - Autowiring with inline valve insertion
+**Current Status:** Phased consolidation to reduce 50+ tools to ~12 high-value batch operations
 
-After testing and validation, legacy tools will be deprecated in favor of the consolidated set:
+#### Phase 1 (Current)
+- ✅ Batch tools available and tested
+- ✅ Legacy tools marked as deprecated where appropriate  
+- ✅ Migration guides provided
+- All tools remain available for backward compatibility
+
+#### Consolidation Tools (Recommended)
+- **model_batch_apply** - Execute multiple operations atomically (reduces 50 calls to 1)
+- **rules_apply** - Structured validation with LLM-friendly output
+- **graph_connect** - Smart autowiring with inline component insertion
+
+#### Phase 2 (Next)
+- Add telemetry to track tool usage patterns
+- Identify heavily-used deprecated tools
+- Gather user feedback on batch tool experience
+
+#### Phase 3 (Future)
+- Remove unused deprecated tools
+- Keep heavily-used ones with stronger warnings
+- Auto-migration in batch tools where possible
+
+#### Phase 4 (Final)
+- Full removal of subsumed tools
+- Final consolidated tool set (~12 tools)
 
 #### DEXPI P&ID Tools (14 tools)
 - `dexpi_create_pid` - Initialize P&ID with ISO 15926 compliant metadata
 - `dexpi_add_equipment` - Add equipment from 159 available types (dynamically discovered from pyDEXPI)
 - `dexpi_add_piping` - Create piping segments with material specifications
-- `dexpi_add_valve` - Add valves from 22 available types including safety and control valves
+- `dexpi_add_valve` - **[DEPRECATED]** Use `dexpi_add_valve_between_components` instead
+- `dexpi_add_valve_between_components` - **[NEW]** Add valve between two components with proper connectivity
 - `dexpi_insert_valve_in_segment` - Insert valve inline within existing piping segment
 - `dexpi_add_instrumentation` - Add instrumentation from 33 available types with signal support
 - `dexpi_add_control_loop` - Create complete control loops with signal generating, control, and actuating functions
@@ -249,50 +270,68 @@ engineering-mcp-server/
 └── README.md                # This file
 ```
 
-## Example: Creating a P&ID
+## Migration Guide: Valve Connections
+
+### Old Workflow (Deprecated)
+```python
+# This creates an isolated valve that CANNOT be connected
+dexpi_add_valve(model_id, valve_type="GateValve", tag_name="V-101")
+dexpi_connect_components(from="P-101", to="V-101")  # FAILS!
+```
+
+### New Workflow (Recommended)
+```python
+# Option 1: Add valve between components directly
+dexpi_add_valve_between_components(
+    model_id=model_id,
+    from_component="P-101",
+    to_component="HX-101",
+    valve_type="GateValve",
+    valve_tag="V-101"
+)
+
+# Option 2: Connect first, then insert valve
+connection = dexpi_connect_components(from="P-101", to="HX-101")
+dexpi_insert_valve_in_segment(
+    segment_id=connection["segment_id"],
+    valve_type="GateValve",
+    tag_name="V-101"
+)
+```
+
+## Example: Creating a P&ID with Batch Tools
 
 ```python
-# The LLM can execute these through MCP:
+# Old way: 5+ individual calls
+model_id = dexpi_create_pid(project_name="Plant", drawing_number="PID-001")
+dexpi_add_equipment(model_id, "Tank", "TK-101")
+dexpi_add_equipment(model_id, "Pump", "P-101")
+dexpi_add_valve_between_components(model_id, "TK-101", "P-101", "GateValve", "V-101")
 
-# 1. Initialize project
-dexpi_init_project(
-    project_path="/tmp/plant_project",
-    project_name="Demo Plant"
-)
-
-# 2. Create P&ID
-model_id = dexpi_create_pid(
-    project_name="Demo Plant",
-    drawing_number="PID-001"
-)
-
-# 3. Add equipment
-dexpi_add_equipment(
+# New way: Single batch call
+model_batch_apply(
     model_id=model_id,
-    equipment_type="Tank",
-    tag_name="TK-101"
+    operations=[
+        {"tool": "dexpi_add_equipment", "params": {"equipment_type": "Tank", "tag_name": "TK-101"}},
+        {"tool": "dexpi_add_equipment", "params": {"equipment_type": "Pump", "tag_name": "P-101"}},
+        {"tool": "dexpi_add_valve_between_components", 
+         "params": {"from_component": "TK-101", "to_component": "P-101", 
+                   "valve_type": "GateValve", "valve_tag": "V-101"}}
+    ]
 )
+```
 
-dexpi_add_equipment(
-    model_id=model_id,
-    equipment_type="Pump",
-    tag_name="P-101"
-)
+## Visual Dashboard
 
-# 4. Connect with piping
-dexpi_connect_components(
-    model_id=model_id,
-    from_component="TK-101",
-    to_component="P-101",
-    line_number="100-PL-001"
-)
+The dashboard provides interactive visualization of your engineering drawings:
+- Pan, zoom, and rotate 3D views
+- Interactive node details on hover
+- Export to PNG/SVG
+- Real-time updates as models change
 
-# 5. Save to git
-dexpi_save_to_project(
-    model_id=model_id,
-    project_path="/tmp/plant_project",
-    model_name="main_pid"
-)
+Start the dashboard server:
+```bash
+python -m src.dashboard.server
 ```
 
 ## Example: Creating a PFD with SFILES
