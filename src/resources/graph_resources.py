@@ -243,10 +243,10 @@ class GraphResourceProvider:
         # Add model-specific metadata
         if resource_type == "dexpi" and model_id in self.dexpi_models:
             model = self.dexpi_models[model_id]
-            if model.metaData:
-                metadata["project_name"] = model.metaData.projectName
-                metadata["drawing_number"] = model.metaData.drawingNumber
-                metadata["revision"] = model.metaData.revision
+            if model.conceptualModel and model.conceptualModel.metaData:
+                metadata["project_name"] = model.conceptualModel.metaData.projectName
+                metadata["drawing_number"] = model.conceptualModel.metaData.drawingNumber
+                metadata["revision"] = model.conceptualModel.metaData.revision
         
         elif resource_type == "sfiles" and model_id in self.flowsheets:
             flowsheet = self.flowsheets[model_id]

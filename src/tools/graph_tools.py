@@ -350,9 +350,11 @@ class GraphTools:
             }
         
         if "efficiency" in metrics:
+            # Convert to undirected for efficiency calculations
+            undirected = graph.to_undirected()
             results["efficiency"] = {
-                "global_efficiency": nx.global_efficiency(graph),
-                "local_efficiency": nx.local_efficiency(graph)
+                "global_efficiency": nx.global_efficiency(undirected),
+                "local_efficiency": nx.local_efficiency(undirected)
             }
         
         return success_response(results)

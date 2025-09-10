@@ -315,14 +315,17 @@ class SearchTools:
         
         for fid, flowsheet in flowsheets_to_search.items():
             for node, data in flowsheet.state.nodes(data=True):
-                node_type = data.get('type', '').lower()
+                # SFILES uses 'unit_type' not 'type'
+                node_type = data.get('unit_type', '').lower()
                 
                 if include_subtypes:
-                    if component_type in node_type or node_type in component_type:
+                    # Only check if component_type is in node_type (not vice versa)
+                    # Also ensure node_type is not empty
+                    if node_type and component_type in node_type:
                         results.append({
                             "model_id": fid,
                             "node": node,
-                            "type": data.get('type', 'Unknown'),
+                            "type": data.get('unit_type', 'Unknown'),
                             "model_type": "sfiles"
                         })
                 else:
@@ -330,7 +333,7 @@ class SearchTools:
                         results.append({
                             "model_id": fid,
                             "node": node,
-                            "type": data.get('type', 'Unknown'),
+                            "type": data.get('unit_type', 'Unknown'),
                             "model_type": "sfiles"
                         })
         
@@ -640,7 +643,7 @@ class SearchTools:
                     results.append({
                         "node": node,
                         "tag": tag,
-                        "type": data.get('type', 'Unknown'),
+                        "type": data.get('unit_type', 'Unknown'),
                         "model_type": "sfiles",
                         "data": dict(data)
                     })
@@ -799,7 +802,8 @@ class SearchTools:
         if group_by == "type":
             type_counts = {}
             for node, data in graph.nodes(data=True):
-                type_name = data.get('type', 'Unknown')
+                # SFILES uses 'unit_type' not 'type'
+                type_name = data.get('unit_type', 'Unknown')
                 type_counts[type_name] = type_counts.get(type_name, 0) + 1
             stats["by_type"] = type_counts
         

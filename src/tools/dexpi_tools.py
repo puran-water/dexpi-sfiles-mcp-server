@@ -332,8 +332,9 @@ class DexpiTools:
             description=args.get("description", "")
         )
         
-        # Create empty DEXPI model
-        model = DexpiModel(metaData=metadata)
+        # Create empty DEXPI model and ConceptualModel with metadata
+        model = DexpiModel()
+        model.conceptualModel = ConceptualModel(metaData=metadata)
         
         # Store model
         self.models[model_id] = model
@@ -532,14 +533,13 @@ class DexpiTools:
         
         model.conceptualModel.processInstrumentationFunctions.append(instrument)
         
-        return {
-            "status": "success",
+        return success_response({
             "instrument_type": instrument_type,
             "tag_name": tag_name,
             "connected_equipment": connected_equipment,
             "model_id": model_id,
             "signal_generating": instrument_type.endswith("Transmitter")
-        }
+        })
     
     async def _add_control_loop(self, args: dict) -> dict:
         """Add complete control loop with signal connections."""
@@ -589,22 +589,31 @@ class DexpiTools:
             actuatorType="ControlValve"
         )
         
-        # Create signal connections
+        # Create signal connections using object references (as per pyDEXPI design)
         # Measuring line from sensor to controller
         measuring_line = MeasuringLineFunction(
-            tagName=f"{sensor_tag}_to_{controller_tag}",
+            id=f"measuring_line_{sensor_tag}_to_{controller_tag}",
             source=signal_gen,
             target=controller
         )
         
         # Signal line from controller to valve
         signal_line = SignalLineFunction(
-            tagName=f"{controller_tag}_to_{control_valve_tag}",
+            id=f"signal_line_{controller_tag}_to_{control_valve_tag}",
             source=controller,
             target=actuator
         )
         
+        # Add to model
+        if not model.conceptualModel:
+            model.conceptualModel = ConceptualModel()
+        
+        # Initialize collections if needed
+        if not model.conceptualModel.processInstrumentationFunctions:
+            model.conceptualModel.processInstrumentationFunctions = []
+        
         # Create main instrumentation function for the loop
+        # All control components are contained within this function
         loop_function = ProcessInstrumentationFunction(
             tagName=loop_tag,
             instrumentationType="ControlLoop",
@@ -613,13 +622,6 @@ class DexpiTools:
             actuatingFunctions=[actuator],
             signalConveyingFunctions=[measuring_line, signal_line]
         )
-        
-        # Add to model
-        if not model.conceptualModel:
-            model.conceptualModel = ConceptualModel()
-        
-        if not model.conceptualModel.processInstrumentationFunctions:
-            model.conceptualModel.processInstrumentationFunctions = []
         
         model.conceptualModel.processInstrumentationFunctions.append(loop_function)
         
@@ -802,7 +804,7 @@ class DexpiTools:
         issues = []
         
         # Basic validation
-        if not model.metaData:
+        if not model.conceptualModel or not model.conceptualModel.metaData:
             issues.append("Missing metadata")
         
         if not model.conceptualModel:
@@ -884,15 +886,33 @@ class DexpiTools:
             f.write(json_content)
             temp_path = f.name
         
-        model = self.json_serializer.load(temp_path)
-        os.unlink(temp_path)
+        # JsonSerializer.load expects (directory, filename without extension)
+        temp_dir = os.path.dirname(temp_path)
+        temp_filename = os.path.basename(temp_path)
+        # Remove the .json extension for JsonSerializer
+        if temp_filename.endswith('.json'):
+            temp_filename = temp_filename[:-5]
+        
+        try:
+            model = self.json_serializer.load(temp_dir, temp_filename)
+        except (KeyError, Exception) as e:
+            # Handle missing references or other errors in JSON
+            logger.warning(f"Error loading JSON with JsonSerializer: {e}")
+            # Try to load with dict_to_model as fallback
+            import json
+            with open(temp_path, 'r') as f:
+                model_dict = json.load(f)
+            # Use pyDEXPI's dict_to_model method
+            model = self.json_serializer.dict_to_model(model_dict)
+        finally:
+            os.unlink(temp_path)
         
         # Store model
         self.models[model_id] = model
         
         return success_response({
             "model_id": model_id,
-            "project_name": model.metaData.projectData.projectName if model.metaData else "Unknown"
+            "project_name": model.conceptualModel.metaData.projectName if model.conceptualModel and model.conceptualModel.metaData else "Unknown"
         })
     
     async def _import_proteus_xml(self, args: dict) -> dict:
@@ -911,9 +931,9 @@ class DexpiTools:
             # Extract basic info from the loaded model
             project_name = "Unknown"
             drawing_number = "Unknown"
-            if model.metaData:
-                project_name = model.metaData.projectName or "Unknown"
-                drawing_number = model.metaData.drawingNumber or "Unknown"
+            if model.conceptualModel and model.conceptualModel.metaData:
+                project_name = model.conceptualModel.metaData.projectName or "Unknown"
+                drawing_number = model.conceptualModel.metaData.drawingNumber or "Unknown"
             
             # Count loaded elements
             equipment_count = 0
@@ -1025,13 +1045,12 @@ class DexpiTools:
         
         system.segments.append(segment)
         
-        return {
-            "status": "success",
+        return success_response({
             "valve_type": valve_type,
             "tag_name": tag_name,
             "model_id": model_id,
             "operation": operation
-        }
+        })
     
     async def _insert_valve_in_segment(self, args: dict) -> dict:
         """Insert valve inline within an existing piping segment using pyDEXPI's piping_toolkit."""
@@ -1389,17 +1408,6 @@ class DexpiTools:
     # - _load_from_project  
     # - _init_project
     # - _list_project_models
-        project_name = args["project_name"]
-        description = args.get("description", "")
-        
-        persistence = ProjectPersistence()
-        metadata = persistence.init_project(project_path, project_name, description)
-        
-        return {
-            "status": "success",
-            "project_path": project_path,
-            "metadata": metadata
-        }
     
     async def _list_project_models(self, args: dict) -> dict:
         """List all models in a project."""

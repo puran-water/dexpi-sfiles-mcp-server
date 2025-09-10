@@ -123,44 +123,98 @@ Created: {metadata['created']}
             "name": model_name,
             "type": "DEXPI P&ID",
             "created": datetime.now().isoformat(),
-            "project_name": model.metadata.projectData.projectName if hasattr(model, 'metadata') and model.metadata else None,
-            "drawing_number": model.metadata.drawingData.drawingNumber if hasattr(model, 'metadata') and model.metadata else None
+            "project_name": model.conceptualModel.metaData.projectName if model.conceptualModel and model.conceptualModel.metaData else None,
+            "drawing_number": model.conceptualModel.metaData.drawingNumber if model.conceptualModel and model.conceptualModel.metaData else None
         }
         canonical_json_dump(metadata, meta_path)
         
-        # Export GraphML for visualization
+        # Export GraphML (sanitized) and raster/vector images for human auditing
+        graphml_path = None
+        png_path = None
+        svg_path = None
         try:
-            from pydexpi.loaders import MLGraphLoader
-            loader = MLGraphLoader(plant_model=model)
-            graph = loader.dexpi_to_graph(model)
-            
-            # Clean None values for GraphML export
-            for node, attrs in graph.nodes(data=True):
-                for key, value in list(attrs.items()):
-                    if value is None:
-                        attrs[key] = ""
-            
-            for u, v, attrs in graph.edges(data=True):
-                for key, value in list(attrs.items()):
-                    if value is None:
-                        attrs[key] = ""
-            
+            # Use unified converter for GraphML (handles attribute sanitization)
+            from ..converters.graph_converter import UnifiedGraphConverter
+            converter = UnifiedGraphConverter()
+            graphml_content = converter.dexpi_to_graphml(model, include_msr=True)
             graphml_path = dexpi_dir / f"{model_name}.graphml"
-            nx.write_graphml(graph, str(graphml_path))
+            with open(graphml_path, "w", encoding="utf-8") as f:
+                f.write(graphml_content)
         except Exception as e:
-            logger.warning(f"GraphML export failed: {e}")
-            graphml_path = None
+            logger.warning(f"DEXPI GraphML export failed: {e}")
+
+        # Interactive HTML visualization with hover details
+        html_path = None
+        try:
+            from pydexpi.loaders.ml_graph_loader import MLGraphLoader
+            loader = MLGraphLoader(plant_model=model)
+            # Ensure graph is parsed
+            try:
+                loader.parse_dexpi_to_graph()
+            except Exception:
+                # Some MLGraphLoader versions support direct conversion
+                _ = loader.dexpi_to_graph(model)
+            
+            # Enhance node data with specifications for hover
+            for node_id in loader.plant_graph.nodes():
+                node_data = loader.plant_graph.nodes[node_id]
+                # The node already has 'dexpi_class' and other attributes
+                # We can enhance the hover information by building a better text
+                dexpi_class = node_data.get('dexpi_class', 'Unknown')
+                hover_text = f"<b>{node_id}</b><br>Type: {dexpi_class}<br>"
+                
+                # Add any additional attributes that aren't internal
+                for key, value in node_data.items():
+                    if key not in ['dexpi_class', 'id', 'pos'] and value is not None:
+                        hover_text += f"{key}: {value}<br>"
+                
+                # Store enhanced hover text
+                node_data['hover_text'] = hover_text
+            
+            # Generate interactive Plotly figure
+            fig = loader.draw_process_plotly()
+            
+            # Update figure to use our enhanced hover text
+            for trace in fig.data:
+                if hasattr(trace, 'marker') and trace.marker.size == 10:  # Node trace
+                    # Build hover text array matching node order
+                    hover_texts = []
+                    for node in loader.plant_graph.nodes():
+                        hover_texts.append(loader.plant_graph.nodes[node].get('hover_text', node))
+                    trace.hovertext = hover_texts
+                    trace.hoverinfo = 'text'
+            
+            # Save as self-contained HTML with export capabilities
+            html_path = dexpi_dir / f"{model_name}.html"
+            fig.write_html(
+                str(html_path),
+                include_plotlyjs='inline',  # Fully self-contained
+                config={
+                    'displayModeBar': True,
+                    'toImageButtonOptions': {
+                        'format': 'svg',  # Can be png, svg, jpeg
+                        'filename': model_name,
+                        'height': 800,
+                        'width': 1200,
+                        'scale': 1
+                    }
+                }
+            )
+            logger.info(f"DEXPI HTML visualization saved: {html_path}")
+        except Exception as e:
+            logger.warning(f"DEXPI HTML export failed: {e}")
         
         # Git commit
         if commit_message is None:
             commit_message = f"Save DEXPI model: {model_name}"
         
-        self._git_add_commit(path, [json_path, meta_path, graphml_path], commit_message)
-        
+        self._git_add_commit(path, [json_path, meta_path, graphml_path, html_path], commit_message)
+
         return {
             "json": str(json_path),
             "meta": str(meta_path),
-            "graphml": str(graphml_path) if graphml_path else None
+            "graphml": str(graphml_path) if graphml_path else None,
+            "html": str(html_path) if html_path else None
         }
     
     def load_dexpi(self, project_path: str, model_name: str) -> Any:
@@ -177,7 +231,17 @@ Created: {metadata['created']}
         dexpi_dir = path / "dexpi"
         
         # Load model from JSON
-        model = self.json_serializer.load(str(dexpi_dir), model_name)
+        try:
+            model = self.json_serializer.load(str(dexpi_dir), model_name)
+        except (KeyError, Exception) as e:
+            # Handle missing references - try loading raw JSON and converting
+            import json
+            json_path = dexpi_dir / f"{model_name}.json"
+            with open(json_path, 'r') as f:
+                model_dict = json.load(f)
+            # Use dict_to_model as fallback
+            model = self.json_serializer.dict_to_model(model_dict)
+            logger.warning(f"Loaded model with missing reference workaround: {e}")
         return model
     
     def save_sfiles(
@@ -235,16 +299,172 @@ Created: {metadata['created']}
         }
         canonical_json_dump(metadata, meta_path)
         
+        # Export GraphML and PNG/SVG for human auditing
+        graphml_path = None
+        png_path = None
+        svg_path = None
+        try:
+            from ..converters.graph_converter import UnifiedGraphConverter
+            converter = UnifiedGraphConverter()
+            graphml_content = converter.sfiles_to_graphml(flowsheet)
+            graphml_path = sfiles_dir / f"{flowsheet_name}.graphml"
+            with open(graphml_path, "w", encoding="utf-8") as f:
+                f.write(graphml_content)
+        except Exception as e:
+            logger.warning(f"SFILES GraphML export failed: {e}")
+
+        # SVG via pyflowsheet renderer (if available)
+        try:
+            # visualize_flowsheet expects a path without extension and appends .svg
+            pfd_base = sfiles_dir / flowsheet_name
+            flowsheet.visualize_flowsheet(pfd_path=str(pfd_base))
+            candidate_svg = pfd_base.with_suffix(".svg")
+            if candidate_svg.exists():
+                svg_path = candidate_svg
+        except Exception as e:
+            logger.warning(f"SFILES SVG export failed: {e}")
+
+        # Interactive HTML visualization with hover details
+        html_path = None
+        try:
+            import plotly.graph_objects as go
+            import networkx as nx
+            
+            # Use hierarchical layout for better flow representation
+            pos = nx.spring_layout(flowsheet.state, seed=42, k=2)
+            
+            # Build edge traces with stream hover data
+            edge_traces = []
+            for edge in flowsheet.state.edges(data=True):
+                x0, y0 = pos[edge[0]]
+                x1, y1 = pos[edge[1]]
+                edge_data = edge[2]
+                
+                # Create hover text for streams
+                hover_text = f"<b>Stream: {edge_data.get('stream_name', 'Unnamed')}</b><br>"
+                if 'flow' in edge_data:
+                    hover_text += f"Flow: {edge_data['flow']}<br>"
+                if 'temperature' in edge_data:
+                    hover_text += f"Temperature: {edge_data['temperature']}<br>"
+                if 'pressure' in edge_data:
+                    hover_text += f"Pressure: {edge_data['pressure']}<br>"
+                # Add any other stream properties
+                for key, value in edge_data.items():
+                    if key not in ['stream_name', 'flow', 'temperature', 'pressure', 'tags_he', 'tags_col'] and value is not None:
+                        hover_text += f"{key.replace('_', ' ').title()}: {value}<br>"
+                
+                edge_traces.append(go.Scatter(
+                    x=[x0, x1, None],
+                    y=[y0, y1, None],
+                    mode='lines',
+                    line=dict(width=2, color='#888'),
+                    hoverinfo='text',
+                    hovertext=hover_text,
+                    showlegend=False
+                ))
+            
+            # Build node trace with equipment hover data
+            node_x = []
+            node_y = []
+            node_text = []
+            node_hover = []
+            node_colors = []
+            
+            # Define colors for different unit types
+            unit_type_colors = {
+                'reactor': '#ff7f0e',  # Orange
+                'hex': '#2ca02c',       # Green
+                'distcol': '#1f77b4',   # Blue
+                'pump': '#9467bd',      # Purple
+                'compressor': '#8c564b', # Brown
+                'vessel': '#e377c2',    # Pink
+                'mixer': '#7f7f7f',     # Gray
+                'splitter': '#bcbd22',  # Olive
+                'default': '#17becf'    # Cyan
+            }
+            
+            for node in flowsheet.state.nodes(data=True):
+                x, y = pos[node[0]]
+                node_x.append(x)
+                node_y.append(y)
+                node_text.append(node[0])  # Tag/name
+                
+                # Create hover text for units
+                node_data = node[1]
+                hover = f"<b>{node[0]}</b><br>"
+                unit_type = node_data.get('unit_type', 'Unknown')
+                hover += f"Type: {unit_type}<br>"
+                
+                # Add all specifications
+                for key, value in node_data.items():
+                    if key not in ['unit_type', 'pos', 'id'] and value is not None:
+                        hover += f"{key.replace('_', ' ').title()}: {value}<br>"
+                
+                node_hover.append(hover)
+                
+                # Assign color based on unit type
+                node_colors.append(unit_type_colors.get(unit_type, unit_type_colors['default']))
+            
+            node_trace = go.Scatter(
+                x=node_x,
+                y=node_y,
+                mode='markers+text',
+                text=node_text,
+                textposition="top center",
+                hoverinfo='text',
+                hovertext=node_hover,
+                marker=dict(
+                    size=20,
+                    color=node_colors,
+                    line=dict(color='darkblue', width=2)
+                )
+            )
+            
+            # Create figure
+            fig = go.Figure(
+                data=edge_traces + [node_trace],
+                layout=go.Layout(
+                    title=f"Flowsheet: {flowsheet_name}",
+                    showlegend=False,
+                    hovermode='closest',
+                    xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                    yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                    plot_bgcolor='white'
+                )
+            )
+            
+            # Save as self-contained HTML
+            html_path = sfiles_dir / f"{flowsheet_name}.html"
+            fig.write_html(
+                str(html_path),
+                include_plotlyjs='inline',
+                config={
+                    'displayModeBar': True,
+                    'toImageButtonOptions': {
+                        'format': 'png',
+                        'filename': flowsheet_name,
+                        'height': 600,
+                        'width': 800
+                    }
+                }
+            )
+            logger.info(f"SFILES HTML visualization saved: {html_path}")
+        except Exception as e:
+            logger.warning(f"SFILES HTML export failed: {e}")
+
         # Git commit
         if commit_message is None:
             commit_message = f"Save SFILES flowsheet: {flowsheet_name}"
-        
-        self._git_add_commit(path, [state_path, sfiles_path, meta_path], commit_message)
-        
+
+        self._git_add_commit(path, [state_path, sfiles_path, meta_path, graphml_path, svg_path, html_path], commit_message)
+
         return {
             "json": str(state_path),
             "sfiles": str(sfiles_path) if sfiles_path else None,
-            "meta": str(meta_path)
+            "meta": str(meta_path),
+            "graphml": str(graphml_path) if graphml_path else None,
+            "svg": str(svg_path) if svg_path else None,  # Keep pyflowsheet SVG
+            "html": str(html_path) if html_path else None
         }
     
     def load_sfiles(self, project_path: str, flowsheet_name: str) -> Flowsheet:
