@@ -1,11 +1,17 @@
 {
   "mcpServers": {
     "engineering-mcp": {
-      "command": "python",
-      "args": ["-m", "src.server"],
-      "env": {
-        "PYTHONPATH": "${workspaceFolder}"
-      }
+      "type": "stdio",
+      "command": "uv",
+      "args": [
+        "--directory",
+        "/home/hvksh/processeng/engineering-mcp-server",
+        "run",
+        "python",
+        "-m",
+        "src.server"
+      ],
+      "description": "Engineering MCP Server - LLM-assisted generation of engineering drawings (BFD/PFD/P&ID)"
     }
   }
 }

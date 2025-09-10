@@ -463,17 +463,15 @@ class SfilesTools:
         
         flowsheet = self.flowsheets[flowsheet_id]
         
-        # Convert to GraphML
-        from io import StringIO
-        graphml_buffer = StringIO()
-        nx.write_graphml(flowsheet.state, graphml_buffer)
-        graphml_content = graphml_buffer.getvalue()
+        # Use UnifiedGraphConverter which sanitizes dict values
+        from ..converters.graph_converter import UnifiedGraphConverter
+        converter = UnifiedGraphConverter()
+        graphml_content = converter.sfiles_to_graphml(flowsheet)
         
-        return {
-            "status": "success",
+        return success_response({
             "flowsheet_id": flowsheet_id,
             "graphml": graphml_content
-        }
+        })
     
     async def _add_control(self, args: dict) -> dict:
         """Add control instrumentation using signal edges.
@@ -540,8 +538,7 @@ class SfilesTools:
                 signal_type="actuation"
             )
         
-        return {
-            "status": "success",
+        return success_response({
             "flowsheet_id": flowsheet_id,
             "control_name": unique_name,
             "control_type": control_type,
@@ -549,7 +546,7 @@ class SfilesTools:
             "signal_to": signal_to,
             "num_units": flowsheet.state.number_of_nodes(),
             "num_edges": flowsheet.state.number_of_edges()
-        }
+        })
     
     async def _validate_topology(self, args: dict) -> dict:
         """Validate flowsheet topology."""
@@ -728,31 +725,36 @@ class SfilesTools:
             # Create flowsheet and convert to canonical
             flowsheet = Flowsheet()
             flowsheet.create_from_sfiles(sfiles_string)
-            result = flowsheet.convert_to_sfiles(version=version, canonical=True)
             
-            # Handle different return types
-            if isinstance(result, tuple) and len(result) >= 2:
-                sfiles_list, canonical_sfiles = result
-            elif isinstance(result, str):
-                canonical_sfiles = result
-                sfiles_list = flowsheet.SFILES_parser(sfiles_string)
-            else:
-                raise ValueError(f"Unexpected result from convert_to_sfiles")
+            # Check if the state was populated
+            if not flowsheet.state or flowsheet.state.number_of_nodes() == 0:
+                logger.warning(f"Flowsheet state is empty after create_from_sfiles. Input: {sfiles_string}")
+                return error_response(f"Failed to parse SFILES string - no nodes created", code="CANONICAL_ERROR")
             
-            return {
-                "status": "success",
+            # convert_to_sfiles doesn't return anything - it sets flowsheet.sfiles
+            flowsheet.convert_to_sfiles(version=version, canonical=True)
+            
+            # Access the canonical SFILES string from the flowsheet attribute
+            canonical_sfiles = flowsheet.sfiles
+            
+            if not canonical_sfiles:
+                # Log more details for debugging
+                logger.warning(f"Failed to generate canonical SFILES. State nodes: {flowsheet.state.number_of_nodes()}, edges: {flowsheet.state.number_of_edges()}")
+                return error_response("Failed to generate canonical SFILES string", code="CANONICAL_ERROR")
+            
+            # Get the parsed list for element count
+            sfiles_list = getattr(flowsheet, 'sfiles_list', [])
+            
+            return success_response({
                 "original": sfiles_string,
                 "canonical": canonical_sfiles,
                 "version": version,
                 "num_elements": len(sfiles_list) if sfiles_list else 0
-            }
+            })
             
         except Exception as e:
-            return {
-                "status": "error",
-                "error": str(e),
-                "original": sfiles_string
-            }
+            logger.error(f"Error in canonical_form: {e}")
+            return error_response(f"Failed to generate canonical form: {str(e)}", code="CANONICAL_ERROR")
     
     async def _pattern_helper(self, args: dict) -> dict:
         """Provide SFILES regex patterns and examples."""
