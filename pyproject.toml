@@ -23,6 +23,12 @@ dependencies = [
     "numpy",
     "pandas",
     "lxml",
+    "pyflowsheet==0.2.2",
+    "pathfinding==1.0.1",
+    "plotly>=6.0",
+    "svgwrite>=1.4",
+    "fuzzywuzzy>=0.18.0",
+    "matplotlib>=3.0",
 ]
 
 [project.optional-dependencies]

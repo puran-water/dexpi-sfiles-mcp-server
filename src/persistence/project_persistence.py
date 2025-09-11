@@ -313,16 +313,56 @@ Created: {metadata['created']}
         except Exception as e:
             logger.warning(f"SFILES GraphML export failed: {e}")
 
-        # SVG via pyflowsheet renderer (if available)
+        # SVG via enhanced pyflowsheet renderer with instruments
         try:
-            # visualize_flowsheet expects a path without extension and appends .svg
+            from ..visualization.enhanced_visualization import visualize_flowsheet_with_instruments
+            
+            # Use enhanced visualization if available
             pfd_base = sfiles_dir / flowsheet_name
-            flowsheet.visualize_flowsheet(pfd_path=str(pfd_base))
-            candidate_svg = pfd_base.with_suffix(".svg")
-            if candidate_svg.exists():
-                svg_path = candidate_svg
+            svg_path = visualize_flowsheet_with_instruments(
+                flowsheet,
+                pfd_path=str(pfd_base),
+                pfd_block=False,  # Prefer detailed unit symbols
+                add_positions=True
+            )
+
+            # If enhanced render with symbols failed, retry with block diagram
+            if not svg_path or not Path(svg_path).exists():
+                logger.info("Enhanced SVG (symbols) missing; retrying with block diagram mode")
+                svg_path = visualize_flowsheet_with_instruments(
+                    flowsheet,
+                    pfd_path=str(pfd_base),
+                    pfd_block=True,   # Robust fallback: standard In/Out ports
+                    add_positions=True
+                )
+
+            if not svg_path or not Path(svg_path).exists():
+                # Fallback to original method
+                flowsheet.visualize_flowsheet(pfd_path=str(pfd_base))
+                candidate_svg = pfd_base.with_suffix(".svg")
+                if candidate_svg.exists():
+                    svg_path = candidate_svg
+        except ImportError:
+            # Enhanced visualization not available, use original
+            try:
+                pfd_base = sfiles_dir / flowsheet_name
+                flowsheet.visualize_flowsheet(pfd_path=str(pfd_base))
+                candidate_svg = pfd_base.with_suffix(".svg")
+                if candidate_svg.exists():
+                    svg_path = candidate_svg
+            except Exception as e:
+                logger.warning(f"SFILES SVG export failed: {e}")
         except Exception as e:
-            logger.warning(f"SFILES SVG export failed: {e}")
+            logger.warning(f"Enhanced SVG export failed: {e}, falling back to original")
+            # Try fallback to original visualization
+            try:
+                pfd_base = sfiles_dir / flowsheet_name
+                flowsheet.visualize_flowsheet(pfd_path=str(pfd_base))
+                candidate_svg = pfd_base.with_suffix(".svg")
+                if candidate_svg.exists():
+                    svg_path = candidate_svg
+            except Exception as e2:
+                logger.warning(f"Original SVG export also failed: {e2}")
 
         # Interactive HTML visualization with hover details
         html_path = None

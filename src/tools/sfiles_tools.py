@@ -163,14 +163,30 @@ class SfilesTools:
                         "flowsheet_id": {"type": "string"},
                         "control_type": {
                             "type": "string",
-                            "enum": ["FC", "LC", "TC", "PC"],
-                            "description": "Control type (Flow, Level, Temperature, Pressure)"
+                            "enum": ["FC", "LC", "TC", "PC", "DO", "ORP", "pH"],
+                            "description": "Control type (Flow, Level, Temperature, Pressure, Dissolved Oxygen, ORP, pH)"
                         },
                         "control_name": {"type": "string"},
                         "connected_unit": {"type": "string"},
                         "signal_to": {
                             "type": "string",
                             "description": "Optional target for control signal"
+                        },
+                        "attachment_target": {
+                            "type": "object",
+                            "description": "Optional rendering hint for control placement",
+                            "properties": {
+                                "type": {
+                                    "type": "string",
+                                    "enum": ["unit", "stream"],
+                                    "description": "Whether control is attached to a unit or stream"
+                                },
+                                "ref": {
+                                    "type": "string",
+                                    "description": "Unit ID or stream identifier for attachment"
+                                }
+                            },
+                            "required": ["type", "ref"]
                         }
                     },
                     "required": ["flowsheet_id", "control_type", "control_name", "connected_unit"]
@@ -478,6 +494,7 @@ class SfilesTools:
         
         Controls are added as separate units with signal connections
         to produce proper canonical SFILES with signal cycles.
+        Attachment metadata is stored for render-time placement only.
         """
         flowsheet_id = args["flowsheet_id"]
         if flowsheet_id not in self.flowsheets:
@@ -488,6 +505,7 @@ class SfilesTools:
         control_name = args["control_name"]
         connected_unit = args["connected_unit"]
         signal_to = args.get("signal_to")
+        attachment_target = args.get("attachment_target")
         
         # Format control name according to SFILES2 convention
         # Use (C) as the control unit name for proper signal cycle notation
@@ -509,11 +527,25 @@ class SfilesTools:
         if connected_unit not in flowsheet.state.nodes:
             raise ValueError(f"Connected unit {connected_unit} not found in flowsheet")
         
-        # Add control as a unit
+        # Validate attachment_target if provided
+        if attachment_target:
+            att_type = attachment_target.get("type")
+            att_ref = attachment_target.get("ref")
+            
+            if att_type == "unit":
+                if att_ref not in flowsheet.state.nodes:
+                    raise ValueError(f"Attachment unit {att_ref} not found in flowsheet")
+            elif att_type == "stream":
+                # Stream can be referenced by name or as edge tuple
+                # We'll store it as-is for render-time resolution
+                pass
+        
+        # Add control as a unit with attachment metadata
         flowsheet.add_unit(
             unique_name=unique_name,
             unit_type="Control",
-            control_type=control_type
+            control_type=control_type,
+            attachment_target=attachment_target  # Store for render-time use
         )
         
         # Add signal edge from connected unit to control
@@ -544,6 +576,7 @@ class SfilesTools:
             "control_type": control_type,
             "connected_unit": connected_unit,
             "signal_to": signal_to,
+            "attachment_target": attachment_target,
             "num_units": flowsheet.state.number_of_nodes(),
             "num_edges": flowsheet.state.number_of_edges()
         })

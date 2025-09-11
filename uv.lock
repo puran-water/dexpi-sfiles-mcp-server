@@ -493,16 +493,22 @@ name = "engineering-mcp-server"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "fuzzywuzzy" },
     { name = "lxml" },
+    { name = "matplotlib" },
     { name = "mcp" },
     { name = "networkx", version = "3.4.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "networkx", version = "3.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "numpy", version = "2.3.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "pandas" },
+    { name = "pathfinding" },
+    { name = "plotly" },
     { name = "pydantic" },
     { name = "pydexpi" },
+    { name = "pyflowsheet" },
     { name = "sfiles2" },
+    { name = "svgwrite" },
 ]
 
 [package.optional-dependencies]
@@ -518,19 +524,25 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "black", marker = "extra == 'dev'" },
+    { name = "fuzzywuzzy", specifier = ">=0.18.0" },
     { name = "lxml" },
+    { name = "matplotlib", specifier = ">=3.0" },
     { name = "mcp", specifier = ">=0.9.0" },
     { name = "mypy", marker = "extra == 'dev'" },
     { name = "networkx", specifier = ">=3.0" },
     { name = "numpy" },
     { name = "pandas" },
+    { name = "pathfinding", specifier = "==1.0.1" },
+    { name = "plotly", specifier = ">=6.0" },
     { name = "pydantic", specifier = ">=2.0" },
     { name = "pydexpi", git = "https://github.com/process-intelligence-research/pyDEXPI.git" },
+    { name = "pyflowsheet", specifier = "==0.2.2" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.0" },
     { name = "pytest-asyncio", marker = "extra == 'dev'" },
     { name = "pytest-cov", marker = "extra == 'dev'" },
     { name = "ruff", marker = "extra == 'dev'" },
     { name = "sfiles2", git = "https://github.com/process-intelligence-research/SFILES2.git" },
+    { name = "svgwrite", specifier = ">=1.4" },
 ]
 provides-extras = ["dev"]
 
@@ -619,6 +631,15 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/98/3d/df77907e5be88adcca93cc2cee00646d039da220164be12bee028401e1cf/fonttools-4.59.2-cp314-cp314t-win32.whl", hash = "sha256:59d85088e29fa7a8f87d19e97a1beae2a35821ee48d8ef6d2c4f965f26cb9f8a", size = 2269719, upload-time = "2025-08-27T16:40:07.553Z" },
     { url = "https://files.pythonhosted.org/packages/2d/a0/d4c4bc5b50275449a9a908283b567caa032a94505fe1976e17f994faa6be/fonttools-4.59.2-cp314-cp314t-win_amd64.whl", hash = "sha256:7ad5d8d8cc9e43cb438b3eb4a0094dd6d4088daa767b0a24d52529361fd4c199", size = 2333169, upload-time = "2025-08-27T16:40:09.656Z" },
     { url = "https://files.pythonhosted.org/packages/65/a4/d2f7be3c86708912c02571db0b550121caab8cd88a3c0aacb9cfa15ea66e/fonttools-4.59.2-py3-none-any.whl", hash = "sha256:8bd0f759020e87bb5d323e6283914d9bf4ae35a7307dafb2cbd1e379e720ad37", size = 1132315, upload-time = "2025-08-27T16:40:28.984Z" },
+]
+
+[[package]]
+name = "fuzzywuzzy"
+version = "0.18.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/11/4b/0a002eea91be6048a2b5d53c5f1b4dafd57ba2e36eea961d05086d7c28ce/fuzzywuzzy-0.18.0.tar.gz", hash = "sha256:45016e92264780e58972dca1b3d939ac864b78437422beecebb3095f8efd00e8", size = 28888, upload-time = "2020-02-13T21:06:27.054Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/43/ff/74f23998ad2f93b945c0309f825be92e04e0348e062026998b5eefef4c33/fuzzywuzzy-0.18.0-py2.py3-none-any.whl", hash = "sha256:928244b28db720d1e0ee7587acf660ea49d7e4c632569cad4f1cd7e68a5f0993", size = 18272, upload-time = "2020-02-13T21:06:25.209Z" },
 ]
 
 [[package]]
@@ -1495,11 +1516,11 @@ wheels = [
 
 [[package]]
 name = "pathfinding"
-version = "1.0.17"
+version = "1.0.1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/11/9e/3adfd01dc368112a72709458055cc7c1f236f0a0bbf01e36c22f4d1564e6/pathfinding-1.0.17.tar.gz", hash = "sha256:73ad00daf31e6b71080774e7aa3f68c88524cf4604f2769ead3bfef428cbb5f1", size = 22411, upload-time = "2025-05-03T08:23:41.364Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/1d/a5/6c83a2c79538a4e767ec0c82f431602a5545459e8bfd57f1cd1268cb4fee/pathfinding-1.0.1.tar.gz", hash = "sha256:e735f91173da99b3e0963c315984d5cd616563998de9f58706b0092930fb0675", size = 15692, upload-time = "2021-01-21T11:53:46.051Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/01/69/ba483e0a7716e388cd39f4a5870369cbea966fed8fe1dbcc40bed7b6e083/pathfinding-1.0.17-py3-none-any.whl", hash = "sha256:4ed4d9cd51b470dacf7a5bf21555c93b27e5536836d17bf7d4c95c0fadce1fca", size = 23283, upload-time = "2025-05-03T08:23:40.013Z" },
+    { url = "https://files.pythonhosted.org/packages/37/83/1c9a87fbfe53eed24f8003a0f5fc70a6d3958e723a773e35f5ee8ee5399f/pathfinding-1.0.1-py3-none-any.whl", hash = "sha256:911a5f8b8fbbdb8c4c8b804501b3a4107595d07663f496f7f3bd9ec87513196a", size = 19758, upload-time = "2021-01-21T11:53:42.832Z" },
 ]
 
 [[package]]
