@@ -49,8 +49,9 @@ class ProjectPersistence:
         path.mkdir(parents=True, exist_ok=True)
         
         # Create standard directories
-        (path / "dexpi").mkdir(exist_ok=True)
-        (path / "sfiles").mkdir(exist_ok=True)
+        (path / "bfd").mkdir(exist_ok=True)   # Block Flow Diagrams
+        (path / "pfd").mkdir(exist_ok=True)   # Process Flow Diagrams
+        (path / "pid").mkdir(exist_ok=True)   # P&ID (DEXPI)
         
         # Create project metadata
         metadata = {
@@ -68,8 +69,9 @@ class ProjectPersistence:
 {description}
 
 ## Structure
-- `dexpi/` - P&ID models in DEXPI format
-- `sfiles/` - BFD/PFD models in SFILES format
+- `bfd/` - Block Flow Diagrams (SFILES format, BlackBox visualization)
+- `pfd/` - Process Flow Diagrams (SFILES format, GraphML visualization)
+- `pid/` - Piping & Instrumentation Diagrams (DEXPI format)
 - `project.json` - Project metadata
 
 Created: {metadata['created']}
@@ -110,15 +112,15 @@ Created: {metadata['created']}
             Dict with paths to saved files
         """
         path = Path(project_path)
-        dexpi_dir = path / "dexpi"
-        dexpi_dir.mkdir(exist_ok=True)
+        pid_dir = path / "pid"
+        pid_dir.mkdir(exist_ok=True)
         
         # Save model as JSON
-        json_path = dexpi_dir / f"{model_name}.json"
-        self.json_serializer.save(model, str(dexpi_dir), model_name)
+        json_path = pid_dir / f"{model_name}.json"
+        self.json_serializer.save(model, str(pid_dir), model_name)
         
         # Save metadata
-        meta_path = dexpi_dir / f"{model_name}.meta.json"
+        meta_path = pid_dir / f"{model_name}.meta.json"
         metadata = {
             "name": model_name,
             "type": "DEXPI P&ID",
@@ -131,13 +133,12 @@ Created: {metadata['created']}
         # Export GraphML (sanitized) and raster/vector images for human auditing
         graphml_path = None
         png_path = None
-        svg_path = None
         try:
             # Use unified converter for GraphML (handles attribute sanitization)
             from ..converters.graph_converter import UnifiedGraphConverter
             converter = UnifiedGraphConverter()
             graphml_content = converter.dexpi_to_graphml(model, include_msr=True)
-            graphml_path = dexpi_dir / f"{model_name}.graphml"
+            graphml_path = pid_dir / f"{model_name}.graphml"
             with open(graphml_path, "w", encoding="utf-8") as f:
                 f.write(graphml_content)
         except Exception as e:
@@ -185,7 +186,7 @@ Created: {metadata['created']}
                     trace.hoverinfo = 'text'
             
             # Save as self-contained HTML with export capabilities
-            html_path = dexpi_dir / f"{model_name}.html"
+            html_path = pid_dir / f"{model_name}.html"
             fig.write_html(
                 str(html_path),
                 include_plotlyjs='inline',  # Fully self-contained
@@ -228,15 +229,15 @@ Created: {metadata['created']}
             DEXPI model object
         """
         path = Path(project_path)
-        dexpi_dir = path / "dexpi"
+        pid_dir = path / "pid"
         
         # Load model from JSON
         try:
-            model = self.json_serializer.load(str(dexpi_dir), model_name)
+            model = self.json_serializer.load(str(pid_dir), model_name)
         except (KeyError, Exception) as e:
             # Handle missing references - try loading raw JSON and converting
             import json
-            json_path = dexpi_dir / f"{model_name}.json"
+            json_path = pid_dir / f"{model_name}.json"
             with open(json_path, 'r') as f:
                 model_dict = json.load(f)
             # Use dict_to_model as fallback
@@ -263,12 +264,20 @@ Created: {metadata['created']}
             Dict with paths to saved files
         """
         path = Path(project_path)
-        sfiles_dir = path / "sfiles"
-        sfiles_dir.mkdir(exist_ok=True)
+        
+        # Determine target directory based on flowsheet type
+        if getattr(flowsheet, 'type', 'PFD') == "BFD":
+            target_dir = path / "bfd"
+        else:
+            target_dir = path / "pfd"
+        target_dir.mkdir(exist_ok=True)
         
         # Save flowsheet state as JSON
-        state_path = sfiles_dir / f"{flowsheet_name}.json"
+        state_path = target_dir / f"{flowsheet_name}.json"
         state_data = {
+            "type": getattr(flowsheet, 'type', 'PFD'),  # Preserve flowsheet type
+            "name": getattr(flowsheet, 'name', flowsheet_name),
+            "description": getattr(flowsheet, 'description', ''),
             "nodes": list(flowsheet.state.nodes(data=True)),
             "edges": list(flowsheet.state.edges(data=True))
         }
@@ -284,85 +293,34 @@ Created: {metadata['created']}
         
         sfiles_path = None
         if sfiles_string:
-            sfiles_path = sfiles_dir / f"{flowsheet_name}.sfiles"
+            sfiles_path = target_dir / f"{flowsheet_name}.sfiles"
             with open(sfiles_path, "w") as f:
                 f.write(sfiles_string)
         
         # Save metadata
-        meta_path = sfiles_dir / f"{flowsheet_name}.meta.json"
+        meta_path = target_dir / f"{flowsheet_name}.meta.json"
         metadata = {
             "name": flowsheet_name,
-            "type": "SFILES Flowsheet",
+            "type": getattr(flowsheet, 'type', 'PFD'),  # Use actual type instead of "SFILES Flowsheet"
+            "diagram_type": "BFD" if getattr(flowsheet, 'type', 'PFD') == "BFD" else "PFD",
             "created": datetime.now().isoformat(),
             "num_nodes": flowsheet.state.number_of_nodes(),
             "num_edges": flowsheet.state.number_of_edges()
         }
         canonical_json_dump(metadata, meta_path)
         
-        # Export GraphML and PNG/SVG for human auditing
+        # Export GraphML for human auditing
         graphml_path = None
         png_path = None
-        svg_path = None
         try:
             from ..converters.graph_converter import UnifiedGraphConverter
             converter = UnifiedGraphConverter()
             graphml_content = converter.sfiles_to_graphml(flowsheet)
-            graphml_path = sfiles_dir / f"{flowsheet_name}.graphml"
+            graphml_path = target_dir / f"{flowsheet_name}.graphml"
             with open(graphml_path, "w", encoding="utf-8") as f:
                 f.write(graphml_content)
         except Exception as e:
             logger.warning(f"SFILES GraphML export failed: {e}")
-
-        # SVG via enhanced pyflowsheet renderer with instruments
-        try:
-            from ..visualization.enhanced_visualization import visualize_flowsheet_with_instruments
-            
-            # Use enhanced visualization if available
-            pfd_base = sfiles_dir / flowsheet_name
-            svg_path = visualize_flowsheet_with_instruments(
-                flowsheet,
-                pfd_path=str(pfd_base),
-                pfd_block=False,  # Prefer detailed unit symbols
-                add_positions=True
-            )
-
-            # If enhanced render with symbols failed, retry with block diagram
-            if not svg_path or not Path(svg_path).exists():
-                logger.info("Enhanced SVG (symbols) missing; retrying with block diagram mode")
-                svg_path = visualize_flowsheet_with_instruments(
-                    flowsheet,
-                    pfd_path=str(pfd_base),
-                    pfd_block=True,   # Robust fallback: standard In/Out ports
-                    add_positions=True
-                )
-
-            if not svg_path or not Path(svg_path).exists():
-                # Fallback to original method
-                flowsheet.visualize_flowsheet(pfd_path=str(pfd_base))
-                candidate_svg = pfd_base.with_suffix(".svg")
-                if candidate_svg.exists():
-                    svg_path = candidate_svg
-        except ImportError:
-            # Enhanced visualization not available, use original
-            try:
-                pfd_base = sfiles_dir / flowsheet_name
-                flowsheet.visualize_flowsheet(pfd_path=str(pfd_base))
-                candidate_svg = pfd_base.with_suffix(".svg")
-                if candidate_svg.exists():
-                    svg_path = candidate_svg
-            except Exception as e:
-                logger.warning(f"SFILES SVG export failed: {e}")
-        except Exception as e:
-            logger.warning(f"Enhanced SVG export failed: {e}, falling back to original")
-            # Try fallback to original visualization
-            try:
-                pfd_base = sfiles_dir / flowsheet_name
-                flowsheet.visualize_flowsheet(pfd_path=str(pfd_base))
-                candidate_svg = pfd_base.with_suffix(".svg")
-                if candidate_svg.exists():
-                    svg_path = candidate_svg
-            except Exception as e2:
-                logger.warning(f"Original SVG export also failed: {e2}")
 
         # Interactive HTML visualization with hover details
         html_path = None
@@ -474,7 +432,7 @@ Created: {metadata['created']}
             )
             
             # Save as self-contained HTML
-            html_path = sfiles_dir / f"{flowsheet_name}.html"
+            html_path = target_dir / f"{flowsheet_name}.html"
             fig.write_html(
                 str(html_path),
                 include_plotlyjs='inline',
@@ -496,38 +454,55 @@ Created: {metadata['created']}
         if commit_message is None:
             commit_message = f"Save SFILES flowsheet: {flowsheet_name}"
 
-        self._git_add_commit(path, [state_path, sfiles_path, meta_path, graphml_path, svg_path, html_path], commit_message)
+        self._git_add_commit(path, [state_path, sfiles_path, meta_path, graphml_path, html_path], commit_message)
 
         return {
             "json": str(state_path),
             "sfiles": str(sfiles_path) if sfiles_path else None,
             "meta": str(meta_path),
             "graphml": str(graphml_path) if graphml_path else None,
-            "svg": str(svg_path) if svg_path else None,  # Keep pyflowsheet SVG
             "html": str(html_path) if html_path else None
         }
     
-    def load_sfiles(self, project_path: str, flowsheet_name: str) -> Flowsheet:
+    def load_sfiles(self, project_path: str, flowsheet_name: str, diagram_type: str = None) -> Flowsheet:
         """Load SFILES flowsheet from project.
         
         Args:
             project_path: Path to project root
             flowsheet_name: Name of the flowsheet (without extension)
+            diagram_type: Optional type hint ("bfd" or "pfd")
             
         Returns:
             Flowsheet object
         """
         path = Path(project_path)
-        sfiles_dir = path / "sfiles"
+        
+        # Determine which directory to load from
+        if diagram_type:
+            target_dir = path / diagram_type.lower()
+            state_path = target_dir / f"{flowsheet_name}.json"
+        else:
+            # Try both locations
+            for dir_name in ["bfd", "pfd"]:
+                state_path = path / dir_name / f"{flowsheet_name}.json"
+                if state_path.exists():
+                    target_dir = path / dir_name
+                    break
+            else:
+                raise FileNotFoundError(f"Flowsheet {flowsheet_name} not found in bfd/ or pfd/ directories")
         
         # Load flowsheet state from JSON
-        state_path = sfiles_dir / f"{flowsheet_name}.json"
         with open(state_path, "r") as f:
             state_data = json.load(f)
         
         # Reconstruct flowsheet
         flowsheet = Flowsheet()
         flowsheet.state = nx.DiGraph()
+        
+        # Restore flowsheet metadata
+        flowsheet.type = state_data.get('type', 'PFD')
+        flowsheet.name = state_data.get('name', flowsheet_name)
+        flowsheet.description = state_data.get('description', '')
         
         # Add nodes
         for node, attrs in state_data["nodes"]:
@@ -538,7 +513,7 @@ Created: {metadata['created']}
             flowsheet.state.add_edge(u, v, **attrs)
         
         # Try to load SFILES string if available
-        sfiles_path = sfiles_dir / f"{flowsheet_name}.sfiles"
+        sfiles_path = target_dir / f"{flowsheet_name}.sfiles"
         if sfiles_path.exists():
             with open(sfiles_path, "r") as f:
                 flowsheet.sfiles = f.read()
@@ -552,28 +527,36 @@ Created: {metadata['created']}
             project_path: Path to project root
             
         Returns:
-            Dict with 'dexpi' and 'sfiles' model lists
+            Dict with 'pid', 'bfd', and 'pfd' model lists
         """
         path = Path(project_path)
         
         models = {
-            "dexpi": [],
-            "sfiles": []
+            "pid": [],
+            "bfd": [],
+            "pfd": []
         }
         
-        # List DEXPI models
-        dexpi_dir = path / "dexpi"
-        if dexpi_dir.exists():
-            for json_file in dexpi_dir.glob("*.json"):
+        # List P&ID models
+        pid_dir = path / "pid"
+        if pid_dir.exists():
+            for json_file in pid_dir.glob("*.json"):
                 if not json_file.name.endswith(".meta.json"):
-                    models["dexpi"].append(json_file.stem)
+                    models["pid"].append(json_file.stem)
         
-        # List SFILES flowsheets
-        sfiles_dir = path / "sfiles"
-        if sfiles_dir.exists():
-            for json_file in sfiles_dir.glob("*.json"):
+        # List BFD flowsheets
+        bfd_dir = path / "bfd"
+        if bfd_dir.exists():
+            for json_file in bfd_dir.glob("*.json"):
                 if not json_file.name.endswith(".meta.json"):
-                    models["sfiles"].append(json_file.stem)
+                    models["bfd"].append(json_file.stem)
+        
+        # List PFD flowsheets
+        pfd_dir = path / "pfd"
+        if pfd_dir.exists():
+            for json_file in pfd_dir.glob("*.json"):
+                if not json_file.name.endswith(".meta.json"):
+                    models["pfd"].append(json_file.stem)
         
         return models
     

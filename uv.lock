@@ -506,9 +506,7 @@ dependencies = [
     { name = "plotly" },
     { name = "pydantic" },
     { name = "pydexpi" },
-    { name = "pyflowsheet" },
     { name = "sfiles2" },
-    { name = "svgwrite" },
 ]
 
 [package.optional-dependencies]
@@ -536,13 +534,11 @@ requires-dist = [
     { name = "plotly", specifier = ">=6.0" },
     { name = "pydantic", specifier = ">=2.0" },
     { name = "pydexpi", git = "https://github.com/process-intelligence-research/pyDEXPI.git" },
-    { name = "pyflowsheet", specifier = "==0.2.2" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.0" },
     { name = "pytest-asyncio", marker = "extra == 'dev'" },
     { name = "pytest-cov", marker = "extra == 'dev'" },
     { name = "ruff", marker = "extra == 'dev'" },
     { name = "sfiles2", git = "https://github.com/process-intelligence-research/SFILES2.git" },
-    { name = "svgwrite", specifier = ">=1.4" },
 ]
 provides-extras = ["dev"]
 

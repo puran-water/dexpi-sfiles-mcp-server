@@ -1,24 +1,9 @@
 """
 Visualization module for engineering-mcp-server.
-Provides enhanced visualization capabilities for SFILES flowsheets.
+Provides interactive HTML visualization for process flowsheets.
 """
 
-from .instrument_symbols import (
-    InstrumentBubble,
-    ControllerBubble,
-    TransmitterBubble,
-    create_tap_line,
-    create_signal_line,
-    get_instrument_bubble,
-    CONTROL_TYPE_TO_BUBBLE
-)
+# Interactive visualization uses plotly with spring layout
+# GraphML export for topology analysis
 
-__all__ = [
-    'InstrumentBubble',
-    'ControllerBubble',
-    'TransmitterBubble',
-    'create_tap_line',
-    'create_signal_line',
-    'get_instrument_bubble',
-    'CONTROL_TYPE_TO_BUBBLE'
-]
+__all__ = []

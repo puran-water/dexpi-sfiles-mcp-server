@@ -48,7 +48,7 @@ class GraphResourceProvider:
         for model_id, model in self.dexpi_models.items():
             # JSON resource
             resources.append(Resource(
-                uri=f"dexpi/{model_id}/json",
+                uri=f"pid/{model_id}/json",
                 name=f"P&ID {model_id} (JSON)",
                 mimeType="application/json",
                 description="Full DEXPI semantic model in JSON format"
@@ -56,7 +56,7 @@ class GraphResourceProvider:
             
             # GraphML resource
             resources.append(Resource(
-                uri=f"dexpi/{model_id}/graphml",
+                uri=f"pid/{model_id}/graphml",
                 name=f"P&ID {model_id} (GraphML)",
                 mimeType="application/graphml+xml",
                 description="P&ID topology for ML/analysis"
@@ -64,7 +64,7 @@ class GraphResourceProvider:
             
             # NetworkX resource
             resources.append(Resource(
-                uri=f"dexpi/{model_id}/networkx",
+                uri=f"pid/{model_id}/networkx",
                 name=f"P&ID {model_id} (NetworkX)",
                 mimeType="application/json",
                 description="NetworkX graph representation"
@@ -74,7 +74,7 @@ class GraphResourceProvider:
         for fs_id, flowsheet in self.flowsheets.items():
             # SFILES string resource
             resources.append(Resource(
-                uri=f"sfiles/{fs_id}/string",
+                uri=f"flowsheet/{fs_id}/string",
                 name=f"Flowsheet {fs_id} (SFILES)",
                 mimeType="text/plain",
                 description="Compact SFILES string representation"
@@ -82,7 +82,7 @@ class GraphResourceProvider:
             
             # GraphML resource
             resources.append(Resource(
-                uri=f"sfiles/{fs_id}/graphml",
+                uri=f"flowsheet/{fs_id}/graphml",
                 name=f"Flowsheet {fs_id} (GraphML)",
                 mimeType="application/graphml+xml",
                 description="Flowsheet topology graph"
@@ -90,7 +90,7 @@ class GraphResourceProvider:
             
             # NetworkX resource
             resources.append(Resource(
-                uri=f"sfiles/{fs_id}/networkx",
+                uri=f"flowsheet/{fs_id}/networkx",
                 name=f"Flowsheet {fs_id} (NetworkX)",
                 mimeType="application/json",
                 description="NetworkX graph representation"
@@ -122,9 +122,9 @@ class GraphResourceProvider:
         format_type = parts[2]
         
         # Get content as string
-        if resource_type == "dexpi":
+        if resource_type == "pid":
             content = await self._read_dexpi_resource(model_id, format_type)
-        elif resource_type == "sfiles":
+        elif resource_type == "flowsheet":
             content = await self._read_sfiles_resource(model_id, format_type)
         else:
             raise ValueError(f"Unknown resource type: {resource_type}")
@@ -241,14 +241,14 @@ class GraphResourceProvider:
         }
         
         # Add model-specific metadata
-        if resource_type == "dexpi" and model_id in self.dexpi_models:
+        if resource_type == "pid" and model_id in self.dexpi_models:
             model = self.dexpi_models[model_id]
             if model.conceptualModel and model.conceptualModel.metaData:
                 metadata["project_name"] = model.conceptualModel.metaData.projectName
                 metadata["drawing_number"] = model.conceptualModel.metaData.drawingNumber
                 metadata["revision"] = model.conceptualModel.metaData.revision
         
-        elif resource_type == "sfiles" and model_id in self.flowsheets:
+        elif resource_type == "flowsheet" and model_id in self.flowsheets:
             flowsheet = self.flowsheets[model_id]
             metadata["num_units"] = flowsheet.state.number_of_nodes()
             metadata["num_streams"] = flowsheet.state.number_of_edges()

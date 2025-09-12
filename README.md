@@ -39,9 +39,9 @@ This MCP (Model Context Protocol) server provides LLM-accessible tools for engin
 - **Dynamic Schema Generation** - Automatically discovers and exposes all pyDEXPI classes through introspection
 - **DEXPI P&ID Support** - Full implementation of DEXPI standard for detailed P&ID data models
 - **SFILES BFD/PFD Support** - Compact text notation for flowsheet representation
-- **Git-Based Persistence** - Version-controlled storage with automatic commit tracking
-- **Visualization Dashboard** - Web-based rendering of data models using Cytoscape.js
-- **GraphML Export** - Standardized graph format for machine learning pipelines
+- **Git-Based Persistence** - Version-controlled storage with automatic file overwriting (no versioning)
+- **Interactive HTML Visualization** - Spring layout visualization using plotly (SVG generation removed)
+- **GraphML Export** - Standardized graph format for topology analysis and external tools
 
 ### Tool Consolidation Strategy (v0.4.0)
 

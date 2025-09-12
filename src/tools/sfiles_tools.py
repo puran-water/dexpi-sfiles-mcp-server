@@ -9,6 +9,13 @@ from mcp import Tool
 from Flowsheet_Class.flowsheet import Flowsheet
 import networkx as nx
 from ..utils.response import success_response, error_response, validation_response, create_issue
+from ..utils.process_resolver import (
+    resolve_process_type,
+    generate_semantic_id,
+    get_next_sequence_number,
+    get_fuzzy_matches,
+    load_process_hierarchy
+)
 
 logger = logging.getLogger(__name__)
 
@@ -48,17 +55,29 @@ class SfilesTools:
                     "type": "object",
                     "properties": {
                         "flowsheet_id": {"type": "string"},
-                        "unit_name": {"type": "string"},
+                        "unit_name": {
+                            "type": "string",
+                            "description": "Optional descriptive name (defaults to unit_type)"
+                        },
                         "unit_type": {
                             "type": "string",
-                            "description": "Unit type (e.g., reactor, distcol, hex, pump, etc.)"
+                            "description": "For BFD: Process function name (e.g., 'Aeration Tank', 'Primary Clarification')\nFor PFD: Equipment type (e.g., 'reactor', 'tank', 'pump')"
+                        },
+                        "sequence_number": {
+                            "type": "integer",
+                            "description": "Optional sequence number for BFD equipment tag (auto-increments if not provided)"
+                        },
+                        "allow_custom": {
+                            "type": "boolean",
+                            "default": False,
+                            "description": "Allow custom process types not in hierarchy (BFD only)"
                         },
                         "parameters": {
                             "type": "object",
                             "description": "Unit-specific parameters"
                         }
                     },
-                    "required": ["flowsheet_id", "unit_name", "unit_type"]
+                    "required": ["flowsheet_id", "unit_type"]
                 }
             ),
             Tool(
@@ -304,47 +323,103 @@ class SfilesTools:
         })
     
     async def _add_unit(self, args: dict) -> dict:
-        """Add a unit operation to flowsheet using native graph methods."""
+        """Add a unit operation to flowsheet with BFD/PFD awareness."""
         flowsheet_id = args["flowsheet_id"]
         if flowsheet_id not in self.flowsheets:
             raise ValueError(f"Flowsheet {flowsheet_id} not found")
         
         flowsheet = self.flowsheets[flowsheet_id]
-        unit_name = args["unit_name"]
         unit_type = args["unit_type"]
+        unit_name = args.get("unit_name")
+        sequence_number = args.get("sequence_number")
+        allow_custom = args.get("allow_custom", False)
         parameters = args.get("parameters", {})
         
-        # Generate unique name for the unit
-        # Ensure all units have proper numbering for SFILES compatibility
-        if not unit_name or unit_name == unit_type:
-            # Count existing units of this type
-            existing_units = [n for n in flowsheet.state.nodes if unit_type in n]
-            unit_number = len(existing_units)
-            unique_name = f"{unit_type}-{unit_number}"
+        # Check if this is a BFD or PFD
+        is_bfd = hasattr(flowsheet, 'type') and flowsheet.type == "BFD"
+        
+        if is_bfd:
+            # BFD mode: Process type resolution and semantic IDs
+            try:
+                # Resolve process type via hierarchy/aliases
+                process_info = resolve_process_type(unit_type, allow_custom)
+                
+                if not process_info:
+                    # Get suggestions for error message
+                    hierarchy = load_process_hierarchy()
+                    suggestions = get_fuzzy_matches(unit_type, hierarchy, n=3)
+                    raise ValueError(
+                        f"Unknown process type '{unit_type}'. "
+                        f"Did you mean: {', '.join(suggestions)}? "
+                        f"Use allow_custom=true to add custom process types."
+                    )
+                
+                # Generate semantic ID (for SFILES readability)
+                base_name = process_info['canonical_name']
+                semantic_id = generate_semantic_id(flowsheet, base_name)
+                
+                # Generate equipment tag (for display)
+                area = process_info['area_number']
+                code = process_info['process_unit_id']
+                seq = sequence_number or get_next_sequence_number(flowsheet, area, code)
+                equipment_tag = f"{area}-{code}-{seq:02d}"
+                
+                # Add node with semantic ID, store tag as metadata
+                flowsheet.state.add_node(semantic_id, 
+                    unit_type=process_info['canonical_name'],
+                    name=unit_name or process_info['canonical_name'],
+                    equipment_tag=equipment_tag,
+                    area_number=area,
+                    process_unit_id=code,
+                    sequence_number=seq,
+                    category=process_info.get('category', ''),
+                    subcategory=process_info.get('subcategory', ''),
+                    is_custom=process_info.get('is_custom', False),
+                    **parameters
+                )
+                
+                return success_response({
+                    "flowsheet_id": flowsheet_id,
+                    "unit_id": semantic_id,      # For SFILES connections
+                    "equipment_tag": equipment_tag,  # For reference
+                    "unit_type": process_info['canonical_name'],
+                    "num_units": flowsheet.state.number_of_nodes()
+                })
+            
+            except Exception as e:
+                return error_response(str(e))
+        
         else:
-            # Ensure the name has proper format with a number
-            if '-' not in unit_name:
-                # Add numbering if not present
-                existing_units = [n for n in flowsheet.state.nodes if unit_name in n]
+            # PFD mode: Traditional equipment-based approach
+            # Generate unique name for the unit
+            if not unit_name or unit_name == unit_type:
+                # Count existing units of this type
+                existing_units = [n for n in flowsheet.state.nodes if unit_type in n]
                 unit_number = len(existing_units)
-                unique_name = f"{unit_name}-{unit_number}"
+                unique_name = f"{unit_type}-{unit_number}"
             else:
-                unique_name = unit_name
-        
-        # Add unit using native Flowsheet method
-        # This properly adds it to the NetworkX graph
-        flowsheet.add_unit(
-            unique_name=unique_name,
-            unit_type=unit_type,
-            **parameters
-        )
-        
-        return success_response({
-            "flowsheet_id": flowsheet_id,
-            "unit_name": unique_name,
-            "unit_type": unit_type,
-            "num_units": flowsheet.state.number_of_nodes()
-        })
+                # Ensure the name has proper format with a number
+                if '-' not in unit_name:
+                    # Add numbering if not present
+                    existing_units = [n for n in flowsheet.state.nodes if unit_name in n]
+                    unit_number = len(existing_units)
+                    unique_name = f"{unit_name}-{unit_number}"
+                else:
+                    unique_name = unit_name
+            
+            # Add unit using native Flowsheet method
+            flowsheet.add_unit(
+                unique_name=unique_name,
+                unit_type=unit_type,
+                **parameters
+            )
+            
+            return success_response({
+                "flowsheet_id": flowsheet_id,
+                "unit_name": unique_name,
+                "unit_type": unit_type,
+                "num_units": flowsheet.state.number_of_nodes()
+            })
     
     async def _add_stream(self, args: dict) -> dict:
         """Add a stream between units using native graph methods.
