@@ -11,11 +11,11 @@ from .dexpi_introspector import DexpiIntrospector
 # Safe import for SFILES2 - will raise helpful error if not installed
 try:
     from ..adapters.sfiles_adapter import get_flowsheet_class_cached
+    import importlib
     # Get the module for introspection
     Flowsheet = get_flowsheet_class_cached()
-    sfiles_module = Flowsheet.__module__ if hasattr(Flowsheet, '__module__') else None
-    import Flowsheet_Class.flowsheet as sfiles_module_direct
-    sfiles_module = sfiles_module_direct
+    # Get module via importlib instead of direct import (maintains shim protection)
+    sfiles_module = importlib.import_module(Flowsheet.__module__)
 except ImportError:
     sfiles_module = None
 

@@ -141,7 +141,59 @@ This roadmap consolidates the Codex Quick Wins and High-ROI Implementation Plan,
 
 ---
 
+## Critical Issues from Codex Review #2 (November 4, 2025)
+
+### 🔴 URGENT: Fix Remaining Direct Import
+**File:** `src/tools/schema_tools.py:17`
+**Issue:** After using adapter, re-imports `Flowsheet_Class.flowsheet` directly
+**Impact:** Bypasses safe import shim, raw ImportError in environments without SFILES2
+**Fix:** Use `importlib.import_module(Flowsheet.__module__)` instead
+**Status:** ✅ FIXED
+
+### ⚠️ Legacy BFD Data Migration
+**Issue:** CamelCase fix only protects NEW nodes
+**Impact:** Existing flowsheets with "Aeration-Tank-01" will fail round-trip validation
+**Options:**
+1. Create automated migration script (scan + rename nodes)
+2. Document manual rename procedure
+3. Add validation warning for legacy IDs
+
+**Decision Needed:** Choose migration strategy before Phase 1
+
+### ⚠️ Phase Sequencing Correction
+**Codex Finding:** "Transaction-first work underpins template instantiation"
+**Issue:** Templates (#4/#5) depend on TransactionManager
+**Risk:** Partial writes when patterns expand without transaction safety
+**Fix:** Reorder Phase 1 to implement TransactionManager BEFORE templates
+
+---
+
 ## Phase 1: Core Infrastructure (Week 1, Days 4-7)
+
+### Transaction Manager Enhancement - MOVED TO FIRST 🔴
+**Status:** Basic batch operations exist, need full ACID support
+**Priority:** MUST complete before templates (#4/#5)
+
+**Current State:**
+- ✅ `model_batch_apply` provides basic batching
+- ❌ No deep copy/rollback capability
+- ❌ No transaction state management
+
+**What Needs to Be Done:**
+1. Create `src/managers/transaction_manager.py`
+2. Implement `begin()` with deep copy
+3. Implement `apply_batch()` with operation dispatcher
+4. Implement `commit()` and `rollback()`
+5. Add diff calculation
+
+**Why This Must Come First:**
+- Templates expand patterns into models
+- Without transactions, partial writes are unrecoverable
+- Rollback essential for LLM retry safety
+
+**Estimate:** 2 days (Days 4-5)
+
+---
 
 ### #3: Enhance graph_connect with piping_toolkit (8 hours) - NOT STARTED 🔴
 **Status:** Basic version exists, needs piping_toolkit integration
@@ -206,24 +258,6 @@ This roadmap consolidates the Codex Quick Wins and High-ROI Implementation Plan,
 
 ---
 
-### Transaction Manager Enhancement - NOT STARTED 🔴
-**Status:** Basic batch operations exist, need full ACID support
-
-**Current State:**
-- ✅ `model_batch_apply` provides basic batching
-- ❌ No deep copy/rollback capability
-- ❌ No transaction state management
-
-**What Needs to Be Done:**
-1. Create `src/managers/transaction_manager.py`
-2. Implement `begin()` with deep copy
-3. Implement `apply_batch()` with operation dispatcher
-4. Implement `commit()` and `rollback()`
-5. Add diff calculation
-
-**Estimate:** 2 days
-
----
 
 ### Universal Model Operations - NOT STARTED 🔴
 **What Needs to Be Done:**
@@ -385,6 +419,15 @@ This roadmap consolidates the Codex Quick Wins and High-ROI Implementation Plan,
 ---
 
 ### Phase 1: Production-Ready Core (4-6 months) - NOT STARTED 🔴
+
+**⚠️ Timeline Risk (Codex Review #2):**
+> "The 6-9 month BFD plan assumes elkjs + drawsvg/ezdxf glue lands smoothly. Budget time for the Node/JS bridge and renderer symbol work—they're new stacks for this repo and may stretch the timeline."
+
+**Risk Mitigation:**
+- Sprint 3 includes decision gate: Evaluate elkjs quality at Week 7
+- Symbol library creation (20+ ISA S5.1 symbols) is main renderer effort
+- Node.js bridge is straightforward subprocess call, but test thoroughly
+- Add 2-week buffer to 6-9 month estimate if rendering work exceeds estimates
 
 #### Sprint 1 (Weeks 1-2): Foundation
 **What Needs to Be Done:**
