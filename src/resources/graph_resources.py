@@ -8,7 +8,10 @@ from mcp import Resource
 from mcp.types import TextContent
 from pydexpi.dexpi_classes.dexpiModel import DexpiModel
 from pydexpi.loaders import JsonSerializer
-from Flowsheet_Class.flowsheet import Flowsheet
+from ..adapters.sfiles_adapter import get_flowsheet_class
+
+# Safe import with helpful error messages
+Flowsheet = get_flowsheet_class()
 
 from ..converters.graph_converter import UnifiedGraphConverter
 

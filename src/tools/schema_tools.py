@@ -3,11 +3,21 @@
 import logging
 from typing import Any, Dict, List, Optional
 import inspect
-from Flowsheet_Class import flowsheet as sfiles_module
 
 from mcp import Tool
 from ..utils.response import success_response, error_response
 from .dexpi_introspector import DexpiIntrospector
+
+# Safe import for SFILES2 - will raise helpful error if not installed
+try:
+    from ..adapters.sfiles_adapter import get_flowsheet_class_cached
+    # Get the module for introspection
+    Flowsheet = get_flowsheet_class_cached()
+    sfiles_module = Flowsheet.__module__ if hasattr(Flowsheet, '__module__') else None
+    import Flowsheet_Class.flowsheet as sfiles_module_direct
+    sfiles_module = sfiles_module_direct
+except ImportError:
+    sfiles_module = None
 
 logger = logging.getLogger(__name__)
 

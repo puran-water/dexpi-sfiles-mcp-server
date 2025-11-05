@@ -6,7 +6,10 @@ import networkx as nx
 
 from mcp import Tool
 from pydexpi.loaders.ml_graph_loader import MLGraphLoader
-from Flowsheet_Class.flowsheet import Flowsheet
+from ..adapters.sfiles_adapter import get_flowsheet_class
+
+# Safe import with helpful error messages
+Flowsheet = get_flowsheet_class()
 
 from ..utils.response import validation_response, create_issue, error_response
 from ..validators.constraints import EngineeringConstraints

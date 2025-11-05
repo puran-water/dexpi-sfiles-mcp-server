@@ -2,7 +2,11 @@
 
 import logging
 from typing import Dict, List, Any, Optional, Tuple
-from Flowsheet_Class.flowsheet import Flowsheet
+from ..adapters.sfiles_adapter import get_flowsheet_class
+
+# Safe import with helpful error messages
+Flowsheet = get_flowsheet_class()
+
 from pydexpi.dexpi_classes.equipment import (
     Tank, CentrifugalPump, HeatExchanger, ProcessColumn,
     Equipment, Vessel, Nozzle

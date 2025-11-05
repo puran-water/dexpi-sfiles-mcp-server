@@ -9,7 +9,10 @@ import logging
 import subprocess
 
 from pydexpi.loaders import JsonSerializer
-from Flowsheet_Class.flowsheet import Flowsheet
+from ..adapters.sfiles_adapter import get_flowsheet_class
+
+# Safe import with helpful error messages
+Flowsheet = get_flowsheet_class()
 import networkx as nx
 
 logger = logging.getLogger(__name__)

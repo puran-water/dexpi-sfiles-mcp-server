@@ -154,24 +154,35 @@ def resolve_process_type(query: str, allow_custom: bool = False) -> Optional[Dic
 
 def generate_semantic_id(flowsheet, base_name: str) -> str:
     """
-    Generate a semantic ID for BFD units.
-    E.g., "Aeration Tank" -> "Aeration-Tank-01"
+    Generate a semantic ID for BFD units compatible with SFILES2 parsing.
+
+    SFILES2 requires node IDs to match "name-number" pattern (single hyphen).
+    E.g., "Aeration Tank" -> "AerationTank-01" (not "Aeration-Tank-01")
+
+    Args:
+        flowsheet: Flowsheet object to check for existing IDs
+        base_name: Human-readable process name (e.g., "Aeration Tank")
+
+    Returns:
+        SFILES2-compatible node ID (e.g., "AerationTank-01")
     """
-    # Normalize name for ID (replace spaces with hyphens)
-    normalized = re.sub(r'[^a-zA-Z0-9]+', '-', base_name)
-    normalized = normalized.strip('-')
-    
+    # Convert to CamelCase to avoid internal hyphens
+    # "Aeration Tank" -> "AerationTank"
+    words = re.findall(r'[a-zA-Z0-9]+', base_name)
+    normalized = ''.join(word.capitalize() for word in words)
+
     # Find existing units with similar base name
     existing_count = 0
     for node_id in flowsheet.state.nodes():
-        if normalized in node_id:
-            # Extract sequence number if present
+        # Check if node starts with our normalized name
+        if node_id.startswith(normalized):
+            # Extract sequence number if present (after single hyphen)
             match = re.search(r'-(\d+)$', node_id)
             if match:
                 seq = int(match.group(1))
                 existing_count = max(existing_count, seq)
-    
-    # Generate new ID with next sequence
+
+    # Generate new ID with next sequence (single hyphen before number)
     sequence = existing_count + 1
     return f"{normalized}-{sequence:02d}"
 

@@ -27,6 +27,36 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+def validate_dependencies():
+    """
+    Validate required dependencies at startup.
+
+    Raises:
+        ImportError: If critical dependencies are missing
+    """
+    from .adapters.sfiles_adapter import validate_sfiles_available
+
+    logger.info("Validating dependencies...")
+
+    # Check SFILES2 (Flowsheet_Class)
+    if not validate_sfiles_available():
+        logger.error("✗ SFILES2 (Flowsheet_Class) not available")
+        logger.error("Install with: pip install git+https://github.com/process-intelligence-research/SFILES2.git")
+        raise ImportError("SFILES2 required but not installed")
+
+    logger.info("✓ SFILES2 (Flowsheet_Class) available")
+
+    # Check pyDEXPI (implicitly checked by imports, but good to log)
+    try:
+        import pydexpi
+        logger.info("✓ pyDEXPI available")
+    except ImportError:
+        logger.error("✗ pyDEXPI not available")
+        raise
+
+    logger.info("✓ All dependencies validated")
+
+
 class EngineeringDrawingMCPServer:
     """MCP Server for engineering drawing generation and manipulation."""
     
@@ -44,10 +74,9 @@ class EngineeringDrawingMCPServer:
         self.graph_tools = GraphTools(self.dexpi_models, self.flowsheets)
         self.search_tools = SearchTools(self.dexpi_models, self.flowsheets)
         self.batch_tools = BatchTools(
-            self.dexpi_tools, 
-            self.sfiles_tools, 
-            self.validation_tools, 
-            self.dexpi_models, 
+            self.dexpi_tools,
+            self.sfiles_tools,
+            self.dexpi_models,
             self.flowsheets
         )
         
@@ -149,6 +178,14 @@ class EngineeringDrawingMCPServer:
 
 def main():
     """Main entry point for the MCP server."""
+    # Validate dependencies before starting server
+    try:
+        validate_dependencies()
+    except ImportError as e:
+        logger.error(f"Dependency validation failed: {e}")
+        logger.error("Server cannot start. Please install missing dependencies.")
+        raise
+
     server = EngineeringDrawingMCPServer()
     asyncio.run(server.run())
 

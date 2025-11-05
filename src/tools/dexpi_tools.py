@@ -1573,7 +1573,10 @@ class DexpiTools:
             from ..converters.sfiles_dexpi_mapper import SfilesDexpiMapper
         except ImportError:
             from converters.sfiles_dexpi_mapper import SfilesDexpiMapper
-        from Flowsheet_Class.flowsheet import Flowsheet
+
+        # Use safe import adapter for SFILES2
+        from ..adapters.sfiles_adapter import get_flowsheet_class
+        Flowsheet = get_flowsheet_class()
         
         flowsheet_id = args["flowsheet_id"]
         model_id = args.get("model_id", None)

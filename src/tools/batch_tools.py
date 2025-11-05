@@ -13,11 +13,10 @@ logger = logging.getLogger(__name__)
 class BatchTools:
     """Handles batch operations, validation, and smart connections."""
     
-    def __init__(self, dexpi_tools, sfiles_tools, validation_tools, dexpi_models, flowsheets):
+    def __init__(self, dexpi_tools, sfiles_tools, dexpi_models, flowsheets):
         """Initialize with references to existing tool handlers."""
         self.dexpi_tools = dexpi_tools
         self.sfiles_tools = sfiles_tools
-        self.validation_tools = validation_tools
         self.dexpi_models = dexpi_models
         self.flowsheets = flowsheets
         self.idempotency_cache = {}  # Track completed operations
@@ -224,39 +223,104 @@ class BatchTools:
         return success_response(response_data)
     
     async def rules_apply(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
-        """Apply validation rules with structured output for LLMs."""
+        """
+        Apply validation rules using upstream libraries.
+
+        - DEXPI models: Uses MLGraphLoader.validate_graph_format()
+        - SFILES models: Uses round-trip conversion (parse → convert → compare)
+
+        Both approaches leverage upstream library validation capabilities.
+        """
         model_id = arguments["model_id"]
         rule_sets = arguments.get("rule_sets", ["syntax", "topology", "connectivity"])
         scope = arguments.get("scope", "model")
-        
-        # Use existing validation tools
-        validation_args = {
-            "model_id": model_id,
-            "scopes": rule_sets
-        }
-        
-        validation_result = await self.validation_tools.handle_tool("validate_model", validation_args)
-        
-        # Transform to structured format for LLMs
+
+        # Check if DEXPI model
+        if model_id in self.dexpi_models:
+            return await self._validate_dexpi(model_id, rule_sets, scope)
+
+        # Check if SFILES model
+        elif model_id in self.flowsheets:
+            return await self._validate_sfiles(model_id, rule_sets, scope)
+
+        # Model not found
+        else:
+            return error_response(f"Model not found: {model_id}")
+
+    async def _validate_dexpi(self, model_id: str, rule_sets: List[str], scope: str) -> Dict[str, Any]:
+        """Validate DEXPI model using MLGraphLoader."""
+        from pydexpi.loaders.ml_graph_loader import MLGraphLoader
+
         issues = []
-        if validation_result.get("ok") and "data" in validation_result:
-            for issue in validation_result["data"].get("issues", []):
-                structured_issue = {
-                    "severity": issue.get("severity", "warning"),
-                    "message": issue.get("message", "Unknown issue"),
-                    "location": issue.get("location"),
-                    "rule": issue.get("code", "general"),
-                    "scope": scope,
-                    "can_autofix": False,  # For now, no autofix
-                    "suggested_fix": None
-                }
-                issues.append(structured_issue)
-        
+
+        try:
+            model = self.dexpi_models[model_id]
+            loader = MLGraphLoader()
+
+            # Convert DEXPI model to graph (stores internally in loader.plant_graph)
+            try:
+                graph = loader.dexpi_to_graph(model)
+                logger.info(f"DEXPI graph: {graph.number_of_nodes()} nodes, {graph.number_of_edges()} edges")
+            except Exception as e:
+                logger.error(f"Error during dexpi_to_graph: {type(e).__name__}: {e}")
+                raise
+
+            # Validate using MLGraphLoader (operates on internal plant_graph)
+            try:
+                logger.info("Validating DEXPI format...")
+                loader.validate_graph_format()
+                logger.info("DEXPI validation passed!")
+            except AttributeError as e:
+                error_msg = str(e)
+                logger.warning(f"DEXPI validation failed: {error_msg}")
+
+                if "missing required attribute" in error_msg.lower():
+                    issues.append({
+                        "severity": "error",
+                        "message": error_msg,
+                        "location": None,
+                        "rule": "dexpi_attribute_compliance",
+                        "scope": scope,
+                        "can_autofix": False,
+                        "suggested_fix": "Add missing required attributes to nodes/edges"
+                    })
+                elif "invalid class" in error_msg.lower():
+                    issues.append({
+                        "severity": "error",
+                        "message": error_msg,
+                        "location": None,
+                        "rule": "dexpi_class_compliance",
+                        "scope": scope,
+                        "can_autofix": False,
+                        "suggested_fix": "Use valid DEXPI node/edge classes"
+                    })
+                else:
+                    issues.append({
+                        "severity": "error",
+                        "message": error_msg,
+                        "location": None,
+                        "rule": "dexpi_format_validation",
+                        "scope": scope,
+                        "can_autofix": False,
+                        "suggested_fix": None
+                    })
+
+        except Exception as e:
+            issues.append({
+                "severity": "error",
+                "message": f"DEXPI validation failed: {str(e)}",
+                "location": None,
+                "rule": "validation_error",
+                "scope": scope,
+                "can_autofix": False,
+                "suggested_fix": None
+            })
+
         # Calculate statistics
         error_count = sum(1 for i in issues if i["severity"] == "error")
         warning_count = sum(1 for i in issues if i["severity"] == "warning")
         info_count = sum(1 for i in issues if i["severity"] == "info")
-        
+
         return success_response({
             "valid": error_count == 0,
             "issues": issues,
@@ -266,7 +330,83 @@ class BatchTools:
                 "warnings": warning_count,
                 "info": info_count
             },
-            "rule_sets_applied": rule_sets
+            "rule_sets_applied": rule_sets,
+            "validation_method": "MLGraphLoader"
+        })
+
+    async def _validate_sfiles(self, model_id: str, rule_sets: List[str], scope: str) -> Dict[str, Any]:
+        """Validate SFILES model using round-trip conversion."""
+        from ..adapters.sfiles_adapter import get_flowsheet_class
+        Flowsheet = get_flowsheet_class()
+
+        issues = []
+        flowsheet = self.flowsheets[model_id]
+
+        try:
+            # Convert flowsheet to canonical SFILES string
+            flowsheet.convert_to_sfiles(version="v2", canonical=True)
+            original_sfiles = flowsheet.sfiles
+
+            if not original_sfiles:
+                issues.append({
+                    "severity": "error",
+                    "message": "Flowsheet has no SFILES representation (empty model)",
+                    "location": None,
+                    "rule": "sfiles_empty",
+                    "scope": scope,
+                    "can_autofix": False,
+                    "suggested_fix": "Add units and streams to the flowsheet"
+                })
+            else:
+                # Round-trip validation: parse and convert back
+                logger.info(f"SFILES round-trip validation for {len(original_sfiles)} char string")
+                test_flowsheet = Flowsheet()
+                test_flowsheet.create_from_sfiles(original_sfiles)
+                test_flowsheet.convert_to_sfiles(version="v2", canonical=True)
+                regenerated_sfiles = test_flowsheet.sfiles
+
+                # Compare canonical forms
+                if original_sfiles != regenerated_sfiles:
+                    issues.append({
+                        "severity": "error",
+                        "message": "Round-trip validation failed: topology not preserved",
+                        "location": None,
+                        "rule": "sfiles_round_trip",
+                        "scope": scope,
+                        "can_autofix": False,
+                        "suggested_fix": "Check for cycles, ambiguous connections, or invalid SFILES syntax"
+                    })
+                else:
+                    logger.info(f"SFILES validation passed: {test_flowsheet.state.number_of_nodes()} nodes, {test_flowsheet.state.number_of_edges()} edges")
+
+        except Exception as e:
+            logger.error(f"SFILES validation error: {type(e).__name__}: {e}")
+            issues.append({
+                "severity": "error",
+                "message": f"SFILES validation failed: {str(e)}",
+                "location": None,
+                "rule": "sfiles_parse",
+                "scope": scope,
+                "can_autofix": False,
+                "suggested_fix": "Check SFILES syntax and ensure model can be parsed"
+            })
+
+        # Calculate statistics
+        error_count = sum(1 for i in issues if i["severity"] == "error")
+        warning_count = sum(1 for i in issues if i["severity"] == "warning")
+        info_count = sum(1 for i in issues if i["severity"] == "info")
+
+        return success_response({
+            "valid": error_count == 0,
+            "issues": issues,
+            "stats": {
+                "total": len(issues),
+                "errors": error_count,
+                "warnings": warning_count,
+                "info": info_count
+            },
+            "rule_sets_applied": rule_sets,
+            "validation_method": "round_trip"
         })
     
     async def graph_connect(self, arguments: Dict[str, Any]) -> Dict[str, Any]:

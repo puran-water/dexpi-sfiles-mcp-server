@@ -6,8 +6,11 @@ from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
 from mcp import Tool
-from Flowsheet_Class.flowsheet import Flowsheet
+from ..adapters.sfiles_adapter import get_flowsheet_class
 import networkx as nx
+
+# Safe import with helpful error messages
+Flowsheet = get_flowsheet_class()
 from ..utils.response import success_response, error_response, validation_response, create_issue
 from ..utils.process_resolver import (
     resolve_process_type,
