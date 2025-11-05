@@ -154,4 +154,7 @@ test_*.py
 
 # OS files
 .DS_Store
-Thumbs.db.codex/
+Thumbs.db
+
+# Codex working directory
+.codex/

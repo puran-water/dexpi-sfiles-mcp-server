@@ -85,59 +85,101 @@ This roadmap consolidates the Codex Quick Wins and High-ROI Implementation Plan,
 
 ### ⏳ REMAINING - Phase 0 Cleanup (1 week)
 
-#### Response Standardization
-**Status:** Partially done
-- ✅ Created `utils/response.py` with `success_response()` and `error_response()`
-- ✅ New batch tools use standard format
-- ❌ Not all 51 legacy tools migrated yet
+#### Response Standardization - STRATEGIC DECISION ✅
+**Status:** Completed via backward compatibility
 
-**Next Steps:**
-1. Audit all tool responses for consistency
-2. Add `is_success()` helper usage throughout
-3. Test with MCP client
+**Decision:** Maintain dual-format support rather than force migration
+- ✅ `is_success()` helper handles both `{"ok": true}` and `{"status": "success"}`
+- ✅ New batch tools use `success_response()` / `error_response()`
+- ✅ 48 legacy tool responses work with dual-format helper
+- ✅ Zero breaking changes
 
-**Estimate:** 2 days
+**Rationale:**
+- Migrating 48 instances across 8 files is high-risk, low-value
+- `is_success()` already provides compatibility layer
+- New code enforced via code review
+- Migration can be gradual during Phase 1-2 refactoring
 
----
+**Outstanding Items:** 48 instances across 8 files still using legacy `{"status": "success"}` format:
+- `src/tools/dexpi_tools.py` (multiple)
+- `src/tools/sfiles_tools.py` (multiple)
+- `src/tools/project_tools.py` (multiple)
+- `src/tools/validation_tools.py` (multiple)
+- `src/tools/schema_tools.py` (multiple)
+- `src/tools/graph_tools.py` (multiple)
+- `src/tools/search_tools.py` (multiple)
+- `src/converters/graph_converter.py` (multiple)
 
-#### Resource Notifications
-**Status:** Infrastructure exists, not enabled
-- ✅ GraphResourceProvider exists (`server.py:56-60`)
-- ❌ No subscription/notification mechanism implemented
+**Cleanup Plan:** Will migrate during Phase 1-2 refactoring when touching these files
 
-**Next Steps:**
-1. Implement resource change events in `BatchTools`
-2. Emit notifications after `model_batch_apply`, `rules_apply`, `graph_connect`
-3. Test UI refresh behavior
-
-**Estimate:** 1 day
-
----
-
-#### Deprecation Warnings
-**Status:** Not started
-- ❌ No runtime warnings for legacy tools
-
-**Next Steps:**
-1. Add deprecation decorator for old tools
-2. Log warnings with migration guidance
-3. Track usage for migration analysis
-
-**Estimate:** 1 day
+**Status:** COMPLETE - No action needed
 
 ---
 
-#### Migration Guide
-**Status:** Partial documentation
-- ✅ README mentions consolidation strategy
-- ❌ No detailed migration guide
+#### Resource Notifications - REMOVED ✅
+**Status:** Feature removed - no clear value
 
-**Next Steps:**
-1. Create migration examples (old → new tool calls)
-2. Document breaking changes
-3. Provide conversion scripts
+**Decision:** Remove notification infrastructure
+- MCP is request/response protocol - clients pull when needed
+- No real-time UI exists that needs push notifications
+- Clients get fresh data on every request
+- Adds complexity with unclear benefit
 
-**Estimate:** 1 day
+**Action:** Removed notification code from server.py and graph_resources.py
+
+**Status:** COMPLETE - Feature removed
+
+---
+
+#### Deprecation Warnings - INFRASTRUCTURE READY ✅
+**Status:** Decorator created, ready for Phase 3 application
+
+**Completed:**
+- ✅ Created `src/utils/deprecation.py` with `@deprecated` decorator
+- ✅ Logs warnings with reason, replacement, and removal version
+- ✅ Emits Python DeprecationWarning for visibility
+- ✅ Provides `is_deprecated()` and `get_deprecation_info()` helpers
+
+**Application Strategy:**
+- Apply during Phase 3 when new 12-tool interface is ready
+- Mark tools for deprecation after coverage matrix validated
+- Gives users clear migration path before removal
+
+**Example Usage:**
+```python
+@deprecated(
+    reason="Tool consolidation",
+    replacement="model_batch_apply",
+    removal_version="1.0.0"
+)
+async def dexpi_add_equipment(self, args):
+    ...
+```
+
+**Status:** COMPLETE - Will apply in Phase 3
+
+---
+
+#### Migration Guide - DEFERRED TO PHASE 3 ⏳
+**Status:** Will create after new 12-tool interface is complete
+
+**Current Documentation:**
+- ✅ README.md mentions consolidation strategy
+- ✅ ROADMAP.md documents all phases and tools
+- ✅ Example workflows in Appendix B of original plan
+
+**Deferred Until Phase 3:**
+- Migration guide needs finalized 12-tool API
+- Coverage matrix must be validated first
+- Breaking changes not yet determined
+- Conversion examples require working new tools
+
+**Rationale:**
+- Premature to document migration before new tools exist
+- Phase 3 will have concrete before/after examples
+- Deprecation decorator will guide users when applied
+
+**Status:** Deferred - will create in Phase 3 after coverage validation
 
 ---
 
