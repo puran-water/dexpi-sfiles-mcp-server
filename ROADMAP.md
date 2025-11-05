@@ -150,15 +150,12 @@ This roadmap consolidates the Codex Quick Wins and High-ROI Implementation Plan,
 **Fix:** Use `importlib.import_module(Flowsheet.__module__)` instead
 **Status:** ✅ FIXED
 
-### ⚠️ Legacy BFD Data Migration
+### ✅ Legacy BFD Data Migration - NOT NEEDED
 **Issue:** CamelCase fix only protects NEW nodes
-**Impact:** Existing flowsheets with "Aeration-Tank-01" will fail round-trip validation
-**Options:**
-1. Create automated migration script (scan + rename nodes)
-2. Document manual rename procedure
-3. Add validation warning for legacy IDs
-
-**Decision Needed:** Choose migration strategy before Phase 1
+**Impact:** Existing flowsheets with "Aeration-Tank-01" would fail round-trip validation
+**Resolution:** All legacy BFDs are test data from MCP server testing - no production usage
+**Action:** No migration needed, test BFDs can be discarded
+**Status:** RESOLVED - No action required
 
 ### ⚠️ Phase Sequencing Correction
 **Codex Finding:** "Transaction-first work underpins template instantiation"
