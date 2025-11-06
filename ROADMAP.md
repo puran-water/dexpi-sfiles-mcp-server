@@ -207,6 +207,338 @@ async def dexpi_add_equipment(self, args):
 
 ---
 
+## Phase 0.5: API Design & Specifications (Critical Pre-Phase 1) 🔴
+
+**Status:** BLOCKING Phase 1 - Must complete before implementation
+**Duration:** 3-5 days
+**Codex Assessment:** "If well designed" qualifier NOT currently satisfied
+
+### Critical Finding from Codex Review
+
+**Problem**: Current ROADMAP has implementation tasks but missing foundational API designs. Codex identified specific gaps that must be resolved before Phase 1 implementation:
+
+1. **graph_modify** - No concrete contract exists (only TODO)
+2. **model_tx_apply** - Still string dispatch, needs typed operation registry
+3. **area_deploy** - Missing template library design and parameter rules
+4. **TransactionManager** - Deep-copy performance concerns, needs structural diff design
+
+**Impact**: Without these specifications, Phase 1 implementation would be building on undefined foundations.
+
+---
+
+### Design Task 1: graph_modify API Specification ⏳
+
+**Status:** IN PROGRESS - Updated with upstream library leverage
+**Priority:** CRITICAL - Determines if consolidation satisfies "point change" requirement
+**Estimate:** 2 days
+
+**Codex Validation - Upstream Library Leverage:**
+
+**✅ Use Directly from pyDEXPI** (`pydexpi/toolkits/piping_toolkit.py`):
+- `insert_item_to_segment` (lines 532-707) - For `insert_inline_component`
+- `connect_piping_network_segment` (lines 134-207) - For `rewire_connection`
+- `append_item_to_unconnected_segment` - For free segment operations
+- `piping_network_segment_validity_check` - Post-operation validation
+
+**❌ Build Custom (No Upstream Support)**:
+- Segment split/merge - No native helpers in pyDEXPI
+- Must compose "insert + reconnect + new segment" manually
+- Use `find_final_connection` and `construct_new_segment` utilities
+
+**SFILES Operations**:
+- ✅ `Flowsheet.add_unit` / `add_stream` (Flowsheet_Class/flowsheet.py:56-86)
+- ✅ `split_HI_nodes` / `merge_HI_nodes` (lines 524-638) - Heat integration
+- ❌ Direct stream rewiring - manipulate NetworkX `self.state` directly
+- Re-run `convert_to_sfiles` after modifications for canonicalization
+
+**What Must Be Designed:**
+
+1. **Action Enum** (Codex-recommended, covering 80%+ of point changes):
+   - `insert_component` - Add new component to model
+   - `remove_component` - Delete component from model
+   - `update_component` - Modify component attributes
+   - `insert_inline_component` - **Wrapper over `insert_item_to_segment`**
+   - `split_segment` - Custom logic using pyDEXPI segment utilities
+   - `merge_segments` - Custom logic with validity checks
+   - `rewire_connection` - **Wrapper over `connect_piping_network_segment`**
+   - `set_tag_properties` - Update tag metadata
+   - `toggle_instrumentation` - Add/remove instruments
+   - `update_stream_properties` - **SFILES: NetworkX manipulation + canonicalize**
+
+2. **Target Selector Schema**:
+   ```typescript
+   {
+     kind: "component" | "segment" | "stream" | "port",
+     identifier: string,  // tag or GUID
+     selector?: {         // optional filters
+       class?: string,
+       service?: string,
+       attributes?: object
+     }
+   }
+   ```
+
+3. **Implementation Strategy** (thin wrappers over upstream):
+   - Resolve target segment/component
+   - Construct pyDEXPI `PipingNetworkSegmentItem` objects
+   - Call upstream toolkit functions
+   - Run `piping_network_segment_validity_check` post-operation
+   - Log diff for TransactionManager
+   - For SFILES: wrap NetworkX ops, re-canonicalize
+
+4. **Response Format**:
+   ```typescript
+   {
+     ok: true,
+     mutated_entities: string[],  // IDs of changed components
+     diff: {
+       added: string[],
+       removed: string[],
+       updated: string[]
+     },
+     validation: {                // Run toolkit validity checks
+       errors: [],
+       warnings: []
+     }
+   }
+   ```
+
+5. **DEXPI/SFILES Parity** - Each action must specify behavior for both standards or explicitly error
+
+**Deliverable**: `docs/api/graph_modify_spec.md` with upstream toolkit integration details
+
+---
+
+### Design Task 2: Operation Registry for model_tx_apply ⏳
+
+**Status:** NOT STARTED
+**Priority:** HIGH - Required for typed dispatch
+**Estimate:** 1 day
+
+**Current Problem** (Codex): "Still just a thin dispatcher over 51 atomic tools using string names"
+
+**Codex Validation - Upstream Pattern:**
+- ✅ Follow `ParserFactory.factory_methods` pattern from `pydexpi/loaders/proteus_serializer/parser_factory.py:24-76`
+- ✅ Leverage `DexpiIntrospector` (already in codebase) for schema metadata
+- ✅ Use dict-of-callables structure for operation dispatch
+- ❌ No ready-made operation descriptor catalog - must author ourselves
+
+**What Must Be Designed:**
+
+1. **Operation Descriptor Schema**:
+   ```typescript
+   {
+     name: string,
+     version: string,
+     category: "dexpi" | "sfiles" | "universal",
+     description: string,
+     inputSchema: JSONSchema,
+     handler: async (model, params) => result,
+     validationHooks?: {
+       pre?: (model, params) => ValidationResult,
+       post?: (model, result) => ValidationResult
+     },
+     metadata?: {
+       replaces?: string[],  // old tool names
+       introduced?: string,  // version
+       deprecated?: string
+     }
+   }
+   ```
+
+2. **Registry Interface**:
+   - `register(operation: OperationDescriptor)`
+   - `get(name: string): OperationDescriptor`
+   - `list(filter?: {category, version}): OperationDescriptor[]`
+   - `getSchema(): JSONSchema` - For schema_query tool
+
+3. **Built-in Operations** - Map current atomic tools to operations:
+   - `add_equipment`, `add_valve`, `add_piping`, etc.
+   - Define which stay vs. which are replaced by graph_modify actions
+
+4. **Versioning Strategy** - How operations evolve over time
+
+5. **Integration Points**:
+   - model_tx_apply dispatch logic
+   - schema_query tool exposure
+   - Validation hook execution
+
+**Deliverable**: `docs/api/operation_registry_spec.md`
+
+---
+
+### Design Task 3: TransactionManager Architecture ⏳
+
+**Status:** NOT STARTED
+**Priority:** CRITICAL - Performance and reliability foundation
+**Estimate:** 1 day
+
+**Codex Warning**: "Deep copies of large DexpiModels can be MB-scale; benchmark early and fall back to structural diffs"
+
+**Codex Validation - Upstream Utilities:**
+- ✅ Use `copy.deepcopy` for small models (pattern from `pydexpi/syndata/pattern.py:504-519`)
+- ✅ Use `model_toolkit.combine_dexpi_models` / `import_model_contents_into_model` (`pydexpi/toolkits/model_toolkit.py:17-99`)
+- ✅ Use `MLGraphLoader.validate_graph_format` for post-transaction validation (`pydexpi/loaders/ml_graph_loader.py:80-103`)
+- ✅ Use `get_all_instances_in_model` (`pydexpi/toolkits/model_toolkit.py:102-199`) for building audit diffs
+- ❌ No native diff/transaction scaffolding - must build custom
+
+**What Must Be Designed:**
+
+1. **State Management**:
+   ```typescript
+   class TransactionManager {
+     transactions: Map<string, Transaction>
+
+     begin(model_id: string): transaction_id
+     apply(transaction_id: string, operations: Operation[]): results
+     commit(transaction_id: string): final_state
+     rollback(transaction_id: string): void
+     diff(transaction_id: string): StructuralDiff
+   }
+   ```
+
+2. **Copy Strategy** (Codex-recommended):
+   - **Snapshot by serialization** for large models (>1MB threshold)
+   - **Deep copy** for small models (<1MB) using `copy.deepcopy`
+   - Use existing serializers for snapshot caching
+   - Benchmark with real DEXPI models to determine threshold
+
+3. **Diff Calculation**:
+   - Use `get_all_instances_in_model` to enumerate components
+   - Track added/removed/modified components
+   - Efficient comparison algorithm
+   - Integration with `MLGraphLoader.validate_graph_format`
+
+4. **Isolation Levels**:
+   - Single-transaction per model (simple)
+   - OR: Multi-transaction with conflict detection (complex)
+
+5. **Performance Targets**:
+   - begin(): <100ms for models up to 500 components
+   - apply(): <50ms per operation
+   - commit(): <200ms with validation
+   - rollback(): <50ms
+
+6. **Error Handling**:
+   - Partial operation failures
+   - Validation failures
+   - Timeout handling
+
+**Deliverable**: `docs/architecture/transaction_manager.md`
+
+---
+
+### Design Task 4: Template Library Architecture ⏳
+
+**Status:** NOT STARTED
+**Priority:** MEDIUM - Needed for area_deploy
+**Estimate:** 1 day
+
+**Codex Concern**: "Missing internal template library, parameter substitution rules, and coverage for instrumentation/control variations"
+
+**Codex Validation - Upstream Capabilities:**
+- ✅ `DexpiPattern` merges models via `mt.import_model_contents_into_model` (`pydexpi/syndata/dexpi_pattern.py:268-286`)
+- ✅ `ConnectorRenamingConvention` handles connector renaming (`pydexpi/syndata/connector_renaming.py:8-69`)
+- ✅ `Pattern.relabel_connector` for observer propagation (`pydexpi/syndata/pattern.py:483-503`)
+- ✅ `Pattern.copy_pattern` for cloning templates (`pydexpi/syndata/pattern.py:504-519`)
+- ✅ Generator stack shows how to sequence patterns (`pydexpi/syndata/generator.py:14-181`)
+- ❌ No built-in parameter substitution - must layer our own templating
+- ❌ No automatic self-validation - must run separately
+
+**Additional Leverage Opportunities:**
+- `SyntheticPIDGenerator` shows pattern sequencing for `area_deploy`
+- SFILES `split_HI_nodes`/`merge_HI_nodes` (Flowsheet_Class/flowsheet.py:524-638) for heat-integration templates
+- SFILES `generalize_SFILES` + `flatten` already solve Phase 2 generalization helper
+
+**What Must Be Designed:**
+
+1. **Template Format** (wraps pyDEXPI DexpiPattern):
+   ```yaml
+   name: pump_station_n_plus_1
+   version: 1.0
+   category: piping
+   description: N+1 redundant pump station
+
+   parameters:
+     pump_count: {type: int, min: 2, max: 10, default: 3}
+     flow_rate: {type: float, unit: m3/h}
+     control_type: {type: enum, values: [flow, pressure, level]}
+
+   components:
+     - type: CentrifugalPump
+       count: ${pump_count}
+       tag_pattern: "P-${area}-${sequence}"
+       attributes: {...}
+
+   connections:
+     - from: ${header_inlet}
+       to: pump[*].inlet
+       via: [CheckValve, IsolationValve]
+
+   instrumentation:
+     - if: ${control_type} == "flow"
+       add: FlowController
+   ```
+
+2. **Template Library Structure**:
+   ```
+   /library/patterns/
+     /piping/
+       pump_station_n_plus_1.yaml
+       tank_farm.yaml
+       heat_integration.yaml        # NEW: Use SFILES split/merge_HI_nodes
+     /instrumentation/
+       flow_control_loop.yaml
+       cascade_control.yaml
+     /process/
+       ro_train_2stage.yaml
+       chemical_dosing.yaml
+   ```
+
+3. **Implementation Strategy** (Codex-recommended):
+   - Wrap templates in "parametric template" class
+   - Clone via `Pattern.copy_pattern`
+   - Apply parameter substitutions (walk DexpiModel, replace attributes)
+   - Feed to `ConnectorRenamingConvention` for tag generation
+   - Compose patterns using generator stack pattern
+   - Validation: Run `MLGraphLoader.validate_graph_format` after instantiation
+
+4. **Parameter Substitution Rules**:
+   - Variable interpolation syntax: `${variable_name}`
+   - Conditional logic (if/else): Simple Python-style conditions
+   - Array expansion (count, foreach): Generate N copies with pattern
+   - Naming conventions: Integrate with `ConnectorRenamingConvention`
+
+5. **Minimum Template Coverage** (start with 5, plan for 20+):
+   - **Piping**: Pump station, Tank farm, Heat exchanger network
+   - **Control**: Flow/Level/Pressure/Temperature control loops
+   - **Process**: RO train, Dosing skid, Aeration system
+   - **Heat Integration**: Use SFILES heat-integration utilities
+
+6. **Validation**:
+   - Template schema validation
+   - Parameter type checking
+   - Connection validity via `piping_network_segment_validity_check`
+   - Instrument compatibility
+   - Post-instantiation: `MLGraphLoader.validate_graph_format`
+
+**Deliverable**: `docs/templates/template_system.md` + 5 example templates + parameter substitution implementation
+
+---
+
+### Phase 0.5 Success Criteria
+
+**All 4 design tasks completed** with:
+- ✅ Written specifications in `docs/`
+- ✅ API contracts defined
+- ✅ Examples/schemas provided
+- ✅ User review and approval
+- ✅ Codex validation of designs
+
+**Only then** can Phase 1 implementation begin with confidence that "if well designed" qualifier is satisfied.
+
+---
+
 ## Phase 1: Core Infrastructure (Week 1, Days 4-7)
 
 ### Transaction Manager Enhancement - MOVED TO FIRST 🔴
