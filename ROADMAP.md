@@ -595,14 +595,19 @@ async def dexpi_add_equipment(self, args):
 
 **Upstream Integration:**
 - ✅ `mt.get_all_instances_in_model(model, None)` for size estimation
-- ✅ `MLGraphLoader.validate_graph_format()` for DEXPI validation
+- ✅ `MLGraphLoader.dexpi_to_graph()` + `validate_graph_format()` for DEXPI validation
 - ✅ `JsonSerializer` for DEXPI snapshots
-- ✅ `Flowsheet.to_SFILES()/from_SFILES()` for SFILES snapshots
+- ✅ `Flowsheet.convert_to_sfiles()` / `create_from_sfiles()` for SFILES snapshots
 
 **Tests:**
 - ✅ 11/11 unit tests passing (`test_transaction_manager_unit.py`)
 - ✅ Data structures, exceptions, enums validated
 - ✅ Integration test suite created (`test_transaction_manager.py`)
+
+**Codex Review:**
+- ✅ Fixed SFILES snapshot API (commit `b7d596f`)
+- ✅ Fixed DEXPI validation API (commit `b7d596f`)
+- ✅ **APPROVED** to proceed to Task 2
 
 **Actual Time:** 1 day (vs 2 days estimated)
 
