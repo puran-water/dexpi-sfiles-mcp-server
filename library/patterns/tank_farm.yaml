@@ -1,0 +1,210 @@
+# Tank Farm Template
+# Multiple storage tanks with isolation and drain valves
+
+name: tank_farm
+version: 1.0.0
+category: storage
+description: Tank farm with configurable number of storage tanks, each with inlet/outlet isolation and drain valves
+
+# Template parameters
+parameters:
+  tank_count:
+    type: integer
+    min: 1
+    max: 20
+    default: 4
+    description: Number of storage tanks
+
+  tank_capacity:
+    type: number
+    min: 1
+    max: 10000
+    default: 100
+    description: Tank capacity (m3)
+
+  nominal_diameter:
+    type: string
+    enum: [DN50, DN80, DN100, DN150, DN200, DN250]
+    default: DN100
+    description: Pipe nominal diameter for connections
+
+  area:
+    type: string
+    default: "TK"
+    description: Area tag for naming
+
+  design_pressure:
+    type: number
+    min: 1
+    max: 50
+    default: 5
+    description: Design pressure (bar)
+
+  level_instrumentation:
+    type: boolean
+    default: true
+    description: Include level transmitters
+
+  common_header:
+    type: boolean
+    default: true
+    description: Use common inlet/outlet headers
+
+# Base pattern
+base_pattern:
+  # Generated programmatically
+
+# Component generation rules
+components:
+  # Generate N tanks
+  - name: tank
+    type: Tank
+    count: ${tank_count}
+    tag_pattern: "TK-${area}-${sequence:03d}"
+    attributes:
+      volume: ${tank_capacity}
+      designPressure: ${design_pressure}
+      tankType: "vertical_cylindrical"
+    nozzles:
+      - subTagName: "N1"
+        nominalDiameter: "${nominal_diameter}"
+        function: "inlet"
+        location: "top"
+      - subTagName: "N2"
+        nominalDiameter: "${nominal_diameter}"
+        function: "outlet"
+        location: "bottom"
+      - subTagName: "N3"
+        nominalDiameter: "DN50"
+        function: "drain"
+        location: "bottom"
+      - subTagName: "N4"
+        nominalDiameter: "DN25"
+        function: "vent"
+        location: "top"
+
+  # Inlet isolation valve for each tank
+  - name: inlet_valve
+    type: GateValve
+    count: ${tank_count}
+    tag_pattern: "V-${area}-${sequence:03d}A"
+    attributes:
+      nominalDiameter: "${nominal_diameter}"
+      valveType: "isolation"
+      normalPosition: "open"
+
+  # Outlet isolation valve for each tank
+  - name: outlet_valve
+    type: GateValve
+    count: ${tank_count}
+    tag_pattern: "V-${area}-${sequence:03d}B"
+    attributes:
+      nominalDiameter: "${nominal_diameter}"
+      valveType: "isolation"
+      normalPosition: "open"
+
+  # Drain valve for each tank
+  - name: drain_valve
+    type: GateValve
+    count: ${tank_count}
+    tag_pattern: "V-${area}-${sequence:03d}D"
+    attributes:
+      nominalDiameter: "DN50"
+      valveType: "drain"
+      normalPosition: "closed"
+
+  # Common inlet header (conditional)
+  - name: inlet_header
+    type: Tank
+    count: 1
+    condition: "${common_header} == true"
+    tag_pattern: "HDR-${area}-INLET"
+    attributes:
+      nominalDiameter: "${nominal_diameter}"
+      headerType: "inlet_manifold"
+
+  # Common outlet header (conditional)
+  - name: outlet_header
+    type: Tank
+    count: 1
+    condition: "${common_header} == true"
+    tag_pattern: "HDR-${area}-OUTLET"
+    attributes:
+      nominalDiameter: "${nominal_diameter}"
+      headerType: "outlet_manifold"
+
+# Instrumentation (conditional)
+instrumentation:
+  # Level transmitters for each tank
+  - condition: "${level_instrumentation} == true"
+    components:
+      - name: level_transmitter
+        type: FlowDetector
+        count: ${tank_count}
+        tag_pattern: "LT-${area}-${sequence:03d}"
+        attributes:
+          sensingLocation: "tank_body"
+          measurementType: "level"
+          measurementRange: "100"
+          units: "percent"
+
+      - name: level_indicator
+        type: ProcessControlFunction
+        count: ${tank_count}
+        tag_pattern: "LI-${area}-${sequence:03d}"
+        attributes:
+          indicatorType: "local"
+          displayUnits: "percent"
+
+# Connection topology
+connections:
+  - description: "Inlet header to tanks (if common_header=true)"
+    condition: "${common_header} == true"
+    from: "inlet_header"
+    to: "tank[*].N1"
+    via: ["inlet_valve[*]"]
+    pipe_class: "CS150"
+
+  - description: "Tanks to outlet header (if common_header=true)"
+    condition: "${common_header} == true"
+    from: "tank[*].N2"
+    to: "outlet_header"
+    via: ["outlet_valve[*]"]
+    pipe_class: "CS150"
+
+  - description: "Tank drains (independent)"
+    from: "tank[*].N3"
+    to: "drain_collection"
+    via: ["drain_valve[*]"]
+    pipe_class: "CS150"
+
+# Validation rules
+validation:
+  rules:
+    - type: tag_uniqueness
+      description: All tags must be unique
+    - type: connectivity
+      description: All tanks properly connected
+    - type: capacity
+      description: Total farm capacity = tank_capacity * tank_count
+
+# Metadata
+metadata:
+  author: Engineering MCP Server
+  created: 2025-11-06
+  tags: [tank, storage, farm, bulk_storage]
+  references:
+    - API 650 (Welded Tanks for Oil Storage)
+    - NFPA 30 (Flammable and Combustible Liquids Code)
+  use_cases:
+    - Chemical storage
+    - Water storage
+    - Fuel storage
+    - Buffer tanks for batch processes
+  notes: |
+    Tank farm template with flexible configuration:
+    - Configurable tank count and capacity
+    - Optional common headers
+    - Level instrumentation
+    - Individual drain systems
+    - Suitable for liquid storage applications

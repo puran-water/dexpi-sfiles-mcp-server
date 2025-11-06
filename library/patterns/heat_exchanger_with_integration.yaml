@@ -1,0 +1,297 @@
+# Heat Exchanger with Heat Integration
+# Demonstrates SFILES heat integration nodes (split_HI_nodes/merge_HI_nodes)
+
+name: heat_exchanger_with_integration
+version: 1.0.0
+category: heat_transfer
+description: Shell-and-tube heat exchanger with heat integration support for process optimization
+
+# Template parameters
+parameters:
+  exchanger_tag:
+    type: string
+    default: "HX-001"
+    description: Tag name for heat exchanger
+
+  heat_duty:
+    type: number
+    min: 1
+    max: 10000
+    default: 1000
+    description: Heat duty (kW)
+
+  shell_pressure:
+    type: number
+    min: 1
+    max: 100
+    default: 10
+    description: Shell side design pressure (bar)
+
+  tube_pressure:
+    type: number
+    min: 1
+    max: 100
+    default: 15
+    description: Tube side design pressure (bar)
+
+  nominal_diameter_shell:
+    type: string
+    enum: [DN100, DN150, DN200, DN250, DN300]
+    default: DN150
+    description: Shell side pipe diameter
+
+  nominal_diameter_tube:
+    type: string
+    enum: [DN50, DN80, DN100, DN150, DN200]
+    default: DN100
+    description: Tube side pipe diameter
+
+  area:
+    type: string
+    default: "HX"
+    description: Area tag for naming
+
+  heat_integration:
+    type: boolean
+    default: true
+    description: Enable heat integration nodes (SFILES)
+
+  control_type:
+    type: string
+    enum: [temperature, flow, none]
+    default: temperature
+    description: Control loop type
+
+  exchanger_type:
+    type: string
+    enum: [shell_and_tube, plate, air_cooled]
+    default: shell_and_tube
+    description: Type of heat exchanger
+
+# Base pattern
+base_pattern:
+  # Generated programmatically
+
+# Component generation rules
+components:
+  # Main heat exchanger
+  - name: heat_exchanger
+    type: HeatExchanger
+    count: 1
+    tag_pattern: "${exchanger_tag}"
+    attributes:
+      heatDuty: ${heat_duty}
+      exchangerType: "${exchanger_type}"
+      shellPressure: ${shell_pressure}
+      tubePressure: ${tube_pressure}
+    nozzles:
+      # Shell side
+      - subTagName: "N1"
+        nominalDiameter: "${nominal_diameter_shell}"
+        function: "shell_inlet"
+      - subTagName: "N2"
+        nominalDiameter: "${nominal_diameter_shell}"
+        function: "shell_outlet"
+      # Tube side
+      - subTagName: "N3"
+        nominalDiameter: "${nominal_diameter_tube}"
+        function: "tube_inlet"
+      - subTagName: "N4"
+        nominalDiameter: "${nominal_diameter_tube}"
+        function: "tube_outlet"
+
+  # Shell side inlet isolation valve
+  - name: shell_inlet_valve
+    type: GateValve
+    count: 1
+    tag_pattern: "V-${area}-001A"
+    attributes:
+      nominalDiameter: "${nominal_diameter_shell}"
+      valveType: "isolation"
+
+  # Shell side outlet isolation valve
+  - name: shell_outlet_valve
+    type: GateValve
+    count: 1
+    tag_pattern: "V-${area}-001B"
+    attributes:
+      nominalDiameter: "${nominal_diameter_shell}"
+      valveType: "isolation"
+
+  # Tube side inlet isolation valve
+  - name: tube_inlet_valve
+    type: GateValve
+    count: 1
+    tag_pattern: "V-${area}-002A"
+    attributes:
+      nominalDiameter: "${nominal_diameter_tube}"
+      valveType: "isolation"
+
+  # Tube side outlet isolation valve
+  - name: tube_outlet_valve
+    type: GateValve
+    count: 1
+    tag_pattern: "V-${area}-002B"
+    attributes:
+      nominalDiameter: "${nominal_diameter_tube}"
+      valveType: "isolation"
+
+  # Heat integration nodes (SFILES-specific)
+  # These will be converted to SFILES HI nodes during instantiation
+  - name: hi_node_hot_in
+    type: Tank  # Placeholder, converted to SFILES HI node
+    count: 1
+    condition: "${heat_integration} == true"
+    tag_pattern: "HI-${area}-HOT-IN"
+    attributes:
+      nodeType: "heat_integration"
+      streamType: "hot_utility_in"
+      temperature: "high"
+
+  - name: hi_node_hot_out
+    type: Tank
+    count: 1
+    condition: "${heat_integration} == true"
+    tag_pattern: "HI-${area}-HOT-OUT"
+    attributes:
+      nodeType: "heat_integration"
+      streamType: "hot_utility_out"
+      temperature: "medium"
+
+  - name: hi_node_cold_in
+    type: Tank
+    count: 1
+    condition: "${heat_integration} == true"
+    tag_pattern: "HI-${area}-COLD-IN"
+    attributes:
+      nodeType: "heat_integration"
+      streamType: "cold_utility_in"
+      temperature: "low"
+
+  - name: hi_node_cold_out
+    type: Tank
+    count: 1
+    condition: "${heat_integration} == true"
+    tag_pattern: "HI-${area}-COLD-OUT"
+    attributes:
+      nodeType: "heat_integration"
+      streamType: "cold_utility_out"
+      temperature: "medium"
+
+# Instrumentation (conditional)
+instrumentation:
+  # Temperature control on outlet
+  - condition: "${control_type} == 'temperature'"
+    components:
+      - name: temperature_transmitter
+        type: FlowDetector
+        count: 1
+        tag_pattern: "TT-${area}-001"
+        attributes:
+          sensingLocation: "tube_outlet"
+          measurementType: "temperature"
+          units: "celsius"
+
+      - name: temperature_controller
+        type: ProcessControlFunction
+        count: 1
+        tag_pattern: "TC-${area}-001"
+        attributes:
+          controlType: "temperature"
+          manipulatedVariable: "shell_flow"
+
+  # Flow control
+  - condition: "${control_type} == 'flow'"
+    components:
+      - name: flow_transmitter
+        type: FlowDetector
+        count: 1
+        tag_pattern: "FT-${area}-001"
+        attributes:
+          sensingLocation: "shell_inlet"
+          measurementType: "flow"
+          units: "m3/h"
+
+      - name: flow_controller
+        type: ProcessControlFunction
+        count: 1
+        tag_pattern: "FC-${area}-001"
+        attributes:
+          controlType: "flow"
+
+# Connection topology
+connections:
+  - description: "Shell side flow path"
+    from: "shell_inlet"
+    to: "heat_exchanger.N1"
+    via: ["shell_inlet_valve"]
+    pipe_class: "CS300"
+
+  - description: "Shell side exit"
+    from: "heat_exchanger.N2"
+    to: "shell_outlet"
+    via: ["shell_outlet_valve"]
+    pipe_class: "CS300"
+
+  - description: "Tube side flow path"
+    from: "tube_inlet"
+    to: "heat_exchanger.N3"
+    via: ["tube_inlet_valve"]
+    pipe_class: "CS300"
+
+  - description: "Tube side exit"
+    from: "heat_exchanger.N4"
+    to: "tube_outlet"
+    via: ["tube_outlet_valve"]
+    pipe_class: "CS300"
+
+  # Heat integration connections (SFILES-specific)
+  - description: "Heat integration - hot utility"
+    condition: "${heat_integration} == true"
+    from: "hi_node_hot_in"
+    to: "hi_node_hot_out"
+    via: ["heat_exchanger"]
+    heat_flow: "negative"  # Heat removed from hot stream
+
+  - description: "Heat integration - cold utility"
+    condition: "${heat_integration} == true"
+    from: "hi_node_cold_in"
+    to: "hi_node_cold_out"
+    via: ["heat_exchanger"]
+    heat_flow: "positive"  # Heat added to cold stream
+
+# Validation rules
+validation:
+  rules:
+    - type: tag_uniqueness
+      description: All tags must be unique
+    - type: heat_balance
+      description: Heat duty matches integration nodes (if enabled)
+    - type: pressure_rating
+      description: Valves rated for design pressure
+
+# Metadata
+metadata:
+  author: Engineering MCP Server
+  created: 2025-11-06
+  tags: [heat_exchanger, heat_integration, SFILES, optimization]
+  references:
+    - TEMA (Tubular Exchanger Manufacturers Association)
+    - ASME Section VIII (Pressure Vessels)
+    - Heat Integration Network Design
+  use_cases:
+    - Process heating/cooling
+    - Heat recovery
+    - Utility optimization
+    - Pinch analysis integration
+  sfiles_features:
+    - split_HI_nodes: Splits heat integration at exchanger
+    - merge_HI_nodes: Merges heat streams after exchange
+    - Used in SFILES generalization for process optimization
+  notes: |
+    Heat exchanger template with heat integration support:
+    - DEXPI: Full P&ID representation with valves and instrumentation
+    - SFILES: Heat integration nodes for optimization
+    - Demonstrates dual-mode template (DEXPI + SFILES)
+    - Heat integration nodes converted via split_HI_nodes/merge_HI_nodes
+    - Enables pinch analysis and heat network optimization

@@ -1,0 +1,220 @@
+# N+1 Redundant Pump Station
+# Strategic template demonstrating full parametric capabilities
+
+name: pump_station_n_plus_1
+version: 1.0.0
+category: piping
+description: N+1 redundant pump station with isolation valves, check valves, and optional instrumentation
+
+# Template parameters (user-provided values)
+parameters:
+  pump_count:
+    type: integer
+    min: 2
+    max: 10
+    default: 3
+    description: Number of pumps (N+1 configuration)
+
+  flow_rate:
+    type: number
+    min: 1
+    max: 1000
+    default: 100
+    description: Design flow rate per pump (m3/h)
+
+  nominal_diameter:
+    type: string
+    enum: [DN50, DN80, DN100, DN150, DN200]
+    default: DN100
+    description: Pipe nominal diameter
+
+  control_type:
+    type: string
+    enum: [flow, pressure, none]
+    default: flow
+    description: Control loop type
+
+  area:
+    type: string
+    default: "PUMP"
+    description: Area tag for naming
+
+  design_pressure:
+    type: number
+    min: 1
+    max: 100
+    default: 10
+    description: Design pressure (bar)
+
+# Base pattern (created programmatically)
+base_pattern:
+  # Will be generated based on components below
+
+# Component generation rules
+components:
+  # Generate N pumps
+  - name: pump
+    type: CentrifugalPump
+    count: ${pump_count}
+    tag_pattern: "P-${area}-${sequence:03d}"
+    attributes:
+      nominalDiameter: "${nominal_diameter}"
+      flowRate: ${flow_rate}
+      designPressure: ${design_pressure}
+    nozzles:
+      - subTagName: "N1"
+        nominalDiameter: "${nominal_diameter}"
+        function: "inlet"
+      - subTagName: "N2"
+        nominalDiameter: "${nominal_diameter}"
+        function: "outlet"
+
+  # Isolation valve for each pump (inlet)
+  - name: isolation_valve_inlet
+    type: GateValve
+    count: ${pump_count}
+    tag_pattern: "V-${area}-${sequence:03d}A"
+    attributes:
+      nominalDiameter: "${nominal_diameter}"
+      valveType: "isolation"
+      normalPosition: "open"
+
+  # Check valve for each pump (outlet)
+  - name: check_valve
+    type: CheckValve
+    count: ${pump_count}
+    tag_pattern: "CV-${area}-${sequence:03d}"
+    attributes:
+      nominalDiameter: "${nominal_diameter}"
+      flowDirection: "forward"
+
+  # Isolation valve for each pump (outlet)
+  - name: isolation_valve_outlet
+    type: GateValve
+    count: ${pump_count}
+    tag_pattern: "V-${area}-${sequence:03d}B"
+    attributes:
+      nominalDiameter: "${nominal_diameter}"
+      valveType: "isolation"
+      normalPosition: "open"
+
+  # Common inlet header (single)
+  - name: inlet_header
+    type: Tank  # Using Tank as header placeholder
+    count: 1
+    tag_pattern: "HDR-${area}-INLET"
+    attributes:
+      nominalDiameter: "${nominal_diameter}"
+      headerType: "inlet"
+    nozzles:
+      - subTagName: "N1"
+        nominalDiameter: "${nominal_diameter}"
+        function: "main_inlet"
+
+  # Common outlet header (single)
+  - name: outlet_header
+    type: Tank  # Using Tank as header placeholder
+    count: 1
+    tag_pattern: "HDR-${area}-OUTLET"
+    attributes:
+      nominalDiameter: "${nominal_diameter}"
+      headerType: "outlet"
+    nozzles:
+      - subTagName: "N1"
+        nominalDiameter: "${nominal_diameter}"
+        function: "main_outlet"
+
+# Connection topology
+# Note: Actual connections will be handled by pattern instantiation
+# This section documents the intended connectivity
+connections:
+  - description: "Inlet header to each pump via isolation valve"
+    from: "inlet_header"
+    to: "pump[*].N1"
+    via: ["isolation_valve_inlet[*]"]
+    pipe_class: "CS150"
+
+  - description: "Each pump to outlet header via check valve and isolation valve"
+    from: "pump[*].N2"
+    to: "outlet_header"
+    via: ["check_valve[*]", "isolation_valve_outlet[*]"]
+    pipe_class: "CS150"
+
+# Instrumentation (conditional on control_type)
+instrumentation:
+  # Flow control on each pump
+  - condition: "${control_type} == 'flow'"
+    components:
+      - name: flow_transmitter
+        type: FlowDetector  # Using FlowDetector from pyDEXPI instrumentation
+        count: ${pump_count}
+        tag_pattern: "FT-${area}-${sequence:03d}"
+        attributes:
+          sensingLocation: "pump_outlet"
+          measurementRange: "${flow_rate * 1.2}"
+          units: "m3/h"
+
+      - name: flow_controller
+        type: ProcessControlFunction
+        count: ${pump_count}
+        tag_pattern: "FC-${area}-${sequence:03d}"
+        attributes:
+          controlType: "flow"
+          setpoint: ${flow_rate}
+          units: "m3/h"
+
+  # Pressure control on outlet header
+  - condition: "${control_type} == 'pressure'"
+    components:
+      - name: pressure_transmitter
+        type: FlowDetector  # Using generic detector
+        count: 1
+        tag_pattern: "PT-${area}-001"
+        attributes:
+          sensingLocation: "outlet_header"
+          measurementType: "pressure"
+          measurementRange: "${design_pressure * 1.5}"
+          units: "bar"
+
+      - name: pressure_controller
+        type: ProcessControlFunction
+        count: 1
+        tag_pattern: "PC-${area}-001"
+        attributes:
+          controlType: "pressure"
+          setpoint: ${design_pressure}
+          units: "bar"
+
+# Validation rules (run after instantiation)
+validation:
+  rules:
+    - type: connectivity
+      description: All pumps connected to headers
+    - type: tag_uniqueness
+      description: All tags must be unique
+    - type: port_compatibility
+      description: Connected ports must match diameter
+    - type: redundancy
+      description: N+1 redundancy verified (pump_count >= 2)
+
+# Metadata
+metadata:
+  author: Engineering MCP Server
+  created: 2025-11-06
+  tags: [pump, redundancy, n+1, piping, strategic]
+  references:
+    - ISA-5.1 (Instrumentation Symbols)
+    - API 610 (Centrifugal Pumps)
+    - ASME B31.3 (Process Piping)
+  use_cases:
+    - Water distribution systems
+    - Chemical feed systems
+    - Cooling water systems
+    - Process fluid transfer
+  notes: |
+    This template demonstrates full parametric capabilities including:
+    - Array generation with sequencing
+    - Conditional instrumentation based on control_type
+    - Tag pattern generation with area and sequence
+    - Parameter validation (count, range, enum)
+    - Connection topology definition
