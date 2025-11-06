@@ -196,25 +196,20 @@ class ParametricTemplate:
 
     def instantiate(
         self,
-        target_model: DexpiModel,
+        target_model: Any,  # DexpiModel or Flowsheet
         parameters: Dict[str, Any],
+        model_type: str = "dexpi",  # "dexpi" or "sfiles"
         connection_point: Optional[str] = None
     ) -> TemplateInstantiationResult:
         """
         Instantiate template into target model.
 
-        Workflow (Codex-recommended):
-        1. Validate parameters
-        2. Load/create base DexpiPattern
-        3. Clone via Pattern.copy_pattern()
-        4. Apply parameter substitutions
-        5. Feed to ConnectorRenamingConvention
-        6. Import into target model
-        7. Validate result
+        Supports both DEXPI (P&ID) and SFILES (flowsheet) models.
 
         Args:
-            target_model: Model to instantiate into
+            target_model: DexpiModel or Flowsheet to instantiate into
             parameters: Parameter values
+            model_type: "dexpi" or "sfiles"
             connection_point: Optional connector to attach at
 
         Returns:
@@ -240,55 +235,13 @@ class ParametricTemplate:
                 elif "default" in param_schema:
                     full_params[param_name] = param_schema["default"]
 
-            logger.info(f"Instantiating template '{self.name}' with parameters: {full_params}")
+            logger.info(f"Instantiating template '{self.name}' ({model_type}) with parameters: {full_params}")
 
-            # Step 2: Get base pattern
-            base_pattern = self._get_base_pattern()
-
-            # Step 3: Clone pattern (Codex: "Clone via Pattern.copy_pattern")
-            cloned_pattern = base_pattern.copy_pattern()
-
-            # Step 4: Apply parameter substitutions
-            substituted_model = self._substitution_engine.substitute_model(
-                cloned_pattern.model,
-                full_params
-            )
-
-            # Step 5: Apply connector renaming convention
-            # This generates unique tags based on sequence
-            prefix = full_params.get("area", self.category.upper())
-            renaming_convention = ConnectorRenamingConvention(
-                prefix=prefix,
-                start_index=1
-            )
-
-            # Apply renaming to connectors
-            for connector in cloned_pattern.connectors:
-                connector.apply_renaming_convention(renaming_convention)
-
-            # Step 6: Import into target model
-            # Use pyDEXPI's model_toolkit.import_model_contents
-            instantiated_components = mt.import_model_contents(
-                source_model=substituted_model,
-                target_model=target_model,
-                preserve_ids=False  # Generate new IDs
-            )
-
-            # Step 7: Validate result
-            validation_errors = self._validate_instantiation(target_model)
-
-            return TemplateInstantiationResult(
-                success=len(validation_errors) == 0,
-                message=f"Template '{self.name}' instantiated successfully" if not validation_errors
-                        else f"Template instantiated with {len(validation_errors)} validation errors",
-                instantiated_components=[comp.tagName for comp in instantiated_components if hasattr(comp, 'tagName')],
-                validation_errors=validation_errors,
-                metadata={
-                    "template": self.name,
-                    "version": self.version,
-                    "parameters": full_params
-                }
-            )
+            # Branch based on model type
+            if model_type.lower() == "sfiles":
+                return self._instantiate_sfiles(target_model, full_params, connection_point)
+            else:
+                return self._instantiate_dexpi(target_model, full_params, connection_point)
 
         except ParameterValidationError:
             raise
@@ -296,6 +249,216 @@ class ParametricTemplate:
         except Exception as e:
             logger.exception(f"Template instantiation failed: {e}")
             raise TemplateInstantiationError(f"Failed to instantiate template: {e}")
+
+    def _instantiate_dexpi(
+        self,
+        target_model: DexpiModel,
+        full_params: Dict[str, Any],
+        connection_point: Optional[str]
+    ) -> TemplateInstantiationResult:
+        """
+        DEXPI-specific instantiation workflow.
+
+        Workflow (Codex-recommended):
+        1. Load/create base DexpiPattern
+        2. Clone via Pattern.copy_pattern()
+        3. Apply parameter substitutions
+        4. Feed to ConnectorRenamingConvention
+        5. Import into target model
+        6. Validate result
+        """
+        # Step 1: Get base pattern
+        base_pattern = self._get_base_pattern()
+
+        # Step 2: Clone pattern (Codex: "Clone via Pattern.copy_pattern")
+        cloned_pattern = base_pattern.copy_pattern()
+
+        # Step 3: Apply parameter substitutions
+        substituted_model = self._substitution_engine.substitute_model(
+            cloned_pattern.model,
+            full_params
+        )
+
+        # Step 4: Apply connector renaming convention
+        # This generates unique tags based on sequence
+        prefix = full_params.get("area", self.category.upper())
+        renaming_convention = ConnectorRenamingConvention(
+            prefix=prefix,
+            start_index=1
+        )
+
+        # Apply renaming to connectors
+        for connector in cloned_pattern.connectors:
+            connector.apply_renaming_convention(renaming_convention)
+
+        # Step 5: Import into target model
+        # Use pyDEXPI's model_toolkit.import_model_contents
+        instantiated_components = mt.import_model_contents(
+            source_model=substituted_model,
+            target_model=target_model,
+            preserve_ids=False  # Generate new IDs
+        )
+
+        # Step 6: Validate result
+        validation_errors = self._validate_instantiation(target_model)
+
+        return TemplateInstantiationResult(
+            success=len(validation_errors) == 0,
+            message=f"Template '{self.name}' instantiated successfully" if not validation_errors
+                    else f"Template instantiated with {len(validation_errors)} validation errors",
+            instantiated_components=[comp.tagName for comp in instantiated_components if hasattr(comp, 'tagName')],
+            validation_errors=validation_errors,
+            metadata={
+                "template": self.name,
+                "version": self.version,
+                "parameters": full_params,
+                "model_type": "dexpi"
+            }
+        )
+
+    def _instantiate_sfiles(
+        self,
+        target_flowsheet: Any,  # Flowsheet from SFILES2
+        full_params: Dict[str, Any],
+        connection_point: Optional[str]
+    ) -> TemplateInstantiationResult:
+        """
+        SFILES-specific instantiation workflow.
+
+        Workflow:
+        1. Generate components from template definition
+        2. Apply parameter substitutions to component definitions
+        3. Add nodes to flowsheet.state (NetworkX graph)
+        4. Add edges based on connections
+        5. Convert heat integration placeholders
+        6. Validate via convert_to_sfiles()
+        """
+        instantiated_components = []
+        self._substitution_engine.set_parameters(full_params)
+
+        # Step 1 & 2: Generate and substitute components
+        for component_def in self.components:
+            # Check condition if present
+            if "condition" in component_def:
+                condition_expr = component_def["condition"]
+                condition_result = self._substitution_engine.substitute(condition_expr)
+                # Evaluate as boolean
+                if condition_result.lower() not in ["true", "1"]:
+                    continue
+
+            component_type = component_def.get("type")
+            count = self._substitution_engine.substitute(str(component_def.get("count", 1)))
+            count = int(count) if isinstance(count, str) else count
+            tag_pattern = component_def.get("tag_pattern", "${name}_${sequence}")
+            attributes = component_def.get("attributes", {})
+
+            # Substitute attributes
+            substituted_attrs = self._substitution_engine.substitute_dict(attributes)
+
+            # Generate N instances
+            for i in range(count):
+                # Reset sequence for each component type
+                if i == 0:
+                    self._substitution_engine.reset_sequence_counters()
+
+                # Generate tag
+                tag_context = {"name": component_def.get("name"), "index": i + 1}
+                tag = self._substitution_engine.substitute(tag_pattern, tag_context)
+
+                # Add node to flowsheet
+                target_flowsheet.state.add_node(
+                    tag,
+                    unit_type=component_type,
+                    **substituted_attrs
+                )
+
+                instantiated_components.append(tag)
+
+                # Check for heat integration flag
+                if substituted_attrs.get("heat_integration") or substituted_attrs.get("nodeType") == "heat_integration":
+                    # Mark for HI conversion
+                    target_flowsheet.state.nodes[tag]["_hi_node"] = True
+
+        # Step 3: Add connections (edges)
+        for connection_def in self.connections:
+            # Check condition if present
+            if "condition" in connection_def:
+                condition_expr = connection_def["condition"]
+                condition_result = self._substitution_engine.substitute(condition_expr)
+                if condition_result.lower() not in ["true", "1"]:
+                    continue
+
+            # Parse connection (simplified - actual implementation would handle patterns)
+            from_node = self._substitution_engine.substitute(connection_def.get("from", ""))
+            to_node = self._substitution_engine.substitute(connection_def.get("to", ""))
+
+            # Add edge if both nodes exist
+            if from_node in target_flowsheet.state.nodes and to_node in target_flowsheet.state.nodes:
+                target_flowsheet.add_stream(
+                    node1=from_node,
+                    node2=to_node,
+                    stream_name=f"{from_node}_to_{to_node}"
+                )
+
+        # Step 4: Convert heat integration nodes
+        self._convert_hi_nodes(target_flowsheet)
+
+        # Step 5: Validate via convert_to_sfiles
+        try:
+            target_flowsheet.convert_to_sfiles(version="v2", canonical=True)
+            validation_errors = []
+        except Exception as e:
+            validation_errors = [f"SFILES validation failed: {e}"]
+
+        return TemplateInstantiationResult(
+            success=len(validation_errors) == 0,
+            message=f"Template '{self.name}' instantiated successfully (SFILES)" if not validation_errors
+                    else f"Template instantiated with {len(validation_errors)} validation errors",
+            instantiated_components=instantiated_components,
+            validation_errors=validation_errors,
+            metadata={
+                "template": self.name,
+                "version": self.version,
+                "parameters": full_params,
+                "model_type": "sfiles"
+            }
+        )
+
+    def _convert_hi_nodes(self, flowsheet: Any) -> None:
+        """
+        Convert heat integration placeholder nodes to proper SFILES HI nodes.
+
+        Args:
+            flowsheet: Flowsheet instance with _hi_node marked nodes
+        """
+        # Find all HI nodes
+        hi_nodes = [
+            node for node, data in flowsheet.state.nodes(data=True)
+            if data.get("_hi_node", False)
+        ]
+
+        if not hi_nodes:
+            return
+
+        logger.info(f"Converting {len(hi_nodes)} heat integration nodes")
+
+        # Group HI nodes by exchanger (simplified - actual implementation would be more sophisticated)
+        # For now, just mark them as HI nodes in the graph
+        for node in hi_nodes:
+            flowsheet.state.nodes[node]["is_heat_integration"] = True
+            # Remove temporary marker
+            del flowsheet.state.nodes[node]["_hi_node"]
+
+            # Call split_HI_nodes or merge_HI_nodes if available
+            # Note: Actual implementation depends on Flowsheet_Class API
+            # This is a placeholder for the integration
+            stream_type = flowsheet.state.nodes[node].get("streamType", "")
+            if "in" in stream_type.lower():
+                # This is an inlet HI node - would call split_HI_nodes
+                pass
+            elif "out" in stream_type.lower():
+                # This is an outlet HI node - would call merge_HI_nodes
+                pass
 
     def _get_base_pattern(self) -> DexpiPattern:
         """
