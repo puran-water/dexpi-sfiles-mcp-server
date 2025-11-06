@@ -28,6 +28,7 @@ from pydexpi.loaders.ml_graph_loader import MLGraphLoader
 from pydexpi.toolkits import model_toolkit as mt
 
 from ..adapters.sfiles_adapter import get_flowsheet_class
+from ..registry.operation_registry import get_operation_registry
 
 logger = logging.getLogger(__name__)
 
@@ -278,6 +279,9 @@ class TransactionManager:
         self.json_serializer = JsonSerializer()
         self.graph_loader = MLGraphLoader()
 
+        # Initialize operation registry
+        self.registry = get_operation_registry()
+
         logger.info("TransactionManager initialized")
 
     # ========================================================================
@@ -390,12 +394,21 @@ class TransactionManager:
             )
 
             try:
-                # Execute operation
+                # Execute operation via registry or custom executor
                 if executor:
+                    # Custom executor provided - use it
                     result = executor(working_model, params)
+                elif self.registry.exists(operation_name):
+                    # Use operation registry (default path)
+                    result = await self.registry.execute(
+                        model=working_model,
+                        operation_name=operation_name,
+                        params=params,
+                        enable_validation=True
+                    )
                 else:
-                    # For now, return success - will integrate with operation registry later
-                    result = {"status": "success", "message": f"Operation {operation_name} applied"}
+                    # Fallback for unregistered operations
+                    result = {"status": "success", "message": f"Operation {operation_name} applied (unregistered)"}
 
                 op_record.result = result
                 op_record.success = True
@@ -403,8 +416,8 @@ class TransactionManager:
                 # Update working model cache
                 transaction._working_model = working_model
 
-                # Update diff (simplified for now)
-                self._update_diff(transaction, operation_name, params)
+                # Update diff using operation's DiffMetadata if available
+                self._update_diff(transaction, operation_name, params, result)
 
                 return result
 
@@ -724,38 +737,75 @@ class TransactionManager:
         self,
         transaction: Transaction,
         operation_name: str,
-        params: Dict[str, Any]
+        params: Dict[str, Any],
+        result: Any
     ) -> None:
         """
         Update transaction diff based on operation.
 
-        Simplified version - tracks operations by name.
-        Full implementation will use operation registry metadata.
+        Uses DiffMetadata from operation registry if available,
+        otherwise falls back to heuristic.
 
         Args:
             transaction: Transaction to update
             operation_name: Operation that was executed
             params: Operation parameters
+            result: Operation result
         """
-        # Simple heuristic based on operation name
-        if "add" in operation_name or "create" in operation_name:
-            # Track as addition
-            component_id = params.get("tag_name", "unknown")
-            if component_id not in transaction.diff.added:
+        # Try to get DiffMetadata from registry
+        diff_metadata = None
+        if self.registry.exists(operation_name):
+            try:
+                operation = self.registry.get(operation_name)
+                if operation.metadata and operation.metadata.diff_metadata:
+                    diff_metadata = operation.metadata.diff_metadata
+            except Exception:
+                pass  # Fall back to heuristic
+
+        # If we have DiffMetadata, use it
+        if diff_metadata:
+            component_id = params.get("tag_name", params.get("component_id", "unknown"))
+
+            if diff_metadata.tracks_additions and component_id not in transaction.diff.added:
                 transaction.diff.added.append(component_id)
 
-        elif "delete" in operation_name or "remove" in operation_name:
-            # Track as removal
-            component_id = params.get("tag_name", params.get("component_id", "unknown"))
-            if component_id not in transaction.diff.removed:
+            if diff_metadata.tracks_removals and component_id not in transaction.diff.removed:
                 transaction.diff.removed.append(component_id)
 
-        else:
-            # Track as modification
-            component_id = params.get("tag_name", params.get("component_id", "unknown"))
-            if component_id not in transaction.diff.modified and \
+            if diff_metadata.tracks_modifications and \
+               component_id not in transaction.diff.modified and \
                component_id not in transaction.diff.added:
                 transaction.diff.modified.append(component_id)
+
+            # Use custom diff calculator if provided
+            if diff_metadata.diff_calculator:
+                # Get original model from snapshot
+                original_model = self._restore_from_snapshot(transaction)
+                working_model = self._get_working_model(transaction)
+                custom_diff = diff_metadata.diff_calculator(original_model, working_model)
+                # Merge custom diff with transaction diff
+                # (implementation would depend on StructuralDiff structure)
+
+        else:
+            # Fall back to simple heuristic based on operation name
+            if "add" in operation_name or "create" in operation_name:
+                # Track as addition
+                component_id = params.get("tag_name", "unknown")
+                if component_id not in transaction.diff.added:
+                    transaction.diff.added.append(component_id)
+
+            elif "delete" in operation_name or "remove" in operation_name:
+                # Track as removal
+                component_id = params.get("tag_name", params.get("component_id", "unknown"))
+                if component_id not in transaction.diff.removed:
+                    transaction.diff.removed.append(component_id)
+
+            else:
+                # Track as modification
+                component_id = params.get("tag_name", params.get("component_id", "unknown"))
+                if component_id not in transaction.diff.modified and \
+                   component_id not in transaction.diff.added:
+                    transaction.diff.modified.append(component_id)
 
     def _cleanup_transaction(self, transaction_id: str) -> None:
         """

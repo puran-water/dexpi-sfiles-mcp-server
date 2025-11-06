@@ -14,6 +14,8 @@ Provides:
 - Diff metadata integration with TransactionManager
 """
 
+import asyncio
+import inspect
 import logging
 from dataclasses import dataclass, field
 from enum import Enum
@@ -316,8 +318,16 @@ class OperationRegistry:
                     f"Pre-validation failed for {operation_name}: {pre_result.errors}"
                 )
 
-        # Execute operation
-        result = operation.handler(model, params)
+        # Execute operation (handle both sync and async handlers)
+        if inspect.iscoroutinefunction(operation.handler):
+            # Async handler - await it
+            result = await operation.handler(model, params)
+        else:
+            # Sync handler - call directly
+            result = operation.handler(model, params)
+            # If result is a coroutine (handler returned awaitable), await it
+            if inspect.iscoroutine(result):
+                result = await result
 
         # Post-validation
         if enable_validation and operation.validation_hooks and operation.validation_hooks.post:
