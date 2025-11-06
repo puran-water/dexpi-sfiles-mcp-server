@@ -1,0 +1,82 @@
+# Basic pump with isolation valves
+# Simple template for testing template system
+
+name: pump_basic
+version: 1.0.0
+category: piping
+description: Single centrifugal pump with inlet and outlet isolation valves
+
+# Template parameters
+parameters:
+  pump_tag:
+    type: string
+    default: "P-001"
+    description: Tag name for the pump
+
+  nominal_diameter:
+    type: string
+    enum: [DN50, DN80, DN100, DN150]
+    default: DN100
+    description: Pipe nominal diameter
+
+  flow_rate:
+    type: number
+    default: 100
+    description: Design flow rate (m3/h)
+
+  area:
+    type: string
+    default: "PUMP"
+    description: Area tag for naming
+
+# Base pattern is inline (no external file for this simple example)
+base_pattern:
+  # Will be created programmatically in instantiation
+
+# Component generation rules
+components:
+  # Main pump
+  - name: pump
+    type: CentrifugalPump
+    count: 1
+    tag_pattern: "${pump_tag}"
+    attributes:
+      nominalDiameter: "${nominal_diameter}"
+      flowRate: ${flow_rate}
+    nozzles:
+      - subTagName: "N1"
+        nominalDiameter: "${nominal_diameter}"
+      - subTagName: "N2"
+        nominalDiameter: "${nominal_diameter}"
+
+  # Inlet isolation valve
+  - name: inlet_valve
+    type: GateValve
+    count: 1
+    tag_pattern: "V-${area}-001A"
+    attributes:
+      nominalDiameter: "${nominal_diameter}"
+
+  # Outlet isolation valve
+  - name: outlet_valve
+    type: GateValve
+    count: 1
+    tag_pattern: "V-${area}-001B"
+    attributes:
+      nominalDiameter: "${nominal_diameter}"
+
+# Validation rules
+validation:
+  rules:
+    - type: tag_uniqueness
+      description: All tags must be unique
+    - type: connectivity
+      description: Components must be connectable
+
+# Metadata
+metadata:
+  author: Engineering MCP Server
+  created: 2025-11-06
+  tags: [pump, valve, basic]
+  references:
+    - API 610 (Centrifugal Pumps)
