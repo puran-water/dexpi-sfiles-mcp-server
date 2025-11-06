@@ -144,8 +144,9 @@ cython_debug/
 # MCP logs
 mcp-logs-*/
 
-# Test outputs
-test_*.py
+# Test outputs (not in tests/ directory)
+/test_*.py
+*.test.py
 /tmp/
 
 # Dashboard runtime

@@ -5,6 +5,58 @@ All notable changes to the Engineering MCP Server are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2025-11-06
+
+### Added - Phase 1 & 2.1 Infrastructure
+- **TransactionManager**: ACID transaction support with dual snapshot strategies
+  - Deepcopy for models <1MB, serialization for ≥1MB
+  - Begin/apply/commit/rollback operations
+  - Diff calculation and audit trails
+- **Operation Registry**: Typed operation catalog following ParserFactory pattern from pyDEXPI
+  - 7 initial operations (3 DEXPI + 2 SFILES + 2 Template)
+  - STRATEGIC/TACTICAL/ATOMIC categorization
+  - DiffMetadata for transaction integration
+- **Template System**: Parametric template instantiation (Phase 1 Task 4)
+  - ParameterSubstitutionEngine with ${variable} syntax
+  - ParametricTemplate with DEXPI/SFILES dual-mode support
+  - 4 strategic templates (pump_basic, pump_station_n_plus_1, tank_farm, heat_exchanger_with_integration)
+- **area_deploy MCP Tool** (Phase 2 Task 1):
+  - `template_list`: Lists available templates with category filtering
+  - `template_get_schema`: Returns parameter schema and metadata
+  - `area_deploy`: Deploys parametric templates (reduces 50+ calls to 1)
+  - Template caching for performance
+
+### Changed - Phase 0 Cleanup
+- **Import Safety**: Created sfiles_adapter.py for safe SFILES2 imports with clear error messages
+- **Validation**: MLGraphLoader integration for DEXPI, round-trip validation for SFILES
+- **BFD Support**: Fixed CamelCase ID generation for BFD process names
+- **Template Architecture**: Direct component addition to DEXPI models (removed Pattern abstraction dependency)
+- **pyDEXPI Integration**: Using equipment/piping/instrumentation modules directly
+
+### Fixed - Phase 0 & 1 Critical Issues
+- SFILES round-trip validation now handles multi-word BFD process names
+- Import errors now provide clear guidance when SFILES2 not installed
+- Response format compatibility via is_success() helper
+- Import shim bypassed in schema_tools.py (used safe adapter)
+- Phase sequencing corrected (TransactionManager before templates)
+- Template tag/tagName compatibility for pyDEXPI tools
+- DeepWiki integration: Pattern class is for synthetic generation, not templates
+
+### Documentation
+- Updated ROADMAP.md: Phase 1 marked COMPLETE (100%)
+- Updated CLAUDE.md: SVG policy revised (planned for BFD Phase 1, Sprint 5)
+- Updated README.md: Tool consolidation status and progress
+- Added comprehensive API specifications in docs/ (3,953 lines total)
+
+### Testing
+- Phase 1 comprehensive testing (TransactionManager, graph_connect, Operation Registry, Template System)
+- Phase 2.1 comprehensive testing (area_deploy with all 4 templates)
+- Both DEXPI and SFILES modes validated
+
+### Deprecation Warnings
+- Legacy BFD data migration not needed (test data only)
+- Phase 3 tool consolidation pending (54 tools → 12 consolidated tools)
+
 ## [0.3.0] - 2025-01-30
 
 ### Added

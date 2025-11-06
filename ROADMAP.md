@@ -571,12 +571,19 @@ async def dexpi_add_equipment(self, args):
 
 ---
 
-## Phase 1: Core Infrastructure (Week 1, Days 4-7) - IN PROGRESS 🟡
+## Phase 1: Core Infrastructure (Week 1, Days 4-7) - COMPLETE ✅
 
-**Status:** 3/4 tasks complete (TransactionManager ✅, graph_connect ✅, Operation Registry ✅)
+**Status:** 100% COMPLETE (2025-11-06)
+
+**Summary:** All Phase 1 core infrastructure components implemented and tested:
+- ✅ TransactionManager with snapshot strategies
+- ✅ graph_connect with pattern-based autowiring
+- ✅ Operation Registry with typed operations
+- ✅ Template System with parametric instantiation
 **Started:** 2025-11-06
+**Completed:** 2025-11-06
 **Authorization:** Codex GREEN LIGHT granted 2025-11-06
-**Progress:** 75% complete, on track
+**All 4 tasks delivered and tested**
 
 ### Transaction Manager Enhancement ✅ COMPLETE
 
@@ -784,40 +791,44 @@ async def dexpi_add_equipment(self, args):
 
 ## MCP Tool Consolidation Timeline
 
-**Current Status:** Infrastructure ready, awaiting Phase 2 completion
+**Current Status:** Infrastructure and Strategic Tools Ready
 
 **When to Consolidate:**
-The MCP tool registry in `server.py` should be consolidated **after Phase 2 Task 1 (area_deploy)** is complete. Here's why:
+The MCP tool registry in `server.py` should be consolidated **after Phase 2 Task 2 (graph_modify)** is complete. Current progress:
 
-1. **Foundation Complete (Phase 1):** ✅
+1. **Foundation Complete (Phase 1):** ✅ DONE
    - TransactionManager provides ACID operations
    - Operation Registry provides typed operation catalog
    - Template System enables strategic operations
 
-2. **High-Level Tools Needed (Phase 2.1):** 🟡 IN PROGRESS
+2. **Strategic Tools Complete (Phase 2.1):** ✅ DONE
    - area_deploy: Template deployment (reduces 50+ calls to 1)
-   - Template discovery and catalog
-   - User-facing documentation
+   - Template discovery and catalog (template_list, template_get_schema)
+   - Registered in server.py and tested
 
-3. **Consolidation Ready (After Phase 2.1):** ⏳ NEXT
+3. **Tactical Tools Needed (Phase 2.2):** 🔴 NOT STARTED
+   - graph_modify: Inline modifications (insert, split, merge, rewire)
+   - Port finding and matching logic
+   - Specification exists but not implemented
+
+4. **Consolidation Ready (After Phase 2.2):** ⏳ PENDING
    - Wrap TransactionManager in model_tx_* tools
-   - Wrap Template System in area_deploy tool
-   - Add graph_modify for tactical operations
-   - Create unified model_create/load/save
-   - **Result:** 51 tools → 12 consolidated tools
+   - Add unified model_create/load/save
+   - Integrate graph_modify for tactical operations
+   - **Result:** 54 tools → 12 consolidated tools
 
 **Testing Approach:**
-Once area_deploy is complete, we can:
-1. Register area_deploy in server.py alongside existing tools
-2. Test both old atomic tools and new strategic tools in parallel
-3. Validate feature parity
-4. Gradually deprecate atomic tools
-5. Final cutover to 12-tool consolidated API
+Once graph_modify is complete, we can:
+1. Test both old atomic tools and new consolidated tools in parallel
+2. Validate feature parity via coverage matrix
+3. Gradually deprecate atomic tools
+4. Final cutover to 12-tool consolidated API
 
-**Estimated Timeline:**
-- Phase 2 Task 1 (area_deploy): 1.5 days
-- Tool consolidation + testing: 2 days
-- **Total to consolidated MCP API: ~3.5 days from now**
+**Revised Timeline:**
+- ✅ Phase 2 Task 1 (area_deploy): 1.5 days (COMPLETE)
+- 🔴 Phase 2 Task 2 (graph_modify): 2 days (NOT STARTED)
+- ⏳ Tool consolidation + testing: 2 days
+- **Total to consolidated MCP API: ~4 days from current state**
 
 ---
 

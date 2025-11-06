@@ -73,13 +73,15 @@ The result is ONE file (`main_pid.json`) with full history in git, not three sep
 
 ## Visualization
 
-### No SVG Generation
-The system no longer generates SVG block diagrams. Available visualizations are:
-- **HTML**: Interactive plotly visualization with spring layout
+### Visualization Options
+
+The system provides multiple visualization formats:
+- **HTML**: Interactive plotly visualization with spring layout (current default)
 - **GraphML**: For topology analysis and external tools
 - **JSON**: Git-trackable state representation
+- **SVG/DXF**: Planned for Phase 1 of BFD system (Sprint 5) - will enable browser review and CAD tool integration
 
-Do not attempt to generate or request SVG outputs for BFD/PFD diagrams.
+**Current Status:** SVG generation for BFD/PFD diagrams is not yet implemented. Use HTML visualizations for interactive viewing or GraphML for external tool integration. SVG export will be added in a future update when BFD visualization system is complete.
 
 ## File Organization
 

@@ -1510,63 +1510,7 @@ class DexpiTools:
         })
     
     # Project tool handlers removed - now handled by unified ProjectTools
-    # The following methods are deprecated:
-    # - _save_to_project
-    # - _load_from_project  
-    # - _init_project
-    # - _list_project_models
-    
-    async def _list_project_models(self, args: dict) -> dict:
-        """List all models in a project."""
-        from ..persistence import ProjectPersistence
-        
-        project_path = args["project_path"]
-        
-        persistence = ProjectPersistence()
-        models = persistence.list_models(project_path)
-        
-        return {
-            "status": "success",
-            "project_path": project_path,
-            "models": models
-        }
-    
-    async def _describe_class(self, args: dict) -> dict:
-        """Get detailed description of a pyDEXPI class."""
-        class_name = args["class_name"]
-        category = args.get("category", None)
-        
-        description = self.introspector.describe_class(class_name, category)
-        
-        if "error" in description:
-            return {
-                "status": "error",
-                "error": description["error"]
-            }
-        
-        return {
-            "status": "success",
-            "class_description": description
-        }
-    
-    async def _list_class_attributes(self, args: dict) -> dict:
-        """List all attributes for a specific pyDEXPI class."""
-        class_name = args["class_name"]
-        category = args["category"]
-        
-        attrs = self.introspector.get_class_attributes(class_name, category)
-        
-        if attrs is None:
-            return {
-                "status": "error",
-                "error": f"Class {class_name} not found in category {category}"
-            }
-        
-        return {
-            "status": "success",
-            "attributes": attrs
-        }
-    
+    # Schema introspection methods removed - now handled by unified SchemaTools
     async def _convert_from_sfiles(self, args: dict) -> dict:
         """Convert SFILES flowsheet to DEXPI P&ID model."""
         try:

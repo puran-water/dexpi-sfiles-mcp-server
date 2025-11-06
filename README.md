@@ -45,18 +45,20 @@ This MCP (Model Context Protocol) server provides LLM-accessible tools for engin
 
 ### Tool Consolidation Strategy (v0.4.0)
 
-**Current Status:** Phased consolidation to reduce 50+ tools to ~12 high-value batch operations
+**Current Status:** Infrastructure complete (Phase 1 ✅), Strategic Tools ready (Phase 2.1 ✅), MCP integration pending
 
-#### Phase 1 (Current)
-- ✅ Batch tools available and tested
-- ✅ Legacy tools marked as deprecated where appropriate  
-- ✅ Migration guides provided
-- All tools remain available for backward compatibility
+#### Implementation Progress
+- ✅ **Phase 1 Complete:** TransactionManager, Operation Registry, Template System implemented
+- ✅ **Phase 2.1 Complete:** area_deploy tool with template discovery and parametric instantiation
+- 🔴 **Phase 2.2 Pending:** graph_modify (specification exists, not implemented)
+- ⏳ **Consolidation Pending:** Full 12-tool MCP interface awaiting graph_modify completion
+- ℹ️ **All 54 legacy tools remain available** for backward compatibility
 
-#### Consolidation Tools (Recommended)
+#### Strategic Tools (Available Now)
 - **model_batch_apply** - Execute multiple operations atomically (reduces 50 calls to 1)
 - **rules_apply** - Structured validation with LLM-friendly output
 - **graph_connect** - Smart autowiring with inline component insertion
+- **area_deploy** - Template deployment (pump stations, tank farms, heat exchangers)
 
 #### Phase 2 (Next)
 - Add telemetry to track tool usage patterns
