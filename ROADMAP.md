@@ -650,12 +650,14 @@ async def dexpi_add_equipment(self, args):
 
 ### Operation Registry ✅ COMPLETE
 
-**Status:** ✅ CORE IMPLEMENTED (2025-11-06)
+**Status:** ✅ FULLY IMPLEMENTED AND INTEGRATED (2025-11-06)
 **Specification:** `docs/api/operation_registry_spec.md` (650 lines, Codex-approved)
 
 **Completed Implementation:**
-- ✅ `src/registry/operation_registry.py` (609 lines)
+- ✅ `src/registry/operation_registry.py` (620 lines with async support)
 - ✅ `src/registry/__init__.py` (exports)
+- ✅ `src/registry/operations/dexpi_operations.py` (173 lines, 3 operations)
+- ✅ `src/registry/operations/sfiles_operations.py` (139 lines, 2 operations)
 - ✅ OperationDescriptor with name, version, category, schema, handler
 - ✅ ValidationHooks for pre/post-operation checks
 - ✅ DiffMetadata for TransactionManager integration
@@ -665,6 +667,7 @@ async def dexpi_add_equipment(self, args):
 
 **Features Implemented:**
 - Type-safe operation definitions with JSON schemas
+- Async/sync handler support (inspect.iscoroutinefunction)
 - Version management and deprecation support
 - Discoverability via get_schema() for schema_query
 - Validation hooks (pre/post-operation)
@@ -672,19 +675,33 @@ async def dexpi_add_equipment(self, args):
 - Category indexing (DEXPI, SFILES, UNIVERSAL, TACTICAL, STRATEGIC)
 - Execute method with schema validation
 
+**TransactionManager Integration:**
+- ✅ Registry initialized in TransactionManager.__init__()
+- ✅ apply() delegates to registry.execute() by default
+- ✅ Custom executor still supported for edge cases
+- ✅ _update_diff() uses DiffMetadata from operations
+- ✅ Falls back to heuristic for unregistered operations
+
+**Initial Operations Registered:**
+1. ✅ `dexpi_add_equipment` - Add equipment to P&ID
+2. ✅ `dexpi_add_valve_between_components` - Add valve between components
+3. ✅ `dexpi_connect_components` - Connect components with piping
+4. ✅ `sfiles_add_unit` - Add process unit to flowsheet
+5. ✅ `sfiles_add_stream` - Add stream connecting units
+
 **Tests:**
-- ✅ Smoke tests passing (registration, retrieval, listing, singleton)
+- ✅ 11/11 TransactionManager unit tests passing after integration
+- ✅ Integration tests passing (5 operations registered)
+- ✅ Registry + TransactionManager working together
 
-**Integration Status:**
-- ⏳ TransactionManager.apply() integration - pending
-- ⏳ Register initial operations (add_equipment, etc) - pending
+**Codex Guidance Followed:**
+- "Build the full registry core" ✅ DONE
+- "Update TransactionManager.apply to delegate through registry" ✅ DONE
+- "Detect coroutine handlers and await them" ✅ DONE
+- "Feed DiffMetadata into _update_diff" ✅ DONE
+- "Seed initial operations" ✅ DONE (5 operations)
 
-**Codex Guidance:**
-- "Build the full registry core now" ✅ DONE
-- "Update TransactionManager.apply to delegate through registry" - NEXT STEP
-- Estimated time: 1½–2 days (on track)
-
-**Actual Time:** 0.5 days (core complete, integration remaining)
+**Actual Time:** 1 day (vs 1.5-2 days estimated)
 
 ---
 
