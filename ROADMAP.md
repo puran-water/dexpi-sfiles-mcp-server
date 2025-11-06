@@ -782,6 +782,44 @@ async def dexpi_add_equipment(self, args):
 
 ---
 
+## MCP Tool Consolidation Timeline
+
+**Current Status:** Infrastructure ready, awaiting Phase 2 completion
+
+**When to Consolidate:**
+The MCP tool registry in `server.py` should be consolidated **after Phase 2 Task 1 (area_deploy)** is complete. Here's why:
+
+1. **Foundation Complete (Phase 1):** ✅
+   - TransactionManager provides ACID operations
+   - Operation Registry provides typed operation catalog
+   - Template System enables strategic operations
+
+2. **High-Level Tools Needed (Phase 2.1):** 🟡 IN PROGRESS
+   - area_deploy: Template deployment (reduces 50+ calls to 1)
+   - Template discovery and catalog
+   - User-facing documentation
+
+3. **Consolidation Ready (After Phase 2.1):** ⏳ NEXT
+   - Wrap TransactionManager in model_tx_* tools
+   - Wrap Template System in area_deploy tool
+   - Add graph_modify for tactical operations
+   - Create unified model_create/load/save
+   - **Result:** 51 tools → 12 consolidated tools
+
+**Testing Approach:**
+Once area_deploy is complete, we can:
+1. Register area_deploy in server.py alongside existing tools
+2. Test both old atomic tools and new strategic tools in parallel
+3. Validate feature parity
+4. Gradually deprecate atomic tools
+5. Final cutover to 12-tool consolidated API
+
+**Estimated Timeline:**
+- Phase 2 Task 1 (area_deploy): 1.5 days
+- Tool consolidation + testing: 2 days
+- **Total to consolidated MCP API: ~3.5 days from now**
+
+---
 
 ### Universal Model Operations - NOT STARTED 🔴
 **What Needs to Be Done:**
@@ -796,20 +834,35 @@ async def dexpi_add_equipment(self, args):
 
 ## Phase 2: High-Level Construction (Week 2)
 
-### Template System & area_deploy - NOT STARTED 🔴
-**Status:** Design validated by Codex
+### #1: area_deploy MCP Tool - IN PROGRESS 🟡
+**Status:** Template system complete, building deployment tool (2025-11-06)
+**Dependencies:** ✅ Template System (Phase 1 Task 4)
 
 **What Needs to Be Done:**
-1. Create `src/templates/parametric_template.py` (thin wrapper around DexpiPattern)
-2. Build template library structure (`/library/patterns/`)
-3. Create 5 example templates:
-   - Pump station (N+1)
-   - RO train (2-stage)
-   - Tank farm
-   - Chemical dosing skid
-   - Heat exchanger
+1. Create `src/tools/template_tools.py` - MCP tool for template deployment
+2. Implement `area_deploy` tool:
+   - List available templates from library
+   - Load template by name
+   - Validate parameters against template schema
+   - Instantiate template into target model
+   - Return deployment result with component list
+3. Add template catalog/discovery:
+   - List templates by category
+   - Get template schema (for parameter hints)
+   - Template metadata (description, use cases)
+4. User-facing documentation:
+   - How to list available templates
+   - Parameter requirements per template
+   - Example usage
+5. Register with MCP server in `server.py`
 
-**Estimate:** 3 days
+**Completed (from Phase 1):**
+- ✅ Template system infrastructure (ParametricTemplate, ParameterSubstitutionEngine)
+- ✅ 4 strategic templates (pump_basic, pump_station_n_plus_1, tank_farm, heat_exchanger_with_integration)
+- ✅ DEXPI/SFILES dual-mode support
+- ✅ Template operations in registry (template_instantiate_dexpi, template_instantiate_sfiles)
+
+**Estimate:** 1.5 days (focused on MCP tool wrapper + discovery)
 
 ---
 
