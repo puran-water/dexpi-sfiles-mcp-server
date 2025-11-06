@@ -573,7 +573,7 @@ async def dexpi_add_equipment(self, args):
 
 ## Phase 1: Core Infrastructure (Week 1, Days 4-7) - IN PROGRESS 🟡
 
-**Status:** 1/4 tasks complete (TransactionManager ✅)
+**Status:** 2/4 tasks complete (TransactionManager ✅, graph_connect ✅ already implemented)
 **Started:** 2025-11-06
 **Authorization:** Codex GREEN LIGHT granted 2025-11-06
 
@@ -613,27 +613,37 @@ async def dexpi_add_equipment(self, args):
 
 ---
 
-### #3: Enhance graph_connect with piping_toolkit (8 hours) - NOT STARTED 🔴
-**Status:** Basic version exists, needs piping_toolkit integration
+### #3: Enhance graph_connect with piping_toolkit ✅ ALREADY COMPLETE
 
-**Current State:**
-- ✅ `graph_connect` tool exists in `batch_tools.py:272-450+`
-- ✅ Pattern matching for equipment selection
-- ✅ 2 strategies: `by_port_type`, `pumps_to_header`
-- ❌ Uses custom loops instead of pyDEXPI's battle-tested toolkit
+**Status:** ✅ ALREADY IMPLEMENTED - Discovered during Phase 1 review (2025-11-06)
 
-**What Needs to Be Done:**
-1. Import `pydexpi.toolkits.piping_toolkit`
-2. Replace custom connection logic with `connect_piping_network_segment()`
-3. Use `insert_item_to_segment()` for inline components
-4. Add validity checks from toolkit
+**Finding:** Upon examination, piping_toolkit integration was already fully implemented in the codebase. No changes needed.
 
-**Why This Matters:**
-- More reliable autowiring
-- Proper nozzle handling
-- Less custom code to maintain
+**Verification:**
+- ✅ `pydexpi.toolkits.piping_toolkit` imported (`dexpi_tools.py:763, 1181`)
+- ✅ `pt.connect_piping_network_segment()` used for connections (`dexpi_tools.py:784, 787`)
+- ✅ `pt.insert_item_to_segment()` used for inline components (`dexpi_tools.py:1248`)
+- ✅ `piping_toolkit.piping_network_segment_validity_check()` validates connections (`dexpi_tools.py:812`)
 
-**Estimate:** 1 day
+**Implementation Details:**
+
+1. **Connection Logic** (`dexpi_tools.py:672-831` - `_connect_components`):
+   - Uses `pt.connect_piping_network_segment(segment, from_nozzle, as_source=True)` for source
+   - Uses `pt.connect_piping_network_segment(segment, to_nozzle, as_source=False)` for target
+   - Validates with `piping_toolkit.piping_network_segment_validity_check(segment)`
+
+2. **Inline Valve Insertion** (`dexpi_tools.py:1162-1261` - `_insert_valve_in_segment`):
+   - Uses `pt.insert_item_to_segment()` with proper parameters:
+     - `the_segment`, `position`, `the_item`, `the_connection`
+     - `item_source_node_index=0`, `item_target_node_index=1`
+     - `insert_before=True`
+
+3. **Graph Connect High-Level** (`batch_tools.py:412-561`):
+   - Delegates to `_connect_components` and `_insert_valve_in_segment`
+   - Supports `pumps_to_header` and `by_port_type` strategies
+   - Inline component insertion (check valves, isolation valves)
+
+**Actual Time:** 0 days (already implemented)
 
 ---
 
