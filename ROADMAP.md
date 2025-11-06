@@ -573,9 +573,10 @@ async def dexpi_add_equipment(self, args):
 
 ## Phase 1: Core Infrastructure (Week 1, Days 4-7) - IN PROGRESS 🟡
 
-**Status:** 2/4 tasks complete (TransactionManager ✅, graph_connect ✅ already implemented)
+**Status:** 3/4 tasks complete (TransactionManager ✅, graph_connect ✅, Operation Registry ✅)
 **Started:** 2025-11-06
 **Authorization:** Codex GREEN LIGHT granted 2025-11-06
+**Progress:** 75% complete, on track
 
 ### Transaction Manager Enhancement ✅ COMPLETE
 
@@ -644,6 +645,46 @@ async def dexpi_add_equipment(self, args):
    - Inline component insertion (check valves, isolation valves)
 
 **Actual Time:** 0 days (already implemented)
+
+---
+
+### Operation Registry ✅ COMPLETE
+
+**Status:** ✅ CORE IMPLEMENTED (2025-11-06)
+**Specification:** `docs/api/operation_registry_spec.md` (650 lines, Codex-approved)
+
+**Completed Implementation:**
+- ✅ `src/registry/operation_registry.py` (609 lines)
+- ✅ `src/registry/__init__.py` (exports)
+- ✅ OperationDescriptor with name, version, category, schema, handler
+- ✅ ValidationHooks for pre/post-operation checks
+- ✅ DiffMetadata for TransactionManager integration
+- ✅ OperationMetadata for deprecation/versioning
+- ✅ Registry pattern following ParserFactory (pyDEXPI)
+- ✅ Singleton pattern with get_operation_registry()
+
+**Features Implemented:**
+- Type-safe operation definitions with JSON schemas
+- Version management and deprecation support
+- Discoverability via get_schema() for schema_query
+- Validation hooks (pre/post-operation)
+- Diff metadata (tightly coupled with TransactionManager per Codex)
+- Category indexing (DEXPI, SFILES, UNIVERSAL, TACTICAL, STRATEGIC)
+- Execute method with schema validation
+
+**Tests:**
+- ✅ Smoke tests passing (registration, retrieval, listing, singleton)
+
+**Integration Status:**
+- ⏳ TransactionManager.apply() integration - pending
+- ⏳ Register initial operations (add_equipment, etc) - pending
+
+**Codex Guidance:**
+- "Build the full registry core now" ✅ DONE
+- "Update TransactionManager.apply to delegate through registry" - NEXT STEP
+- Estimated time: 1½–2 days (on track)
+
+**Actual Time:** 0.5 days (core complete, integration remaining)
 
 ---
 
