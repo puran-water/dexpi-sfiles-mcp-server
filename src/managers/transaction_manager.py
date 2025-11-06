@@ -633,8 +633,10 @@ class TransactionManager:
             json_str = self.json_serializer.serialize(model)
             return json_str.encode('utf-8')
         else:
-            # Use SFILES to_SFILES() canonical format
-            sfiles_str = model.to_SFILES()
+            # Use SFILES canonical format
+            # Call convert_to_sfiles() which populates model.sfiles
+            model.convert_to_sfiles(version="v2", canonical=True)
+            sfiles_str = model.sfiles
             return sfiles_str.encode('utf-8')
 
     def _deserialize_snapshot(
@@ -660,7 +662,9 @@ class TransactionManager:
             # Deserialize SFILES
             Flowsheet = get_flowsheet_class()
             sfiles_str = snapshot.decode('utf-8')
-            return Flowsheet.from_SFILES(sfiles_str)
+            flowsheet = Flowsheet()
+            flowsheet.create_from_sfiles(sfiles_str, overwrite_nx=True)
+            return flowsheet
 
     async def _validate_model(
         self,
@@ -670,7 +674,8 @@ class TransactionManager:
         """
         Validate model using upstream validators.
 
-        For DEXPI: Use MLGraphLoader.validate_graph_format()
+        For DEXPI: Use MLGraphLoader - must call dexpi_to_graph() first,
+                   then validate_graph_format() which raises on error
         For SFILES: Use convert_to_sfiles() canonicalization (implicit validation)
 
         Args:
@@ -685,16 +690,20 @@ class TransactionManager:
 
         try:
             if model_type == ModelType.DEXPI:
-                # Use upstream: pydexpi/loaders/ml_graph_loader.py:80-103
-                is_valid = self.graph_loader.validate_graph_format(model)
-
-                if not is_valid:
-                    errors.append("DEXPI graph format validation failed")
+                # Use upstream: pydexpi/loaders/ml_graph_loader.py
+                # Must call dexpi_to_graph() first to populate plant_graph
+                # Then validate_graph_format() raises AttributeError on failure
+                try:
+                    self.graph_loader.dexpi_to_graph(model)
+                    self.graph_loader.validate_graph_format()
+                    # If we get here, validation passed
+                except AttributeError as e:
+                    errors.append(f"DEXPI graph format validation failed: {e}")
 
             else:
                 # SFILES: Try to canonicalize
                 try:
-                    model.convert_to_sfiles()  # Will raise if invalid
+                    model.convert_to_sfiles(canonical=True)  # Will raise if invalid
                 except Exception as e:
                     errors.append(f"SFILES canonicalization failed: {e}")
 
