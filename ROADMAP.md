@@ -705,42 +705,48 @@ async def dexpi_add_equipment(self, args):
 
 ---
 
-### #4: Template Instantiation Tool (12 hours) - NOT STARTED 🔴
-**Status:** Design complete, implementation needed
+### #4: Template System - IN PROGRESS 🟡
+**Status:** Core infrastructure complete, examples in progress (2025-11-06)
+**Specification:** `docs/templates/template_system.md` (1,113 lines, Codex-approved)
 
-**What Needs to Be Done:**
-1. Create `src/tools/template_tools.py`
-2. Implement `template_instantiate` using `pyDEXPI.syndata.dexpi_pattern`
-3. Add MCP tool registration
-4. Create 2-3 example patterns for testing
+**Completed:**
+- ✅ `src/templates/substitution_engine.py` (247 lines)
+  - ${variable} substitution with multiple formats
+  - Simple: ${param_name}
+  - Formatted: ${sequence:03d} (auto-incrementing counters)
+  - Expressions: ${param1 + param2}
+  - Conditionals: ${control_type} == "flow"
+  - Model-wide substitution via substitute_model()
+- ✅ `src/templates/parametric_template.py` (452 lines)
+  - Wraps DexpiPattern with parameter layer
+  - YAML template loading (from_yaml)
+  - Parameter validation (type, range, enum checking)
+  - 7-step instantiation workflow per Codex:
+    1. Validate parameters
+    2. Load base pattern
+    3. Clone via Pattern.copy_pattern()
+    4. Apply substitutions
+    5. ConnectorRenamingConvention integration
+    6. Import via mt.import_model_contents()
+    7. Validate result
+  - Validation hooks (connectivity, uniqueness, compatibility)
+- ✅ Basic example template (`library/patterns/pump_basic.yaml`)
+- ✅ Core tests passing (all substitution modes validated)
 
-**Key Features:**
-- Load pyDEXPI Pattern files
-- Apply parameter substitutions
-- Connect to target model using Pattern's connector system
-- Auto-generate component IDs
+**Remaining Work:**
+- ⏳ Create advanced example templates:
+  - N+1 pump station (per Codex priority)
+  - Tank farm
+  - Heat exchanger with heat integration
+- ⏳ Add SFILES template support (Flowsheet_Class integration)
+- ⏳ Register template operations in registry
+- ⏳ Integration tests with actual pattern files
 
-**Why This Matters:**
-- Validates pyDEXPI Pattern approach before full consolidation
-- Reduces pump station creation from 50+ calls to 3
+**Dependencies Added:**
+- PyYAML (for template loading)
 
-**Estimate:** 1.5 days
-
----
-
-### #5: ConnectorRenamingConvention Integration (4 hours) - NOT STARTED 🔴
-**Status:** Depends on #4
-
-**What Needs to Be Done:**
-1. Enhance `template_instantiate` with `ConnectorRenamingConvention`
-2. Add prefix/sequence management
-3. Integrate with `get_next_sequence()` logic
-
-**Why This Matters:**
-- Unique tags without TagManager
-- Consistent naming via pyDEXPI conventions
-
-**Estimate:** 0.5 days
+**Progress:** ~60% complete
+**Estimate:** 1.5 days total, ~0.6 days used, ~0.9 days remaining
 
 ---
 
