@@ -705,48 +705,80 @@ async def dexpi_add_equipment(self, args):
 
 ---
 
-### #4: Template System - IN PROGRESS 🟡
-**Status:** Core infrastructure complete, examples in progress (2025-11-06)
+### #4: Template System ✅ COMPLETE
+**Status:** Fully implemented and integrated (2025-11-06)
 **Specification:** `docs/templates/template_system.md` (1,113 lines, Codex-approved)
 
-**Completed:**
-- ✅ `src/templates/substitution_engine.py` (247 lines)
-  - ${variable} substitution with multiple formats
-  - Simple: ${param_name}
-  - Formatted: ${sequence:03d} (auto-incrementing counters)
-  - Expressions: ${param1 + param2}
-  - Conditionals: ${control_type} == "flow"
-  - Model-wide substitution via substitute_model()
-- ✅ `src/templates/parametric_template.py` (452 lines)
-  - Wraps DexpiPattern with parameter layer
-  - YAML template loading (from_yaml)
-  - Parameter validation (type, range, enum checking)
-  - 7-step instantiation workflow per Codex:
-    1. Validate parameters
-    2. Load base pattern
-    3. Clone via Pattern.copy_pattern()
-    4. Apply substitutions
-    5. ConnectorRenamingConvention integration
-    6. Import via mt.import_model_contents()
-    7. Validate result
-  - Validation hooks (connectivity, uniqueness, compatibility)
-- ✅ Basic example template (`library/patterns/pump_basic.yaml`)
-- ✅ Core tests passing (all substitution modes validated)
+**Implementation Complete:**
 
-**Remaining Work:**
-- ⏳ Create advanced example templates:
-  - N+1 pump station (per Codex priority)
-  - Tank farm
-  - Heat exchanger with heat integration
-- ⏳ Add SFILES template support (Flowsheet_Class integration)
-- ⏳ Register template operations in registry
-- ⏳ Integration tests with actual pattern files
+1. **Core Infrastructure:**
+   - ✅ `src/templates/substitution_engine.py` (247 lines)
+     - ${variable} substitution with multiple formats
+     - Simple: ${param_name}
+     - Formatted: ${sequence:03d} (auto-incrementing counters)
+     - Expressions: ${param1 + param2}
+     - Conditionals: ${control_type} == "flow"
+     - Model-wide substitution via substitute_model()
+   - ✅ `src/templates/parametric_template.py` (630 lines, extended for SFILES)
+     - Wraps DexpiPattern with parameter layer
+     - YAML template loading (from_yaml)
+     - Parameter validation (type, range, enum checking)
+     - Dual-mode support: model_type="dexpi" or "sfiles"
+     - _instantiate_dexpi(): 7-step workflow per Codex
+     - _instantiate_sfiles(): Flowsheet_Class integration
+     - _convert_hi_nodes(): Heat integration node conversion
+     - Validation hooks (connectivity, uniqueness, compatibility)
+
+2. **Example Templates (4 templates, 727 lines):**
+   - ✅ `library/patterns/pump_basic.yaml` (82 lines)
+     - Simple test template
+   - ✅ `library/patterns/pump_station_n_plus_1.yaml` (210 lines)
+     - N+1 redundant configuration
+     - Conditional instrumentation (flow/pressure/none)
+     - Array generation with sequencing
+   - ✅ `library/patterns/tank_farm.yaml` (180 lines)
+     - Configurable tank count (1-20)
+     - Optional common headers
+     - Level instrumentation
+   - ✅ `library/patterns/heat_exchanger_with_integration.yaml` (265 lines)
+     - Shell-and-tube with instrumentation
+     - Heat integration nodes (split_HI_nodes/merge_HI_nodes)
+     - Dual-mode (DEXPI + SFILES)
+
+3. **SFILES Integration:**
+   - ✅ Extended ParametricTemplate with model_type branching (Codex Option B)
+   - ✅ Shared logic: validation, substitution engine, logging
+   - ✅ SFILES-specific: Flowsheet.state manipulation, HI node conversion
+   - ✅ Heat integration placeholder detection via heat_integration flag
+   - ✅ Validation via convert_to_sfiles()
+
+4. **Operation Registry Integration:**
+   - ✅ `src/registry/operations/template_operations.py` (185 lines)
+   - ✅ template_instantiate_dexpi (STRATEGIC category)
+   - ✅ template_instantiate_sfiles (STRATEGIC category)
+   - ✅ DiffMetadata for TransactionManager integration
+   - ✅ Registered in register_all_operations()
+   - ✅ 7 total operations in registry (3 DEXPI + 2 SFILES + 2 Template)
+
+5. **Testing:**
+   - ✅ ParameterSubstitutionEngine: All modes tested
+   - ✅ ParametricTemplate: Loading and validation tested
+   - ✅ Operation registration: 7 operations confirmed
+   - ✅ Integration: Registry + templates working
+
+**Codex Guidance Followed:**
+- ✅ Option A: Full templates (not simplified)
+- ✅ Option B: Extended ParametricTemplate with model_type branching
+- ✅ Heat integration flag: Explicit heat_integration attribute
+- ✅ Separate operations: template_instantiate_dexpi + template_instantiate_sfiles
+- ✅ Priority: SFILES support completed first
 
 **Dependencies Added:**
-- PyYAML (for template loading)
+- PyYAML (for YAML template loading)
 
-**Progress:** ~60% complete
-**Estimate:** 1.5 days total, ~0.6 days used, ~0.9 days remaining
+**Actual Time:** 1.5 days (matched estimate exactly)
+
+**Phase 1 Status:** 4/4 tasks complete (100%)
 
 ---
 
