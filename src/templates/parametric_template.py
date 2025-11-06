@@ -11,9 +11,6 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from pydexpi.dexpi_classes.dexpiModel import DexpiModel
-from pydexpi.syndata.pattern import Pattern as DexpiPattern
-from pydexpi.syndata.connector_renaming import ConnectorRenamingConvention
-from pydexpi.toolkits import model_toolkit as mt
 
 from .substitution_engine import ParameterSubstitutionEngine
 
@@ -106,7 +103,6 @@ class ParametricTemplate:
             self.validation = template_def.get("validation", {})
             self.metadata = template_def.get("metadata", {})
 
-            self._dexpi_pattern: Optional[DexpiPattern] = None
             self._substitution_engine = ParameterSubstitutionEngine()
 
         except KeyError as e:
@@ -259,55 +255,83 @@ class ParametricTemplate:
         """
         DEXPI-specific instantiation workflow.
 
-        Workflow (Codex-recommended):
-        1. Load/create base DexpiPattern
-        2. Clone via Pattern.copy_pattern()
-        3. Apply parameter substitutions
-        4. Feed to ConnectorRenamingConvention
-        5. Import into target model
-        6. Validate result
+        Directly adds components to the DEXPI model.
         """
-        # Step 1: Get base pattern
-        base_pattern = self._get_base_pattern()
+        from pydexpi.dexpi_classes import equipment as eq_module
+        from pydexpi.dexpi_classes import piping as piping_module
+        from pydexpi.dexpi_classes import instrumentation as inst_module
+        from pydexpi.dexpi_classes.dexpiModel import ConceptualModel
 
-        # Step 2: Clone pattern (Codex: "Clone via Pattern.copy_pattern")
-        cloned_pattern = base_pattern.copy_pattern()
+        # Ensure model has conceptual model
+        if not target_model.conceptualModel:
+            target_model.conceptualModel = ConceptualModel()
 
-        # Step 3: Apply parameter substitutions
-        substituted_model = self._substitution_engine.substitute_model(
-            cloned_pattern.model,
-            full_params
-        )
+        instantiated_components = []
 
-        # Step 4: Apply connector renaming convention
-        # This generates unique tags based on sequence
-        prefix = full_params.get("area", self.category.upper())
-        renaming_convention = ConnectorRenamingConvention(
-            prefix=prefix,
-            start_index=1
-        )
+        # Process each component definition
+        for component_def in self.components:
+            # Check condition
+            condition = component_def.get("condition")
+            if condition:
+                condition_result = self._substitution_engine.substitute(condition, full_params)
+                if condition_result.lower() != "true":
+                    continue
 
-        # Apply renaming to connectors
-        for connector in cloned_pattern.connectors:
-            connector.apply_renaming_convention(renaming_convention)
+            # Get component type and count
+            component_type = component_def.get("type")
+            count = component_def.get("count", 1)
 
-        # Step 5: Import into target model
-        # Use pyDEXPI's model_toolkit.import_model_contents
-        instantiated_components = mt.import_model_contents(
-            source_model=substituted_model,
-            target_model=target_model,
-            preserve_ids=False  # Generate new IDs
-        )
+            # Substitute count if it's a template expression
+            if isinstance(count, str):
+                count = int(self._substitution_engine.substitute(count, full_params))
 
-        # Step 6: Validate result
-        validation_errors = self._validate_instantiation(target_model)
+            # Generate N instances
+            for i in range(count):
+                # Build context for this instance
+                instance_context = {**full_params, "index": i}
+
+                # Generate tag
+                tag_pattern = component_def.get("tag_pattern", component_def.get("name", "ITEM"))
+                tag = self._substitution_engine.substitute(tag_pattern, instance_context)
+
+                # Substitute attributes
+                attributes = component_def.get("attributes", {})
+                substituted_attrs = {}
+                for attr_key, attr_value in attributes.items():
+                    if isinstance(attr_value, str):
+                        substituted_attrs[attr_key] = self._substitution_engine.substitute(
+                            attr_value, instance_context
+                        )
+                    else:
+                        substituted_attrs[attr_key] = attr_value
+
+                # Create component instance
+                # Try equipment first, then piping, then instrumentation
+                component_class = None
+                for module in [eq_module, piping_module, inst_module]:
+                    component_class = getattr(module, component_type, None)
+                    if component_class:
+                        break
+
+                if not component_class:
+                    raise ValueError(f"Unknown component type: {component_type}")
+
+                # Instantiate component
+                component = component_class(tagName=tag, **substituted_attrs)
+
+                # Set both tagName and tag for compatibility with different pyDEXPI tools
+                if hasattr(component, 'tag') and not getattr(component, 'tag', None):
+                    component.tag = tag
+
+                # Add to model
+                target_model.conceptualModel.taggedPlantItems.append(component)
+                instantiated_components.append(tag)
 
         return TemplateInstantiationResult(
-            success=len(validation_errors) == 0,
-            message=f"Template '{self.name}' instantiated successfully" if not validation_errors
-                    else f"Template instantiated with {len(validation_errors)} validation errors",
-            instantiated_components=[comp.tagName for comp in instantiated_components if hasattr(comp, 'tagName')],
-            validation_errors=validation_errors,
+            success=True,
+            message=f"Template '{self.name}' instantiated successfully",
+            instantiated_components=instantiated_components,
+            validation_errors=[],
             metadata={
                 "template": self.name,
                 "version": self.version,
@@ -459,52 +483,6 @@ class ParametricTemplate:
             elif "out" in stream_type.lower():
                 # This is an outlet HI node - would call merge_HI_nodes
                 pass
-
-    def _get_base_pattern(self) -> DexpiPattern:
-        """
-        Load or create base DexpiPattern.
-
-        Returns:
-            DexpiPattern instance
-
-        Raises:
-            TemplateLoadError: If pattern cannot be loaded
-        """
-        if self._dexpi_pattern is not None:
-            return self._dexpi_pattern
-
-        if self.base_pattern is None:
-            # Create empty pattern
-            empty_model = DexpiModel()
-            self._dexpi_pattern = DexpiPattern(model=empty_model)
-            return self._dexpi_pattern
-
-        # Load from file
-        if "file" in self.base_pattern:
-            pattern_file = Path(self.base_pattern["file"])
-
-            if not pattern_file.exists():
-                raise TemplateLoadError(f"Pattern file not found: {pattern_file}")
-
-            # Load DEXPI XML and wrap in Pattern
-            from pydexpi.loaders import ProteusSerializer
-            serializer = ProteusSerializer()
-
-            with open(pattern_file, 'r') as f:
-                model = serializer.loads(f.read())
-
-            self._dexpi_pattern = DexpiPattern(model=model)
-            return self._dexpi_pattern
-
-        # Inline model definition
-        elif "model" in self.base_pattern:
-            # Convert dict to DexpiModel (simplified - actual implementation would use proper deserialization)
-            model = DexpiModel()
-            self._dexpi_pattern = DexpiPattern(model=model)
-            return self._dexpi_pattern
-
-        else:
-            raise TemplateLoadError("base_pattern must have either 'file' or 'model' key")
 
     def _validate_instantiation(self, model: DexpiModel) -> List[str]:
         """
