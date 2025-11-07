@@ -879,16 +879,40 @@ Once graph_modify is complete, we can:
 
 ---
 
-### #2: Smart Connection System / graph_modify - IN PROGRESS 🟡
-**Status:** Starting implementation (2025-11-06)
+### #2: Smart Connection System / graph_modify - PHASE 1 COMPLETE ✅🟡
+**Status:** V1 (6 actions) implemented (2025-11-07) | V2 (4 actions) pending
 **Dependencies:** ✅ graph_connect infrastructure from Phase 1
 
-**What Needs to Be Done:**
-1. Implement `graph_modify` - Inline modifications
-2. Add port finding and matching logic
-3. Implement split/merge operations
+**V1 Implementation Complete (6 core actions):**
+1. ✅ `insert_component` - Delegates to dexpi_tools/sfiles_tools
+2. ✅ `update_component` - Direct attribute updates
+3. ✅ `insert_inline_component` - Uses pt.insert_item_to_segment (DEXPI only)
+4. ✅ `rewire_connection` - Uses pt.connect_piping_network_segment + NetworkX
+5. ✅ `remove_component` - With optional rerouting (basic implementation)
+6. ✅ `set_tag_properties` - Tag renaming + metadata updates
 
-**Estimate:** 2 days
+**Implementation Details:**
+- ✅ Created `src/tools/graph_modify_tools.py` (980+ lines)
+- ✅ Registered with MCP server in `src/server.py`
+- ✅ Target resolver with component/segment/stream/port resolution
+- ✅ TransactionManager integration with auto-wrapping
+- ✅ DEXPI/SFILES parity with ACTION_NOT_APPLICABLE handling
+- ✅ Validation hooks (pre/post) with MLGraphLoader
+- ✅ Test suite created (`tests/test_graph_modify.py`)
+
+**V2 Actions (Pending):**
+1. ⏳ `split_segment` - Custom segment surgery with validity checks
+2. ⏳ `merge_segments` - Combine adjacent segments
+3. ⏳ `update_stream_properties` - SFILES-only property updates
+4. ⏳ `toggle_instrumentation` - Add/remove instruments
+
+**Architecture (Codex-guided):**
+- Single `graph_modify` tool with action enum
+- Thin wrappers over upstream toolkits
+- Shared ActionContext for model-agnostic orchestration
+- Separate DEXPI/SFILES handlers per action
+
+**Estimate:** V1: 1 day (DONE) | V2: 1 day (pending)
 
 ---
 

@@ -20,6 +20,7 @@ from .tools.graph_tools import GraphTools
 from .tools.search_tools import SearchTools
 from .tools.batch_tools import BatchTools
 from .tools.template_tools import TemplateTools
+from .tools.graph_modify_tools import GraphModifyTools
 from .resources.graph_resources import GraphResourceProvider
 from .converters.graph_converter import UnifiedGraphConverter
 
@@ -81,6 +82,13 @@ class EngineeringDrawingMCPServer:
             self.flowsheets
         )
         self.template_tools = TemplateTools(self.dexpi_models, self.flowsheets)
+        self.graph_modify_tools = GraphModifyTools(
+            self.dexpi_models,
+            self.flowsheets,
+            self.dexpi_tools,
+            self.sfiles_tools,
+            self.search_tools
+        )
         
         # Initialize converters and resources
         self.graph_converter = UnifiedGraphConverter()
@@ -112,6 +120,7 @@ class EngineeringDrawingMCPServer:
             tools.extend(self.search_tools.get_tools())
             tools.extend(self.batch_tools.get_tools())
             tools.extend(self.template_tools.get_tools())
+            tools.extend(self.graph_modify_tools.get_tools())
             return tools
         
         @self.server.call_tool()
@@ -121,6 +130,8 @@ class EngineeringDrawingMCPServer:
                 # Check explicit batch tools first (before prefix matching)
                 if name in ["model_batch_apply", "rules_apply", "graph_connect"]:
                     result = await self.batch_tools.handle_tool(name, arguments)
+                elif name == "graph_modify":
+                    result = await self.graph_modify_tools.handle_tool(name, arguments)
                 elif name.startswith("template_") or name == "area_deploy":
                     result = await self.template_tools.handle_tool_call(name, arguments)
                 elif name.startswith("dexpi_"):
