@@ -185,9 +185,99 @@ class SearchTools:
                         }
                     }
                 }
+            ),
+            Tool(
+                name="search_execute",
+                description="Unified search tool - consolidates all search_* operations",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "query_type": {
+                            "type": "string",
+                            "enum": ["by_tag", "by_type", "by_attributes", "connected", "statistics", "by_stream"],
+                            "description": "Type of search query to execute"
+                        },
+                        "tag_pattern": {
+                            "type": "string",
+                            "description": "Tag pattern (for by_tag query)"
+                        },
+                        "component_type": {
+                            "type": "string",
+                            "description": "Component type (for by_type query)"
+                        },
+                        "attributes": {
+                            "type": "object",
+                            "description": "Attribute key-value pairs (for by_attributes query)"
+                        },
+                        "node_id": {
+                            "type": "string",
+                            "description": "Node ID or tag (for connected query)"
+                        },
+                        "stream_name": {
+                            "type": "string",
+                            "description": "Stream name or pattern (for by_stream query)"
+                        },
+                        "from_unit": {
+                            "type": "string",
+                            "description": "Source unit tag (for by_stream query)"
+                        },
+                        "to_unit": {
+                            "type": "string",
+                            "description": "Target unit tag (for by_stream query)"
+                        },
+                        "properties": {
+                            "type": "object",
+                            "description": "Stream properties (for by_stream query)"
+                        },
+                        "model_id": {
+                            "type": "string",
+                            "description": "Model ID to search in (optional for most queries)"
+                        },
+                        "search_scope": {
+                            "type": "string",
+                            "enum": ["all", "equipment", "instrumentation", "piping"],
+                            "description": "Search scope (for by_tag query)",
+                            "default": "all"
+                        },
+                        "fuzzy": {
+                            "type": "boolean",
+                            "description": "Enable fuzzy matching (for by_tag query)",
+                            "default": False
+                        },
+                        "include_subtypes": {
+                            "type": "boolean",
+                            "description": "Include subtypes (for by_type query)",
+                            "default": True
+                        },
+                        "match_type": {
+                            "type": "string",
+                            "enum": ["exact", "partial", "regex"],
+                            "description": "Attribute matching mode (for by_attributes query)",
+                            "default": "exact"
+                        },
+                        "direction": {
+                            "type": "string",
+                            "enum": ["upstream", "downstream", "both"],
+                            "description": "Search direction (for connected query)",
+                            "default": "both"
+                        },
+                        "max_depth": {
+                            "type": "integer",
+                            "description": "Maximum search depth (for connected query)",
+                            "default": 3
+                        },
+                        "group_by": {
+                            "type": "string",
+                            "enum": ["type", "tag_prefix", "connection_count"],
+                            "description": "Grouping method (for statistics query)",
+                            "default": "type"
+                        }
+                    },
+                    "required": ["query_type"]
+                }
             )
         ]
-    
+
     async def handle_tool(self, name: str, arguments: dict) -> dict:
         """Route tool call to appropriate handler."""
         handlers = {
@@ -196,7 +286,8 @@ class SearchTools:
             "search_by_attributes": self._search_by_attributes,
             "search_connected": self._search_connected,
             "query_model_statistics": self._query_statistics,
-            "search_by_stream": self._search_by_stream
+            "search_by_stream": self._search_by_stream,
+            "search_execute": self._unified_search
         }
         
         handler = handlers.get(name)
@@ -830,5 +921,46 @@ class SearchTools:
                     connection_counts["4_plus_connections"] += 1
             
             stats["by_connection_count"] = connection_counts
-        
+
         return stats
+
+    async def _unified_search(self, args: dict) -> dict:
+        """
+        Unified search handler - dispatches to appropriate search operation.
+
+        Consolidates all search_* tools into a single entry point.
+        """
+        query_type = args.get("query_type")
+
+        if not query_type:
+            return error_response(
+                "Missing required parameter: query_type",
+                code="MISSING_QUERY_TYPE"
+            )
+
+        # Dispatch to appropriate handler based on query type
+        query_map = {
+            "by_tag": self._search_by_tag,
+            "by_type": self._search_by_type,
+            "by_attributes": self._search_by_attributes,
+            "connected": self._search_connected,
+            "statistics": self._query_statistics,
+            "by_stream": self._search_by_stream
+        }
+
+        handler = query_map.get(query_type)
+        if not handler:
+            return error_response(
+                f"Invalid query_type: {query_type}. Must be one of: {', '.join(query_map.keys())}",
+                code="INVALID_QUERY_TYPE"
+            )
+
+        # Call the appropriate handler with the full args dict
+        try:
+            return await handler(args)
+        except Exception as e:
+            logger.error(f"Error in search_execute query '{query_type}': {e}", exc_info=True)
+            return error_response(
+                f"Query '{query_type}' failed: {str(e)}",
+                code="QUERY_ERROR"
+            )

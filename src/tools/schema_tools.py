@@ -126,16 +126,65 @@ class SchemaTools:
                     },
                     "required": ["schema_type"]
                 }
+            ),
+            Tool(
+                name="schema_query",
+                description="Unified schema introspection tool - consolidates all schema_* operations",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "operation": {
+                            "type": "string",
+                            "enum": ["list_classes", "describe_class", "find_class", "get_hierarchy"],
+                            "description": "Operation to perform"
+                        },
+                        "schema_type": {
+                            "type": "string",
+                            "enum": ["dexpi", "sfiles", "all"],
+                            "description": "Which schema to query"
+                        },
+                        "class_name": {
+                            "type": "string",
+                            "description": "Class name (for describe_class operation)"
+                        },
+                        "search_term": {
+                            "type": "string",
+                            "description": "Search term (for find_class operation)"
+                        },
+                        "root_class": {
+                            "type": "string",
+                            "description": "Root class (for get_hierarchy operation)"
+                        },
+                        "category": {
+                            "type": "string",
+                            "enum": ["equipment", "piping", "instrumentation", "all"],
+                            "description": "Filter category (for list_classes with DEXPI)",
+                            "default": "all"
+                        },
+                        "include_inherited": {
+                            "type": "boolean",
+                            "description": "Include inherited members (for describe_class)",
+                            "default": False
+                        },
+                        "max_depth": {
+                            "type": "integer",
+                            "description": "Maximum hierarchy depth (for get_hierarchy)",
+                            "default": 5
+                        }
+                    },
+                    "required": ["operation"]
+                }
             )
         ]
-    
+
     async def handle_tool(self, name: str, arguments: dict) -> dict:
         """Route tool call to appropriate handler."""
         handlers = {
             "schema_list_classes": self._list_classes,
             "schema_describe_class": self._describe_class,
             "schema_find_class": self._find_class,
-            "schema_get_hierarchy": self._get_hierarchy
+            "schema_get_hierarchy": self._get_hierarchy,
+            "schema_query": self._unified_query
         }
         
         handler = handlers.get(name)
@@ -399,5 +448,44 @@ class SchemaTools:
             tree["subclasses"][subclass.__name__] = self._build_hierarchy_tree(
                 subclass, max_depth, current_depth + 1
             )
-        
+
         return tree
+
+    async def _unified_query(self, args: dict) -> dict:
+        """
+        Unified schema query handler - dispatches to appropriate operation.
+
+        Consolidates all schema_* tools into a single entry point.
+        """
+        operation = args.get("operation")
+
+        if not operation:
+            return error_response(
+                "Missing required parameter: operation",
+                code="MISSING_OPERATION"
+            )
+
+        # Dispatch to appropriate handler based on operation
+        operation_map = {
+            "list_classes": self._list_classes,
+            "describe_class": self._describe_class,
+            "find_class": self._find_class,
+            "get_hierarchy": self._get_hierarchy
+        }
+
+        handler = operation_map.get(operation)
+        if not handler:
+            return error_response(
+                f"Invalid operation: {operation}. Must be one of: {', '.join(operation_map.keys())}",
+                code="INVALID_OPERATION"
+            )
+
+        # Call the appropriate handler with the full args dict
+        try:
+            return await handler(args)
+        except Exception as e:
+            logger.error(f"Error in schema_query operation '{operation}': {e}", exc_info=True)
+            return error_response(
+                f"Operation '{operation}' failed: {str(e)}",
+                code="OPERATION_ERROR"
+            )

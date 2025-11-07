@@ -267,6 +267,17 @@ class SfilesTools:
                     },
                     "required": ["model_id"]
                 }
+            ),
+            Tool(
+                name="sfiles_generalize",
+                description="Generalize SFILES flowsheet by removing unit numbers for pattern matching and template creation",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "flowsheet_id": {"type": "string", "description": "ID of flowsheet to generalize"},
+                        "sfiles_string": {"type": "string", "description": "Optional SFILES string to generalize (alternative to flowsheet_id)"}
+                    }
+                }
             )
         ]
     
@@ -288,6 +299,7 @@ class SfilesTools:
             "sfiles_canonical_form": self._canonical_form,
             "sfiles_pattern_helper": self._pattern_helper,
             "sfiles_convert_from_dexpi": self._convert_from_dexpi,
+            "sfiles_generalize": self._generalize,
             # Removed duplicate handlers:
             # - sfiles_init_project (now in ProjectTools)
             # - sfiles_save_to_project (now in ProjectTools)
@@ -1048,3 +1060,75 @@ class SfilesTools:
                 "status": "error",
                 "error": f"Conversion failed: {str(e)}"
             }
+
+    async def _generalize(self, args: dict) -> dict:
+        """
+        Generalize SFILES flowsheet by removing unit numbers.
+
+        Converts flowsheet like "(reactor-1)(distcol-2)" to "(reactor)(distcol)"
+        for pattern matching and template creation.
+
+        Args:
+            args: dict with optional flowsheet_id or sfiles_string
+
+        Returns:
+            dict with generalized SFILES string
+        """
+        from Flowsheet_Class.nx_to_sfiles import generalize_SFILES
+
+        # Unpack arguments
+        flowsheet_id = args.get("flowsheet_id")
+        sfiles_string = args.get("sfiles_string")
+
+        try:
+            # Get SFILES representation
+            if sfiles_string:
+                # Parse SFILES string using Flowsheet constructor
+                # The constructor automatically calls SFILES_parser() when sfiles_in is provided
+                original_string = sfiles_string.strip()
+                temp_flowsheet = Flowsheet(sfiles_in=original_string)
+                sfiles_list = temp_flowsheet.sfiles_list
+            elif flowsheet_id:
+                # Get from stored flowsheet
+                if flowsheet_id not in self.flowsheets:
+                    return error_response(
+                        f"Flowsheet {flowsheet_id} not found",
+                        "FLOWSHEET_NOT_FOUND"
+                    )
+
+                flowsheet = self.flowsheets[flowsheet_id]
+
+                # Convert to SFILES first if needed
+                if not hasattr(flowsheet, 'sfiles') or not flowsheet.sfiles:
+                    flowsheet.convert_to_sfiles(version="v2", canonical=True)
+
+                # Parse SFILES if not already done
+                if not hasattr(flowsheet, 'sfiles_list') or not flowsheet.sfiles_list:
+                    flowsheet.SFILES_parser()
+
+                sfiles_list = flowsheet.sfiles_list
+                original_string = flowsheet.sfiles
+            else:
+                return error_response(
+                    "Must provide either flowsheet_id or sfiles_string",
+                    "MISSING_INPUT"
+                )
+
+            # Generalize by removing unit numbers
+            generalized_list = generalize_SFILES(sfiles_list)
+            # Concatenate tokens (SFILES doesn't use spaces)
+            generalized_string = ''.join(generalized_list)
+
+            return success_response({
+                "original": original_string,
+                "generalized": generalized_string,
+                "token_count": len(generalized_list),
+                "use_case": "Pattern matching and template creation"
+            })
+
+        except Exception as e:
+            logger.error(f"Generalization failed: {e}", exc_info=True)
+            return error_response(
+                f"Generalization failed: {str(e)}",
+                "GENERALIZATION_ERROR"
+            )
