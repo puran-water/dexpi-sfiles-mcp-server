@@ -879,11 +879,16 @@ Once graph_modify is complete, we can:
 
 ---
 
-### #2: Smart Connection System / graph_modify - PHASE 1 COMPLETE ✅🟡
-**Status:** V1 (6 actions) implemented (2025-11-07) | V2 (4 actions) pending
+### #2: Smart Connection System / graph_modify - V1 COMPLETE & FIXED ✅
+**Status:** V1 (6 actions) production-ready after Codex review fixes (2025-11-07) | V2 (4 actions) pending
 **Dependencies:** ✅ graph_connect infrastructure from Phase 1
 
-**V1 Implementation Complete (6 core actions):**
+**V1 Implementation Status:**
+- ✅ Initial implementation (commit f8a053d)
+- ✅ Critical bug fixes after Codex review (commit 01ad000)
+- ✅ Production-ready for 6 core actions
+
+**6 Core Actions Implemented:**
 1. ✅ `insert_component` - Delegates to dexpi_tools/sfiles_tools
 2. ✅ `update_component` - Direct attribute updates
 3. ✅ `insert_inline_component` - Uses pt.insert_item_to_segment (DEXPI only)
@@ -912,7 +917,16 @@ Once graph_modify is complete, we can:
 - Shared ActionContext for model-agnostic orchestration
 - Separate DEXPI/SFILES handlers per action
 
-**Estimate:** V1: 1 day (DONE) | V2: 1 day (pending)
+**Critical Fixes Applied (Codex Review):**
+1. ✅ Transaction integration - Added awaits, operate on working copy
+2. ✅ Error response format - Fixed code/message field swap (15+ calls)
+3. ✅ dry_run implementation - Now creates isolated copies
+4. ✅ DEXPI rewire - Now resolves target segment, preserves properties
+5. ✅ DEXPI rerouting - Honest warnings, improved removal logic
+
+**Codex Assessment:** Critical blockers resolved, V1 production-ready
+
+**Estimate:** V1: 1.5 days (DONE) | V2: 1 day (pending)
 
 ---
 
