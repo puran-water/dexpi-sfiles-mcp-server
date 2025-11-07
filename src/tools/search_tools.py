@@ -566,9 +566,9 @@ class SearchTools:
         """Get model statistics."""
         model_id = args.get("model_id")
         group_by = args.get("group_by", "type")
-        
+
         statistics = {}
-        
+
         # Collect statistics for DEXPI models
         if model_id:
             if model_id in self.dexpi_models:
@@ -578,6 +578,13 @@ class SearchTools:
             elif model_id in self.flowsheets:
                 statistics[model_id] = self._get_flowsheet_statistics(
                     self.flowsheets[model_id], group_by
+                )
+            else:
+                # Model ID specified but not found in either store
+                return error_response(
+                    f"Model {model_id} not found",
+                    "MODEL_NOT_FOUND",
+                    details={"model_id": model_id}
                 )
         else:
             # All models

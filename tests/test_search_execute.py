@@ -60,6 +60,20 @@ async def test_search_execute_statistics(search_tools):
 
 
 @pytest.mark.asyncio
+async def test_search_execute_statistics_model_not_found(search_tools):
+    """Test statistics query with nonexistent model_id returns MODEL_NOT_FOUND."""
+    result = await search_tools.handle_tool("search_execute", {
+        "query_type": "statistics",
+        "model_id": "nonexistent-model-12345"
+    })
+
+    # Should return error, not empty statistics
+    assert result.get('ok') is False
+    assert result['error']['code'] == 'MODEL_NOT_FOUND'
+    assert 'nonexistent-model-12345' in result['error']['message']
+
+
+@pytest.mark.asyncio
 async def test_search_execute_missing_query_type(search_tools):
     """Test error handling when query_type is missing."""
     result = await search_tools.handle_tool("search_execute", {
