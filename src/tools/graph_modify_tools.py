@@ -392,23 +392,28 @@ class GraphModifyTools:
             if not validation.get("ok"):
                 return validation
 
+        # Store swapping for isolation (scoped to this invocation)
+        original_model = None  # Local variable, not instance attribute
+        swapped_store = False
+
         # Transaction wrapping
         if options.get("create_transaction") and not options.get("dry_run"):
             # begin() returns string transaction_id, not dict
             ctx.transaction_id = await self.transaction_manager.begin(model_id)
 
-            # Get working model from transaction (_working_model is private attribute)
-            transaction = self.transaction_manager.transactions[ctx.transaction_id]
-            ctx.model = transaction._working_model
+            # Get working model from transaction (public API that materializes from snapshot)
+            ctx.model = self.transaction_manager.get_working_model(ctx.transaction_id)
 
             # CRITICAL: Temporarily swap store entry so delegates operate on working copy
             # This ensures all mutations (via dexpi_tools/sfiles_tools) affect the transaction
             if ctx.model_type == "dexpi":
-                self._original_model = self.dexpi_models[model_id]  # Save original
+                original_model = self.dexpi_models[model_id]  # Save original
                 self.dexpi_models[model_id] = ctx.model  # Point to working copy
+                swapped_store = True
             elif ctx.model_type == "sfiles":
-                self._original_model = self.flowsheets[model_id]  # Save original
+                original_model = self.flowsheets[model_id]  # Save original
                 self.flowsheets[model_id] = ctx.model  # Point to working copy
+                swapped_store = True
 
         # For dry_run, work on a copy and swap stores
         elif options.get("dry_run"):
@@ -416,8 +421,9 @@ class GraphModifyTools:
                 import copy
                 ctx.model = copy.deepcopy(ctx.model)
                 # Swap store entry so delegates operate on copy
-                self._original_model = self.dexpi_models[model_id]
+                original_model = self.dexpi_models[model_id]
                 self.dexpi_models[model_id] = ctx.model
+                swapped_store = True
             elif ctx.model_type == "sfiles":
                 # SFILES: create copy via serialize/deserialize
                 sfiles_str = ctx.model.convert_to_sfiles()
@@ -425,8 +431,9 @@ class GraphModifyTools:
                 ctx.model = create_flowsheet()
                 ctx.model.create_from_sfiles(sfiles_str)
                 # Swap store entry so delegates operate on copy
-                self._original_model = self.flowsheets[model_id]
+                original_model = self.flowsheets[model_id]
                 self.flowsheets[model_id] = ctx.model
+                swapped_store = True
 
         try:
             # Dispatch to action handler
@@ -462,19 +469,18 @@ class GraphModifyTools:
                 }
                 result["data"]["operations_applied"] = commit_result.operations_applied
 
-            # For dry_run, indicate no changes were made
+            # For dry_run, indicate no changes were made and restore original
             if options.get("dry_run"):
                 if "data" not in result:
                     result["data"] = {}
                 result["data"]["dry_run"] = True
 
                 # Restore original model from store (dry_run shouldn't persist)
-                if hasattr(self, '_original_model'):
+                if swapped_store and original_model is not None:
                     if ctx.model_type == "dexpi":
-                        self.dexpi_models[model_id] = self._original_model
+                        self.dexpi_models[model_id] = original_model
                     elif ctx.model_type == "sfiles":
-                        self.flowsheets[model_id] = self._original_model
-                    delattr(self, '_original_model')
+                        self.flowsheets[model_id] = original_model
 
             return result
 
@@ -483,13 +489,12 @@ class GraphModifyTools:
             if ctx.transaction_id:
                 await self.transaction_manager.rollback(ctx.transaction_id)
 
-            # Restore original model on error
-            if hasattr(self, '_original_model'):
+            # Restore original model on error (if we swapped)
+            if swapped_store and original_model is not None:
                 if ctx.model_type == "dexpi":
-                    self.dexpi_models[model_id] = self._original_model
+                    self.dexpi_models[model_id] = original_model
                 elif ctx.model_type == "sfiles":
-                    self.flowsheets[model_id] = self._original_model
-                delattr(self, '_original_model')
+                    self.flowsheets[model_id] = original_model
 
             return error_response(
                 f"Action execution failed: {str(e)}",
@@ -497,15 +502,18 @@ class GraphModifyTools:
             )
 
         finally:
-            # Always restore original model if we swapped stores (transaction commit handles persistence)
-            if hasattr(self, '_original_model') and ctx.transaction_id:
+            # Restore original model if we swapped stores for transaction
+            # (transaction commit handles persistence to the real store)
+            if swapped_store and original_model is not None and ctx.transaction_id:
                 if ctx.model_type == "dexpi":
-                    # Don't restore - commit already updated the store
+                    # Commit already persisted working model to store, safe to cleanup
                     pass
                 elif ctx.model_type == "sfiles":
-                    # Don't restore - commit already updated the store
+                    # Commit already persisted working model to store, safe to cleanup
                     pass
-                delattr(self, '_original_model')
+                # Note: For transactions, we don't restore because commit() already
+                # wrote the working model to the store. The swap was just temporary
+                # for delegate isolation during execution.
 
     async def _dispatch_action(self, action: GraphAction, ctx: ActionContext) -> dict:
         """Dispatch to specific action handler."""

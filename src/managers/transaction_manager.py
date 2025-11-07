@@ -541,6 +541,25 @@ class TransactionManager:
         transaction = self._get_transaction(transaction_id)
         return transaction.diff
 
+    def get_working_model(self, transaction_id: str) -> Model:
+        """
+        Get working copy of model for transaction.
+
+        This materializes the working model from the snapshot if not already cached.
+        Use this to get the model you should mutate within a transaction.
+
+        Args:
+            transaction_id: Transaction identifier
+
+        Returns:
+            Working copy of the model
+
+        Raises:
+            TransactionNotFound: If transaction doesn't exist
+        """
+        transaction = self._get_transaction(transaction_id)
+        return self._get_working_model(transaction)
+
     async def get_status(self, transaction_id: str) -> Dict[str, Any]:
         """
         Get transaction status and metadata.
