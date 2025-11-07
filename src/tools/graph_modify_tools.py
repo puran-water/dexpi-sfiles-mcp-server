@@ -443,6 +443,14 @@ class GraphModifyTools:
                 # Rollback on error
                 if ctx.transaction_id:
                     await self.transaction_manager.rollback(ctx.transaction_id)
+
+                # Restore original model if we swapped stores
+                if swapped_store and original_model is not None:
+                    if ctx.model_type == "dexpi":
+                        self.dexpi_models[model_id] = original_model
+                    elif ctx.model_type == "sfiles":
+                        self.flowsheets[model_id] = original_model
+
                 return result
 
             # Post-validation
@@ -451,6 +459,14 @@ class GraphModifyTools:
                 if not validation.get("ok"):
                     if ctx.transaction_id:
                         await self.transaction_manager.rollback(ctx.transaction_id)
+
+                    # Restore original model if we swapped stores
+                    if swapped_store and original_model is not None:
+                        if ctx.model_type == "dexpi":
+                            self.dexpi_models[model_id] = original_model
+                        elif ctx.model_type == "sfiles":
+                            self.flowsheets[model_id] = original_model
+
                     return validation
 
             # Commit transaction (not for dry_run)
