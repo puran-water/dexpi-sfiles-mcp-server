@@ -21,6 +21,7 @@ from pydexpi.loaders.ml_graph_loader import MLGraphLoader
 
 from ..utils.response import success_response, error_response
 from ..managers.transaction_manager import TransactionManager
+from .dexpi_attribute_sanitizer import DexpiAttributeSanitizer
 
 logger = logging.getLogger(__name__)
 
@@ -258,6 +259,7 @@ class GraphModifyTools:
         self.resolver = TargetResolver(search_tools)
         self.transaction_manager = TransactionManager(dexpi_models, flowsheet_store)
         self.graph_loader = MLGraphLoader()
+        self.attribute_sanitizer = DexpiAttributeSanitizer()
 
         logger.info("GraphModifyTools initialized")
 
@@ -671,12 +673,17 @@ class GraphModifyTools:
             # Replace all attributes (risky - not recommended)
             logger.warning("update_component with merge=False replaces all attributes")
 
-        # Update attributes
-        for key, value in attributes.items():
-            if hasattr(component, key):
-                setattr(component, key, value)
-            else:
-                logger.warning(f"Component {component} has no attribute '{key}'")
+        sanitized_attrs, issues = self.attribute_sanitizer.sanitize(component, attributes)
+        if issues:
+            ctx.validation_errors.extend(issues)
+            return error_response(
+                "Failed to apply attribute updates due to validation errors",
+                "ATTRIBUTE_VALIDATION_FAILED",
+                {"issues": issues},
+            )
+
+        for key, value in sanitized_attrs.items():
+            setattr(component, key, value)
 
         tag = getattr(component, 'tagName', None) or getattr(component, 'tag', None)
         ctx.mutated_entities.append(str(tag))

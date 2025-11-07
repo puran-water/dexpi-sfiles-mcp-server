@@ -8,6 +8,7 @@ from src.tools.dexpi_tools import DexpiTools
 from src.tools.sfiles_tools import SfilesTools
 from src.converters.graph_converter import UnifiedGraphConverter
 from src.validators.constraints import EngineeringConstraints
+from src.utils.response import is_success
 # Note: LLM generator module removed - functionality moved to batch tools
 
 
@@ -29,13 +30,13 @@ class TestDexpiTools:
             "revision": "A",
             "description": "Test P&ID"
         }
-        
+
         result = await dexpi_tools._create_pid(args)
-        
-        assert result["status"] == "success"
-        assert "model_id" in result
-        assert result["project_name"] == "Test Project"
-        assert result["drawing_number"] == "PID-001"
+
+        assert is_success(result)
+        assert "model_id" in result["data"]
+        assert result["data"]["project_name"] == "Test Project"
+        assert result["data"]["drawing_number"] == "PID-001"
     
     @pytest.mark.asyncio
     async def test_add_equipment(self, dexpi_tools):
@@ -46,8 +47,8 @@ class TestDexpiTools:
             "drawing_number": "PID-001"
         }
         create_result = await dexpi_tools._create_pid(create_args)
-        model_id = create_result["model_id"]
-        
+        model_id = create_result["data"]["model_id"]
+
         # Add equipment
         equipment_args = {
             "model_id": model_id,
@@ -55,12 +56,12 @@ class TestDexpiTools:
             "tag_name": "TK-101",
             "specifications": {"volume": 100.0}
         }
-        
+
         result = await dexpi_tools._add_equipment(equipment_args)
-        
-        assert result["status"] == "success"
-        assert result["equipment_type"] == "Tank"
-        assert result["tag_name"] == "TK-101"
+
+        assert is_success(result)
+        assert result["data"]["equipment_type"] == "Tank"
+        assert result["data"]["tag_name"] == "TK-101"
 
 
 class TestSfilesTools:
@@ -80,13 +81,13 @@ class TestSfilesTools:
             "type": "PFD",
             "description": "Test PFD"
         }
-        
+
         result = await sfiles_tools._create_flowsheet(args)
-        
-        assert result["status"] == "success"
-        assert "flowsheet_id" in result
-        assert result["name"] == "Test Flowsheet"
-        assert result["type"] == "PFD"
+
+        assert is_success(result)
+        assert "flowsheet_id" in result["data"]
+        assert result["data"]["name"] == "Test Flowsheet"
+        assert result["data"]["type"] == "PFD"
     
     @pytest.mark.asyncio
     async def test_add_unit(self, sfiles_tools):
@@ -94,8 +95,8 @@ class TestSfilesTools:
         # First create a flowsheet
         create_args = {"name": "Test"}
         create_result = await sfiles_tools._create_flowsheet(create_args)
-        flowsheet_id = create_result["flowsheet_id"]
-        
+        flowsheet_id = create_result["data"]["flowsheet_id"]
+
         # Add unit
         unit_args = {
             "flowsheet_id": flowsheet_id,
@@ -103,12 +104,12 @@ class TestSfilesTools:
             "unit_type": "reactor",
             "parameters": {"volume": 50.0}
         }
-        
+
         result = await sfiles_tools._add_unit(unit_args)
-        
-        assert result["status"] == "success"
-        assert result["unit_name"] == "reactor-1"
-        assert result["unit_type"] == "reactor"
+
+        assert is_success(result)
+        assert result["data"]["unit_name"] == "reactor-1"
+        assert result["data"]["unit_type"] == "reactor"
 
 
 class TestEngineeringConstraints:
@@ -217,30 +218,19 @@ class TestGraphConverter:
 
 
 class TestLLMPlanValidator:
-    """Test LLM plan validation."""
-    
+    """Test LLM plan validation.
+
+    NOTE: LLMPlanValidator was removed during Phase 3 refactoring.
+    The functionality was moved to batch tools and unified intelligence tools.
+    These tests are preserved but skipped to maintain test history.
+    """
+
+    @pytest.mark.skip(reason="LLMPlanValidator removed - functionality moved to batch tools")
     def test_validate_valid_plan(self):
         """Test validation of valid plan."""
-        plan = create_example_llm_plan()
-        issues = LLMPlanValidator.validate_plan(plan)
-        assert len(issues) == 0
-    
+        pass
+
+    @pytest.mark.skip(reason="LLMPlanValidator removed - functionality moved to batch tools")
     def test_validate_invalid_plan(self):
         """Test validation of invalid plan."""
-        # Missing initial_pattern
-        plan = {"steps": []}
-        issues = LLMPlanValidator.validate_plan(plan)
-        assert "Missing 'initial_pattern' in plan" in issues
-        
-        # Missing steps
-        plan = {"initial_pattern": {"type": "tank"}}
-        issues = LLMPlanValidator.validate_plan(plan)
-        assert "Missing 'steps' in plan" in issues
-        
-        # Invalid step
-        plan = {
-            "initial_pattern": {"type": "tank"},
-            "steps": [{"invalid": "step"}]
-        }
-        issues = LLMPlanValidator.validate_plan(plan)
-        assert any("missing 'type'" in issue for issue in issues)
+        pass

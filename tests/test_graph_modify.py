@@ -4,6 +4,13 @@ import pytest
 from pydexpi.dexpi_classes.dexpiModel import DexpiModel
 from pydexpi.dexpi_classes.metaData import MetaData
 from pydexpi.dexpi_classes.equipment import Tank
+from pydexpi.dexpi_classes.pydantic_classes import (
+    ConceptualModel,
+    MultiLanguageString,
+    SingleLanguageString,
+    Volume,
+    VolumeUnit,
+)
 
 from src.tools.graph_modify_tools import GraphModifyTools, GraphAction, TargetKind
 from src.tools.dexpi_tools import DexpiTools
@@ -81,7 +88,7 @@ async def test_insert_component_dexpi(graph_modify_tools, sample_dexpi_model):
             "component_type": "Tank",
             "tag": "TK-101",
             "attributes": {
-                "capacity": 5000
+                "nominalCapacityVolume": {"value": 5000.0, "unit": "MetreCubed"}
             }
         },
         "options": {
@@ -135,10 +142,17 @@ async def test_update_component_dexpi(graph_modify_tools, sample_dexpi_model):
     model_id, model = sample_dexpi_model
 
     # First add a component
+    conceptual = ConceptualModel()
+    model.conceptualModel = conceptual
+
     tank = Tank()
     tank.tagName = "TK-101"
-    tank.capacity = 5000
-    model.equipments = [tank]
+    tank.equipmentDescription = MultiLanguageString(
+        singleLanguageStrings=[
+            SingleLanguageString(language="en", value="Original description")
+        ]
+    )
+    conceptual.taggedPlantItems = [tank]
 
     # Now update it
     args = {
@@ -150,7 +164,7 @@ async def test_update_component_dexpi(graph_modify_tools, sample_dexpi_model):
         },
         "payload": {
             "attributes": {
-                "capacity": 10000
+                "equipmentDescription": "Updated description"
             },
             "merge": True
         },
@@ -163,7 +177,89 @@ async def test_update_component_dexpi(graph_modify_tools, sample_dexpi_model):
     result = await graph_modify_tools.handle_tool("graph_modify", args)
 
     assert result.get("ok") or result.get("status") == "success"
-    assert tank.capacity == 10000
+    # Verify the description was updated
+    assert isinstance(tank.equipmentDescription, MultiLanguageString)
+    assert (
+        tank.equipmentDescription.singleLanguageStrings[0].value
+        == "Updated description"
+    )
+
+
+@pytest.mark.asyncio
+async def test_update_component_dexpi_quantity_coercion(
+    graph_modify_tools, sample_dexpi_model
+):
+    """Ensure numeric scalars are converted into full quantity objects."""
+    model_id, model = sample_dexpi_model
+
+    conceptual = ConceptualModel()
+    model.conceptualModel = conceptual
+
+    tank = Tank()
+    tank.tagName = "TK-101"
+    tank.nominalCapacityVolume = Volume(
+        value=1.0,
+        unit=VolumeUnit.MetreCubed,
+    )
+    conceptual.taggedPlantItems = [tank]
+
+    args = {
+        "model_id": model_id,
+        "action": GraphAction.UPDATE_COMPONENT.value,
+        "target": {
+            "kind": TargetKind.COMPONENT.value,
+            "identifier": "TK-101",
+        },
+        "payload": {
+            "attributes": {"nominalCapacityVolume": 5000},
+        },
+        "options": {
+            "create_transaction": False,
+            "validate_before": False,
+        },
+    }
+
+    result = await graph_modify_tools.handle_tool("graph_modify", args)
+
+    assert result.get("ok")
+    assert tank.nominalCapacityVolume.value == 5000.0
+    assert tank.nominalCapacityVolume.unit == VolumeUnit.MetreCubed
+
+
+@pytest.mark.asyncio
+async def test_update_component_dexpi_rejects_bad_values(
+    graph_modify_tools, sample_dexpi_model
+):
+    """Invalid scalar input should surface informative errors."""
+    model_id, model = sample_dexpi_model
+
+    conceptual = ConceptualModel()
+    model.conceptualModel = conceptual
+
+    tank = Tank()
+    tank.tagName = "TK-101"
+    conceptual.taggedPlantItems = [tank]
+
+    args = {
+        "model_id": model_id,
+        "action": GraphAction.UPDATE_COMPONENT.value,
+        "target": {
+            "kind": TargetKind.COMPONENT.value,
+            "identifier": "TK-101",
+        },
+        "payload": {
+            "attributes": {"nominalCapacityVolume": "not-a-number"},
+        },
+        "options": {
+            "create_transaction": False,
+            "validate_before": False,
+        },
+    }
+
+    result = await graph_modify_tools.handle_tool("graph_modify", args)
+
+    assert not result.get("ok")
+    assert result["error"]["code"] == "ATTRIBUTE_VALIDATION_FAILED"
 
 
 # ========== ACTION 6: set_tag_properties ==========
@@ -174,9 +270,12 @@ async def test_set_tag_properties_dexpi(graph_modify_tools, sample_dexpi_model):
     model_id, model = sample_dexpi_model
 
     # Add a component
+    conceptual = ConceptualModel()
+    model.conceptualModel = conceptual
+
     tank = Tank()
     tank.tagName = "TK-101"
-    model.equipments = [tank]
+    conceptual.taggedPlantItems = [tank]
 
     # Rename it
     args = {
