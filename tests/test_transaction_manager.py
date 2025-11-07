@@ -18,7 +18,6 @@ from typing import Dict
 from pydexpi.dexpi_classes.dexpiModel import DexpiModel, ConceptualModel
 from pydexpi.dexpi_classes.metaData import MetaData
 from pydexpi.dexpi_classes.equipment import Tank, Pump
-from pydexpi.model import GenericItem
 
 from src.managers.transaction_manager import (
     TransactionManager,
@@ -48,15 +47,16 @@ from src.managers.transaction_manager import (
 @pytest.fixture
 def small_dexpi_model():
     """Create a small DEXPI model (<1MB)."""
-    model = DexpiModel()
-    model.conceptual_models.append(ConceptualModel())
-    model.meta_data = MetaData(title="Test Model", description="Small test")
+    conceptual = ConceptualModel(
+        metaData=MetaData(title="Test Model", description="Small test")
+    )
+    model = DexpiModel(conceptualModel=conceptual)
 
     # Add a few components (< threshold)
     tank = Tank(componentName="Tank", tagName="T-101")
     pump = Pump(componentName="Pump", tagName="P-101")
 
-    model.conceptual_models[0].equipments.extend([tank, pump])
+    conceptual.taggedPlantItems.extend([tank, pump])
 
     return model
 
@@ -64,14 +64,15 @@ def small_dexpi_model():
 @pytest.fixture
 def large_dexpi_model():
     """Create a large DEXPI model (>1MB simulated)."""
-    model = DexpiModel()
-    model.conceptual_models.append(ConceptualModel())
-    model.meta_data = MetaData(title="Large Model", description="Large test")
+    conceptual = ConceptualModel(
+        metaData=MetaData(title="Large Model", description="Large test")
+    )
+    model = DexpiModel(conceptualModel=conceptual)
 
     # Add many components to exceed threshold
     for i in range(600):  # 600 * 2KB = 1.2MB
         tank = Tank(componentName=f"Tank{i}", tagName=f"T-{i:03d}")
-        model.conceptual_models[0].equipments.append(tank)
+        conceptual.taggedPlantItems.append(tank)
 
     return model
 
@@ -222,7 +223,7 @@ async def test_apply_operation_with_executor(transaction_manager, dexpi_models, 
     # Custom executor
     def add_tank(model, params):
         tank = Tank(componentName="NewTank", tagName=params["tag_name"])
-        model.conceptual_models[0].equipments.append(tank)
+        model.conceptualModel.taggedPlantItems.append(tank)
         return {"status": "success", "tag": params["tag_name"]}
 
     result = await transaction_manager.apply(
@@ -320,7 +321,7 @@ async def test_rollback_transaction(transaction_manager, dexpi_models, small_dex
     dexpi_models[model_id] = original_model
 
     # Get initial equipment count
-    initial_count = len(original_model.conceptual_models[0].equipments)
+    initial_count = len(original_model.conceptualModel.taggedPlantItems)
 
     tx_id = await transaction_manager.begin(model_id)
 
@@ -335,7 +336,7 @@ async def test_rollback_transaction(transaction_manager, dexpi_models, small_dex
     await transaction_manager.rollback(tx_id)
 
     # Verify original model unchanged
-    assert len(dexpi_models[model_id].conceptual_models[0].equipments) == initial_count
+    assert len(dexpi_models[model_id].conceptualModel.taggedPlantItems) == initial_count
 
     # Verify transaction cleaned up
     assert tx_id not in transaction_manager.transactions

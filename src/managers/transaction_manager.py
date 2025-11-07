@@ -662,7 +662,9 @@ class TransactionManager:
         """
         if model_type == ModelType.DEXPI:
             # Use JsonSerializer for DEXPI (pydexpi.loaders)
-            json_str = self.json_serializer.serialize(model)
+            import json
+            model_dict = self.json_serializer.model_to_dict(model)
+            json_str = json.dumps(model_dict)
             return json_str.encode('utf-8')
         else:
             # Use SFILES canonical format
@@ -688,8 +690,10 @@ class TransactionManager:
         """
         if model_type == ModelType.DEXPI:
             # Deserialize DEXPI JSON
+            import json
             json_str = snapshot.decode('utf-8')
-            return self.json_serializer.deserialize(json_str)
+            model_dict = json.loads(json_str)
+            return self.json_serializer.dict_to_model(model_dict)
         else:
             # Deserialize SFILES
             Flowsheet = get_flowsheet_class()

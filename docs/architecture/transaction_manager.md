@@ -131,7 +131,7 @@ def estimate_model_size(model: Model) -> int:
     """
     if isinstance(model, DexpiModel):
         from pydexpi.toolkits.model_toolkit import get_all_instances_in_model
-        from pydexpi.model import GenericItem
+        from pydexpi.dexpi_classes.pydantic_classes import GenericItem
 
         components = get_all_instances_in_model(model, GenericItem)
         estimated_size = len(components) * 2048  # 2KB per component
@@ -660,7 +660,7 @@ def calculate_detailed_diff(before: Model, after: Model) -> StructuralDiff:
         StructuralDiff with all changes
     """
     from pydexpi.toolkits.model_toolkit import get_all_instances_in_model
-    from pydexpi.model import GenericItem
+    from pydexpi.dexpi_classes.pydantic_classes import GenericItem
 
     # Get all components before and after
     before_components = {

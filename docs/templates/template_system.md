@@ -440,7 +440,7 @@ class ParameterSubstitutionEngine:
             obj: Object to process
             path: Current path (for debugging)
         """
-        from pydexpi.model import GenericItem
+        from pydexpi.dexpi_classes.pydantic_classes import GenericItem
 
         if isinstance(obj, GenericItem):
             # Process DEXPI model item
@@ -1217,7 +1217,7 @@ class TemplateTestCase:
         Returns:
             TemplateTestResult
         """
-        from pydexpi.model import DexpiModel
+        from pydexpi.dexpi_classes.dexpiModel import DexpiModel
 
         # Create empty model
         test_model = DexpiModel()
