@@ -10,7 +10,8 @@ import sys
 sys.path.append(str(Path(__file__).parent.parent))
 
 from src.tools.dexpi_tools import DexpiTools
-from src.persistence import ProjectPersistence
+from src.tools.project_tools import ProjectTools
+from src.tools.validation_tools import ValidationTools
 
 
 async def create_simple_pid():
@@ -18,21 +19,26 @@ async def create_simple_pid():
     print("Creating Simple P&ID Example...")
     print("=" * 50)
     
-    # Initialize tools with model store
-    model_store = {}
-    dexpi = DexpiTools(model_store)
-    persistence = ProjectPersistence()
+    # Initialize model stores and tool handlers
+    dexpi_models = {}
+    flowsheets = {}
+
+    dexpi = DexpiTools(dexpi_models, flowsheets)
+    projects = ProjectTools(dexpi_models, flowsheets)
+    validation = ValidationTools(dexpi_models, flowsheets)
     
     # 1. Initialize project
     project_path = "/tmp/example_projects/simple_pid"
     print(f"\n1. Initializing project at {project_path}")
     
-    result = await dexpi.handle_tool("dexpi_init_project", {
+    init_result = await projects.handle_tool("project_init", {
         "project_path": project_path,
         "project_name": "Simple P&ID Example",
         "description": "Basic process with tank, pump, and reactor"
     })
-    print(f"   ✅ Project initialized")
+    if not init_result.get("ok"):
+        raise RuntimeError(init_result)
+    print("   ✅ Project initialized")
     
     # 2. Create P&ID
     print("\n2. Creating P&ID drawing")
@@ -42,7 +48,7 @@ async def create_simple_pid():
         "revision": "A",
         "description": "Simple process example"
     })
-    model_id = result["model_id"]
+    model_id = result["data"]["model_id"]
     print(f"   ✅ P&ID created with ID: {model_id}")
     
     # 3. Add equipment
@@ -162,24 +168,29 @@ async def create_simple_pid():
     
     # 7. Validate the model
     print("\n7. Validating P&ID")
-    result = await dexpi.handle_tool("dexpi_validate_model", {
+    validation_result = await validation.handle_tool("validate_model", {
         "model_id": model_id,
-        "validation_level": "basic"
+        "model_type": "dexpi",
+        "checks": ["syntax", "topology"]
     })
-    if result["valid"]:
-        print("   ✅ P&ID validation passed")
+    if validation_result.get("ok"):
+        print("   ✅ Validation passed")
     else:
-        print(f"   ⚠️ Validation issues: {result.get('issues', [])}")
+        print(f"   ⚠️ Issues: {validation_result}")
     
     # 8. Save to project
     print("\n8. Saving to project")
-    result = await dexpi.handle_tool("dexpi_save_to_project", {
-        "model_id": model_id,
+    save_result = await projects.handle_tool("project_save", {
         "project_path": project_path,
+        "model_id": model_id,
         "model_name": "simple_pid",
+        "model_type": "dexpi",
         "commit_message": "Create simple P&ID with tank-pump-reactor system"
     })
-    print(f"   ✅ Saved to: {result['saved_files']['json']}")
+    if not save_result.get("ok"):
+        raise RuntimeError(save_result)
+    saved_paths = save_result["data"]["saved_paths"]
+    print(f"   ✅ Saved JSON: {saved_paths['json']}")
     
     # 9. Export formats
     print("\n9. Exporting formats")
@@ -188,21 +199,23 @@ async def create_simple_pid():
     result = await dexpi.handle_tool("dexpi_export_json", {
         "model_id": model_id
     })
-    print(f"   ✅ Exported JSON ({len(result['json'])} characters)")
-    
+    json_payload = result["data"]["json"]
+    print(f"   ✅ Exported JSON ({len(json_payload)} characters)")
+
     # Export GraphML
     result = await dexpi.handle_tool("dexpi_export_graphml", {
         "model_id": model_id,
         "include_msr": True
     })
-    if result.get("graphml"):
+    if result["data"].get("graphml"):
         print(f"   ✅ Exported GraphML")
     
     print("\n" + "=" * 50)
     print("✅ Simple P&ID example completed!")
     print(f"📁 Project saved at: {project_path}")
-    print("🌐 View in dashboard: http://localhost:8000")
-    print("   (Start dashboard with: python -m src.dashboard.server)")
+    html_path = saved_paths.get("html")
+    if html_path:
+        print(f"📄 Open the Plotly report: {html_path}")
 
 
 if __name__ == "__main__":

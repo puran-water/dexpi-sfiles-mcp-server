@@ -15,7 +15,6 @@ This guide provides detailed installation and configuration instructions for the
 - Python 3.10+ with pip
 - Git 2.0+
 - Virtual environment support (venv)
-- Web browser (for dashboard visualization)
 
 ## Installation Steps
 
@@ -63,7 +62,7 @@ pip install -r requirements.txt
 python -m src.server --help
 
 # Test that imports work correctly
-python -c "from src.tools import DexpiTools, SfilesTools; print('Installation successful!')"
+python -c "from src.tools.dexpi_tools import DexpiTools; from src.tools.sfiles_tools import SfilesTools; print('Installation successful!')"
 ```
 
 ## Configuration
@@ -74,33 +73,20 @@ The MCP server can be configured through environment variables or a configuratio
 
 #### Environment Variables
 
-```bash
-# Optional: Set custom port for dashboard
-export DASHBOARD_PORT=8000
+Define only the variables actually consumed by the codebase:
 
-# Optional: Set project storage directory
+```bash
+# Storage configuration for project persistence
 export PROJECT_ROOT=/path/to/projects
 
-# Optional: Enable debug logging
-export DEBUG=true
+# Logging
+export LOG_LEVEL=INFO
+export DEBUG=false
 ```
 
 #### Configuration File
 
-Create a `.env` file in the project root:
-
-```env
-# Dashboard Configuration
-DASHBOARD_PORT=8000
-DASHBOARD_HOST=0.0.0.0
-
-# Storage Configuration
-PROJECT_ROOT=/path/to/projects
-
-# Logging
-DEBUG=false
-LOG_LEVEL=INFO
-```
+Optionally capture the same values in a `.env` file in the project root so tooling such as `direnv` or `dotenv` can load them automatically.
 
 ### Claude Desktop Integration
 
@@ -143,36 +129,14 @@ python -m src.server
 # You can interact with it using the MCP protocol over stdin/stdout
 ```
 
-## Dashboard Setup
+## Visualization Outputs
 
-The web dashboard provides real-time visualization of your engineering drawings.
+This repository does **not** ship a dashboard service. Visualization artifacts are produced automatically when models are saved with `project_save`:
 
-### Starting the Dashboard
+- `pid/<model>.html`, `pfd/<model>.html`, or `bfd/<model>.html`: Plotly-based interactive files that can be opened directly in any modern browser. The Plotly toolbar supports PNG/SVG export for local snapshots.
+- `<model>.graphml`: GraphML exports generated via `UnifiedGraphConverter` for use with NetworkX or other graph analytics tools.
 
-```bash
-# Activate virtual environment first
-source .venv/bin/activate  # or appropriate command for your OS
-
-# Start the dashboard server
-python -m src.dashboard.server
-
-# The dashboard will be available at http://localhost:8000
-```
-
-### Dashboard Features
-- **Project Browser**: Navigate and open saved projects
-- **Model Viewer**: Visualize DEXPI P&IDs and SFILES flowsheets
-- **Layout Options**: Switch between hierarchical, force-directed, and breadth-first layouts
-- **Real-time Updates**: See changes as the LLM modifies drawings
-- **Export Options**: Download visualizations as images or GraphML
-
-### Accessing the Dashboard
-
-1. Open your web browser
-2. Navigate to `http://localhost:8000`
-3. Enter a project path (e.g., `/tmp/demo_project`)
-4. Click "Open Project" to load models
-5. Click on any model in the sidebar to visualize it
+Open the HTML files manually in your browser or load the GraphML output into your preferred graph environment for further processing.
 
 ## Testing the Installation
 
@@ -182,10 +146,10 @@ python -m src.dashboard.server
 # Run all tests
 pytest tests/
 
-# Run specific test categories
-pytest tests/test_dexpi_tools.py
-pytest tests/test_sfiles_tools.py
-pytest tests/test_persistence.py
+# Run specific test modules that exist in this repo
+pytest tests/test_template_tools.py
+pytest tests/test_graphml_export.py
+pytest tests/test_transaction_manager.py
 ```
 
 ### Create a Test Project
@@ -237,19 +201,6 @@ source .venv/bin/activate
 export PYTHONPATH="${PYTHONPATH}:${PWD}"
 ```
 
-#### Port Already in Use
-
-**Problem**: `[Errno 98] error while attempting to bind on address ('0.0.0.0', 8000): address already in use`
-
-**Solution**: Either kill the existing process or use a different port:
-```bash
-# Find and kill the process using port 8000
-lsof -i :8000  # Find the PID
-kill -9 <PID>  # Kill the process
-
-# Or use a different port
-DASHBOARD_PORT=8001 python -m src.dashboard.server
-```
 
 #### Virtual Environment Issues
 
@@ -304,9 +255,7 @@ source .venv/bin/activate
 # Update dependencies
 pip install -r requirements.txt --upgrade
 
-# Restart services
-# MCP server will restart automatically with Claude Desktop
-# Manually restart dashboard if running
+# Restart services as needed (e.g., relaunch MCP server inside your MCP client)
 ```
 
 ## Next Steps
@@ -315,8 +264,8 @@ After successful installation:
 
 1. **Read the README.md** for usage examples and API documentation
 2. **Try the examples** in the `examples/` directory
-3. **Explore the dashboard** to understand visualization capabilities
-4. **Create your first project** using Claude Desktop or the Python API
+3. **Inspect generated HTML/GraphML outputs** after running `project_save`
+4. **Create your first project** using Claude Desktop, Codex CLI, or the Python API
 5. **Review documentation** for advanced features and API details
 
 ## Additional Resources
@@ -324,7 +273,7 @@ After successful installation:
 - [DEXPI Standard Documentation](https://www.dexpi.org/)
 - [MCP Protocol Specification](https://github.com/anthropics/mcp)
 - [pyDEXPI Library Documentation](https://github.com/process-intelligence-research/pyDEXPI)
-- [Cytoscape.js Documentation](https://js.cytoscape.org/)
+- [Plotly Python Documentation](https://plotly.com/python/)
 
 ---
 

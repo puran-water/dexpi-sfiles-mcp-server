@@ -102,19 +102,19 @@ def generate_class_schema(class_name: str) -> Dict:
 
 ```python
 # Via MCP tool
-result = dexpi_list_available_types(category="equipment")
-# Returns 159 equipment types
+result = schema_list_classes(schema_type="dexpi", category="equipment")
+# result["data"]["dexpi"]["count"] == 159
 
-result = dexpi_list_available_types(category="valves")
-# Returns 22 valve types
+result = schema_list_classes(schema_type="dexpi", category="instrumentation")
+# result["data"]["dexpi"]["count"] == 33
 ```
 
 ### Describing a Class
 
 ```python
 # Via MCP tool
-result = dexpi_describe_class(class_name="TubularHeatExchanger")
-# Returns complete class schema and attributes
+result = schema_describe_class(class_name="TubularHeatExchanger", schema_type="dexpi", include_inherited=True)
+# result["data"] contains composition/reference/data attributes and JSON schema
 ```
 
 ### Adding Specialized Equipment

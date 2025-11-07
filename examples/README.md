@@ -1,124 +1,67 @@
 # Engineering MCP Server Examples
 
-This directory contains example scripts and projects demonstrating the capabilities of the Engineering MCP Server.
+This directory contains runnable Python scripts that demonstrate how to drive the MCP tools directly. Each example builds models using the same code paths that MCP clients call.
 
 ## Contents
 
-- `simple_pid.py` - Create a basic P&ID with tank, pump, and reactor
-- `complex_flowsheet.py` - Build a complete process flowsheet with SFILES
-- `reactor_system.py` - Detailed reactor system with instrumentation
-- `distillation_column.py` - Distillation column with heat integration
-- `batch_process.py` - Batch reactor with sequential operations
+| File | Description |
+|------|-------------|
+| `simple_pid.py` | Creates a minimal DEXPI P&ID (tank → pump → reactor → tank) and saves it with project tools. |
+| `complex_flowsheet.py` | Builds an SFILES flowsheet with multiple units, recycle streams, and control instrumentation. |
 
-## Running Examples
+These are the only scripts currently checked in. If you add more, update this table accordingly.
 
-### Prerequisites
-
-1. Ensure the MCP server is installed (see [SETUP.md](../SETUP.md))
-2. Activate the virtual environment:
-```bash
-cd ..
-source .venv/bin/activate
-```
-
-### Running Individual Examples
+## Running the Examples
 
 ```bash
-# Run a specific example
+cd /path/to/engineering-mcp-server
+source .venv/bin/activate  # if using a virtual environment
 python examples/simple_pid.py
-
-# All examples create projects in /tmp/example_projects/
-# View results in the dashboard at http://localhost:8000
+python examples/complex_flowsheet.py
 ```
 
-### Using with Claude Desktop
+Each script writes its output to `/tmp/example_projects/<example_name>` using the `project_*` MCP tools. After running, open the generated Plotly HTML files (e.g., `/tmp/example_projects/simple_pid/pid/simple_pid.html`) or the accompanying GraphML to review the results.
 
-These examples show the MCP tool calls that Claude can make. Simply ask Claude:
-- "Create a P&ID like the simple_pid example"
-- "Build a distillation system with heat integration"
-- "Generate a batch process flowsheet"
+## Using Examples with MCP Clients
 
-## Example Descriptions
+You can reference these scripts when prompting an MCP-aware client (Claude Code, Codex CLI, etc.). For example:
 
-### 1. Simple P&ID (`simple_pid.py`)
-Creates a basic P&ID with:
-- Feed tank (TK-101)
-- Centrifugal pump (P-101)
-- Stirred reactor (R-101)
-- Piping connections
-- Level and temperature instrumentation
+- “Create a P&ID similar to the steps in `examples/simple_pid.py`.”
+- “Build a flowsheet like `examples/complex_flowsheet.py`, then export GraphML.”
 
-### 2. Complex Flowsheet (`complex_flowsheet.py`)
-Demonstrates SFILES capabilities:
-- Multiple unit operations
-- Recycle streams
-- Heat integration
-- Parallel processing paths
-- Compact notation export
+## Creating Your Own Script
 
-### 3. Reactor System (`reactor_system.py`)
-Complete reactor system with:
-- Feed preparation
-- Preheating
-- Reaction section
-- Product separation
-- Control loops
-- Safety instrumentation
-
-### 4. Distillation Column (`distillation_column.py`)
-Separation system featuring:
-- Feed preheater
-- Distillation column
-- Reboiler and condenser
-- Reflux system
-- Product streams
-
-### 5. Batch Process (`batch_process.py`)
-Batch operation example:
-- Sequential operations
-- Charging and discharging
-- Temperature control
-- Batch tracking
-
-## Learning Path
-
-1. **Start with `simple_pid.py`** to understand basic DEXPI operations
-2. **Try `complex_flowsheet.py`** to learn SFILES notation
-3. **Explore `reactor_system.py`** for instrumentation examples
-4. **Study `distillation_column.py`** for heat integration patterns
-5. **Review `batch_process.py`** for sequential logic
-
-## Creating Your Own Examples
-
-Use this template:
+Use the following template to bootstrap additional examples:
 
 ```python
 import asyncio
 from pathlib import Path
 import sys
+
 sys.path.append(str(Path(__file__).parent.parent))
 
 from src.tools.dexpi_tools import DexpiTools
 from src.tools.sfiles_tools import SfilesTools
+from src.tools.project_tools import ProjectTools
 
-async def create_my_process():
-    # Initialize tools
-    dexpi = DexpiTools({})
-    sfiles = SfilesTools({})
-    
-    # Your process here
-    pass
+async def main():
+    dexpi_models = {}
+    sfiles_models = {}
+
+    dexpi = DexpiTools(dexpi_models, sfiles_models)
+    sfiles = SfilesTools(sfiles_models, dexpi_models)
+    projects = ProjectTools(dexpi_models, sfiles_models)
+
+    # Your MCP tool calls here...
 
 if __name__ == "__main__":
-    asyncio.run(create_my_process())
+    asyncio.run(main())
 ```
 
 ## Additional Resources
 
-- [DEXPI Standard Examples](https://www.dexpi.org/examples)
-- [SFILES Notation Guide](../docs/sfiles_notation.md)
-- [MCP Tool Reference](../docs/mcp_tools.md)
+- [README.md](../README.md) – Feature overview and tool catalog
+- [SETUP.md](../SETUP.md) – Installation instructions
+- [docs/DYNAMIC_SCHEMA.md](../docs/DYNAMIC_SCHEMA.md) – Details about schema introspection (schema_* tools)
 
----
-
-*For questions or contributions, see [CONTRIBUTING.md](../CONTRIBUTING.md)*
+Keep example files synchronized with the rest of the documentation so users can trust that each script runs without modification.

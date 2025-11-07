@@ -10,7 +10,8 @@ import sys
 sys.path.append(str(Path(__file__).parent.parent))
 
 from src.tools.sfiles_tools import SfilesTools
-from src.persistence import ProjectPersistence
+from src.tools.project_tools import ProjectTools
+from src.tools.validation_tools import ValidationTools
 
 
 async def create_complex_flowsheet():
@@ -18,21 +19,26 @@ async def create_complex_flowsheet():
     print("Creating Complex Flowsheet Example...")
     print("=" * 50)
     
-    # Initialize tools
+    # Initialize model stores and tool handlers
+    dexpi_models = {}
     flowsheet_store = {}
-    sfiles = SfilesTools(flowsheet_store)
-    persistence = ProjectPersistence()
+
+    sfiles = SfilesTools(flowsheet_store, dexpi_models)
+    projects = ProjectTools(dexpi_models, flowsheet_store)
+    validation = ValidationTools(dexpi_models, flowsheet_store)
     
     # 1. Initialize project
     project_path = "/tmp/example_projects/complex_flowsheet"
     print(f"\n1. Initializing project at {project_path}")
     
-    result = await sfiles.handle_tool("sfiles_init_project", {
+    init_result = await projects.handle_tool("project_init", {
         "project_path": project_path,
         "project_name": "Complex Flowsheet Example",
         "description": "Process with recycles and heat integration"
     })
-    print(f"   ✅ Project initialized")
+    if not init_result.get("ok"):
+        raise RuntimeError(init_result)
+    print("   ✅ Project initialized")
     
     # 2. Create flowsheet
     print("\n2. Creating PFD flowsheet")
@@ -41,7 +47,7 @@ async def create_complex_flowsheet():
         "type": "PFD",
         "description": "Complete process with separation and recycle"
     })
-    flowsheet_id = result["flowsheet_id"]
+    flowsheet_id = result["data"]["flowsheet_id"]
     print(f"   ✅ Flowsheet created with ID: {flowsheet_id}")
     
     # 3. Add unit operations
@@ -121,14 +127,18 @@ async def create_complex_flowsheet():
     
     # 6. Validate topology
     print("\n6. Validating flowsheet topology")
-    result = await sfiles.handle_tool("sfiles_validate_topology", {
-        "flowsheet_id": flowsheet_id
+    validation_result = await validation.handle_tool("validate_model", {
+        "model_id": flowsheet_id,
+        "model_type": "sfiles",
+        "scopes": ["syntax", "topology", "connectivity"]
     })
-    if result["valid"]:
-        print("   ✅ Topology validation passed")
-        print(f"      - Nodes: {result['num_nodes']}")
-        print(f"      - Edges: {result['num_edges']}")
-        print(f"      - Connected: {result['is_connected']}")
+    if validation_result.get("ok"):
+        metrics = validation_result["data"].get("metrics", {})
+        print("   ✅ Validation passed")
+        if metrics:
+            print(f"      - Graph metrics: {metrics.get('basic', metrics)}")
+    else:
+        print(f"   ⚠️ Validation issues: {validation_result}")
     
     # 7. Export SFILES notation
     print("\n7. Generating SFILES notation")
@@ -137,16 +147,18 @@ async def create_complex_flowsheet():
         "version": "v2",
         "canonical": True
     })
-    sfiles_string = result["sfiles"]
+    sfiles_string = result["data"]["sfiles"]
     print(f"   ✅ SFILES v2: {sfiles_string}")
-    
-    # Validate SFILES syntax
-    result = await sfiles.handle_tool("sfiles_validate_syntax", {
+
+    # Validate SFILES syntax via parser helper
+    parse_result = await sfiles.handle_tool("sfiles_parse_and_validate", {
         "sfiles_string": sfiles_string,
-        "version": "v2"
+        "return_tokens": True
     })
-    if result["is_valid"]:
-        print("   ✅ SFILES syntax validation passed")
+    if parse_result.get("valid"):
+        print(f"   ✅ Parsed {parse_result['num_tokens']} tokens")
+    else:
+        print(f"   ⚠️ Parse issues: {parse_result}")
     
     # 8. Export to various formats
     print("\n8. Exporting flowsheet formats")
@@ -161,45 +173,43 @@ async def create_complex_flowsheet():
     result = await sfiles.handle_tool("sfiles_export_graphml", {
         "flowsheet_id": flowsheet_id
     })
-    if result.get("graphml"):
+    if result["data"].get("graphml"):
         print(f"   ✅ Exported GraphML")
     
     # 9. Save to project
     print("\n9. Saving to project")
-    result = await sfiles.handle_tool("sfiles_save_to_project", {
-        "flowsheet_id": flowsheet_id,
+    save_result = await projects.handle_tool("project_save", {
         "project_path": project_path,
-        "flowsheet_name": "complex_process",
+        "model_id": flowsheet_id,
+        "model_name": "complex_process",
+        "model_type": "sfiles",
         "commit_message": "Create complex flowsheet with recycles and controls"
     })
-    print(f"   ✅ Saved to project:")
-    print(f"      - JSON: {result['saved_paths']['json']}")
-    print(f"      - SFILES: {result['saved_paths']['sfiles']}")
+    if not save_result.get("ok"):
+        raise RuntimeError(save_result)
+    saved_paths = save_result["data"]["saved_paths"]
+    print("   ✅ Saved to project:")
+    for label, path in saved_paths.items():
+        if path:
+            print(f"      - {label}: {path}")
     
     # 10. Demonstrate round-trip conversion
     print("\n10. Testing round-trip conversion")
     
     # Parse and validate
-    result = await sfiles.handle_tool("sfiles_parse_and_validate", {
-        "sfiles_string": sfiles_string,
-        "return_tokens": True
-    })
-    if result["status"] == "success":
-        print(f"   ✅ Parsed {result['num_elements']} elements")
-    
-    # Convert to canonical form
-    result = await sfiles.handle_tool("sfiles_canonical_form", {
+    canonical_result = await sfiles.handle_tool("sfiles_canonical_form", {
         "sfiles_string": sfiles_string,
         "version": "v2"
     })
-    canonical = result["canonical"]
+    canonical = canonical_result["data"]["canonical"]
     print(f"   ✅ Canonical form: {canonical[:50]}...")
     
     print("\n" + "=" * 50)
     print("✅ Complex flowsheet example completed!")
     print(f"📁 Project saved at: {project_path}")
-    print("🌐 View in dashboard: http://localhost:8000")
-    print("   (Start dashboard with: python -m src.dashboard.server)")
+    html_path = saved_paths.get("html")
+    if html_path:
+        print(f"📄 Open the Plotly report: {html_path}")
     print("\n📊 Process Summary:")
     print("   - 10 unit operations")
     print("   - 10 process streams")

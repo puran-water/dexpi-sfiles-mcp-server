@@ -1317,7 +1317,7 @@ Template system satisfies requirements:
 - ✅ Logs substitutions for debugging (Codex)
 - ✅ Supports SFILES heat integration (`split_HI_nodes`, `merge_HI_nodes`)
 - ✅ Pattern composition via generator stack (Codex)
-- ✅ 5+ production-ready templates
+- ✅ 4 production-ready templates (pump_basic, pump_station_n_plus_1, tank_farm, heat_exchanger_with_integration)
 - ✅ Comprehensive validation and testing
 
 ---

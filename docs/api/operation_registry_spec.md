@@ -1,13 +1,15 @@
 # Operation Registry Specification
 
 **Version:** 1.0.0-draft
-**Status:** Phase 0.5 Design
+**Status:** Phase 0.5 Design (Specification Only)
 **Last Updated:** 2025-11-06
 **Codex Approved:** ✅
 
 ---
 
 ## Overview
+
+> **NOTE:** This document captures a planned architecture. `model_tx_apply`, registry-backed MCP tooling, and `schema_query` integration are **not implemented** in the current server build (`src/server.py`).
 
 The **Operation Registry** provides a typed, discoverable catalog of operations for `model_tx_apply`. It replaces string-based tool dispatch with a structured registry pattern, enabling:
 
@@ -503,6 +505,8 @@ async def model_tx_apply(model_id: str, operations: List[Dict]) -> BatchResult:
 
 ### Registry-based Tool Schema
 
+> Planned MCP tooling – `model_tx_apply` has not been implemented.
+
 ```python
 # MCP tool definition
 Tool(
@@ -525,6 +529,8 @@ Tool(
 ---
 
 ## Integration with schema_query
+
+> Planned MCP tooling – the `schema_query` MCP handler referenced here does not yet exist.
 
 ### Exposing Registry via schema_query
 

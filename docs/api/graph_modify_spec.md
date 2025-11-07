@@ -1,7 +1,7 @@
 # graph_modify API Specification
 
 **Version:** 1.0.0-draft
-**Status:** Phase 0.5 Design
+**Status:** Phase 0.5 Design (Specification Only)
 **Last Updated:** 2025-11-06
 **Codex Approved:** ✅
 
@@ -9,17 +9,19 @@
 
 ## Overview
 
-The `graph_modify` tool provides **tactical-level operations** for targeted modifications to engineering diagrams. It bridges the gap between low-level primitive operations (`model_tx_apply`) and high-level pattern deployment (`area_deploy`).
+> **NOTE:** This document captures a future design. The `graph_modify` MCP tool has not been implemented in the repository yet.
+
+The proposed `graph_modify` tool provides **tactical-level operations** for targeted modifications to engineering diagrams. It bridges the gap between low-level primitive operations (`model_tx_apply`) and high-level pattern deployment (`area_deploy`).
 
 **Design Philosophy**: Thin wrappers over upstream pyDEXPI and SFILES2 toolkits, not custom implementations.
 
 ### Design Goals
 
-- ✅ Cover 80%+ of "point change" use cases
-- ✅ Self-documenting actions visible in MCP schema
-- ✅ Leverage upstream toolkits (pyDEXPI piping_toolkit, SFILES2 Flowsheet methods)
-- ✅ Single-call operations with transaction safety
-- ✅ DEXPI/SFILES parity with explicit error handling
+- Cover 80%+ of "point change" use cases
+- Provide self-documenting actions visible in MCP schema
+- Leverage upstream toolkits (pyDEXPI piping_toolkit, SFILES2 Flowsheet methods)
+- Offer single-call operations with transaction safety
+- Maintain DEXPI/SFILES parity with explicit error handling
 
 ---
 
@@ -179,8 +181,8 @@ def graph_modify(
 
 **Purpose**: Insert component into existing piping segment or stream
 
-**DEXPI**: ✅ Uses `insert_item_to_segment()` from `pydexpi/toolkits/piping_toolkit.py:532-707`
-**SFILES**: ❌ Not applicable (streams are edges, not segmented)
+**DEXPI (planned approach):** Uses `insert_item_to_segment()` from `pydexpi/toolkits/piping_toolkit.py:532-707`
+**SFILES:** Not applicable (streams are edges, not segmented)
 
 **Payload Schema**:
 ```typescript
@@ -246,8 +248,8 @@ return build_response(mutated=[segment.id, item.id], diff=calculate_diff(before,
 
 **Purpose**: Split a piping segment at a specific position
 
-**DEXPI**: ✅ Custom logic using pyDEXPI utilities
-**SFILES**: ❌ Not applicable
+**DEXPI (planned approach):** Custom logic using pyDEXPI utilities
+**SFILES:** Not applicable
 
 **Payload Schema**:
 ```typescript
@@ -322,8 +324,8 @@ model.add(segment_1, segment_2)
 
 **Purpose**: Combine two adjacent segments into one
 
-**DEXPI**: ✅ Custom logic with validity checks
-**SFILES**: ❌ Not applicable
+**DEXPI (planned approach):** Custom logic with validity checks
+**SFILES:** Not applicable
 
 **Payload Schema**:
 ```typescript
@@ -364,8 +366,8 @@ model.add(merged)
 
 **Purpose**: Change routing of a connection
 
-**DEXPI**: ✅ Uses `connect_piping_network_segment()` from `pydexpi/toolkits/piping_toolkit.py:134-207`
-**SFILES**: ✅ Direct NetworkX edge manipulation + `convert_to_sfiles()` canonicalization
+**DEXPI (planned approach):** Uses `connect_piping_network_segment()` from `pydexpi/toolkits/piping_toolkit.py:134-207`
+**SFILES (planned approach):** Direct NetworkX edge manipulation + `convert_to_sfiles()` canonicalization
 
 **Payload Schema**:
 ```typescript
@@ -491,8 +493,8 @@ if payload.metadata:
 
 **Purpose**: Modify stream attributes (SFILES only)
 
-**DEXPI**: ❌ Not applicable (use `update_component` for piping properties)
-**SFILES**: ✅ Updates stream properties + re-canonicalization
+**DEXPI:** Not applicable (use `update_component` for piping properties)
+**SFILES (planned approach):** Updates stream properties + re-canonicalization
 
 **Payload Schema**:
 ```typescript
@@ -717,20 +719,20 @@ flowsheet.add_control(
 
 ---
 
-## DEXPI/SFILES Parity Matrix
+## DEXPI/SFILES Parity Matrix (Planned)
 
-| Action | DEXPI | SFILES | Implementation |
-|--------|-------|--------|----------------|
-| `insert_component` | ✅ | ✅ | Direct toolkit calls |
-| `remove_component` | ✅ | ✅ | Custom with reroute logic |
-| `update_component` | ✅ | ✅ | Direct attribute update |
-| `insert_inline_component` | ✅ | ❌ | `insert_item_to_segment()` |
-| `split_segment` | ✅ | ❌ | Custom using utilities |
-| `merge_segments` | ✅ | ❌ | Custom with validity check |
-| `rewire_connection` | ✅ | ✅ | `connect_piping_network_segment()` / NetworkX |
-| `set_tag_properties` | ✅ | ✅ | Direct property update |
-| `update_stream_properties` | ❌ | ✅ | NetworkX + canonicalize |
-| `toggle_instrumentation` | ✅ | ✅ | Different instrument models |
+| Action | DEXPI (planned) | SFILES (planned) | Implementation Outline |
+|--------|-----------------|------------------|-----------------------|
+| `insert_component` | Yes | Yes | Direct toolkit calls |
+| `remove_component` | Yes | Yes | Custom with reroute logic |
+| `update_component` | Yes | Yes | Direct attribute update |
+| `insert_inline_component` | Yes | N/A | `insert_item_to_segment()` |
+| `split_segment` | Yes | N/A | Custom using utilities |
+| `merge_segments` | Yes | N/A | Custom with validity check |
+| `rewire_connection` | Yes | Yes | `connect_piping_network_segment()` / NetworkX |
+| `set_tag_properties` | Yes | Yes | Direct property update |
+| `update_stream_properties` | N/A | Yes | NetworkX + canonicalize |
+| `toggle_instrumentation` | Yes | Yes | Different instrument models |
 
 **Error Handling**: Actions not applicable return:
 ```json
@@ -881,15 +883,15 @@ Potential actions for v2.0:
 
 This API satisfies "if well designed" qualifier:
 
-- ✅ Covers 80%+ of point-change use cases (10 core actions)
-- ✅ Self-documenting action enums in MCP schema
-- ✅ Clear payload contracts for each action
-- ✅ Leverages upstream toolkits (`insert_item_to_segment`, `connect_piping_network_segment`)
-- ✅ DEXPI/SFILES parity documented with explicit N/A handling
-- ✅ Single-call operations (no multi-step coordination)
-- ✅ Transaction safety (atomic, rollback on error)
-- ✅ Performance targets met (<100ms simple, <200ms complex)
-- ✅ Thin wrappers over proven upstream code
+- Planned coverage of 80%+ of point-change use cases (10 core actions)
+- Self-documenting action enums in MCP schema (design goal)
+- Clear payload contracts for each action
+- Leverages upstream toolkits (`insert_item_to_segment`, `connect_piping_network_segment`)
+- Documents DEXPI/SFILES parity with explicit N/A handling
+- Targets single-call operations (no multi-step coordination)
+- Designs for transaction safety (atomic, rollback on error)
+- Performance targets: <100 ms simple actions, <200 ms complex ones
+- Thin wrappers over upstream code to minimize maintenance
 
 ---
 

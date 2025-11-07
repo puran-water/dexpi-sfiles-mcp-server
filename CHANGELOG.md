@@ -106,10 +106,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Support for ProcessSignalGeneratingFunction and ActuatingFunction
 - **Proteus XML Import**: Native support for Proteus 4.2 XML format via `dexpi_import_proteus_xml`
 - **Inline Valve Insertion**: `dexpi_insert_valve_in_segment` for placing valves within existing piping
-- **Class Discovery Tools**:
-  - `dexpi_describe_class`: Comprehensive class description with schema
-  - `dexpi_list_class_attributes`: Attribute listing organized by category
-  - `dexpi_list_available_types`: Discovery of all available types
+- **Class Discovery Tools** (now unified under schema_*):
+  - `schema_describe_class`: Comprehensive class description with schema
+  - `schema_list_classes`: Enumerate classes by category
+  - `schema_find_class` / `schema_get_hierarchy`: Search and navigate inheritance trees
 - **Additional SFILES Tools**:
   - `sfiles_from_string`: Create flowsheet from SFILES notation
   - `sfiles_parse_and_validate`: Validate SFILES syntax with regex
@@ -138,5 +138,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Core DEXPI P&ID functionality with basic equipment types
 - SFILES BFD/PFD support with v1 and v2 notation
 - Git-based project persistence
-- Web-based visualization dashboard
 - MCP server implementation for LLM accessibility
