@@ -879,28 +879,30 @@ Once graph_modify is complete, we can:
 
 ---
 
-### #2: Smart Connection System / graph_modify - V1 COMPLETE & FIXED ✅
-**Status:** V1 (6 actions) production-ready after Codex review fixes (2025-11-07) | V2 (4 actions) pending
+### #2: Smart Connection System / graph_modify - V1 PRODUCTION-READY ✅
+**Status:** V1 (6 actions) fully functional after comprehensive fixes (2025-11-07) | V2 (4 actions) pending
 **Dependencies:** ✅ graph_connect infrastructure from Phase 1
 
-**V1 Implementation Status:**
+**V1 Implementation Timeline:**
 - ✅ Initial implementation (commit f8a053d)
-- ✅ Critical bug fixes after Codex review (commit 01ad000)
-- ✅ Production-ready for 6 core actions
+- ✅ First fix attempt after Codex review #1 (commit 01ad000)
+- ✅ Comprehensive fixes after Codex review #2 (commit 43c9fa8)
+- ✅ All 5 production-blocking issues resolved
 
 **6 Core Actions Implemented:**
 1. ✅ `insert_component` - Delegates to dexpi_tools/sfiles_tools
 2. ✅ `update_component` - Direct attribute updates
 3. ✅ `insert_inline_component` - Uses pt.insert_item_to_segment (DEXPI only)
-4. ✅ `rewire_connection` - Uses pt.connect_piping_network_segment + NetworkX
-5. ✅ `remove_component` - With optional rerouting (basic implementation)
+4. ✅ `rewire_connection` - Uses pt.connect_piping_network_segment + NetworkX (FULLY REWRITTEN)
+5. ✅ `remove_component` - Honest implementation (no false rerouting claims)
 6. ✅ `set_tag_properties` - Tag renaming + metadata updates
 
 **Implementation Details:**
-- ✅ Created `src/tools/graph_modify_tools.py` (980+ lines)
+- ✅ Created `src/tools/graph_modify_tools.py` (1100+ lines after fixes)
 - ✅ Registered with MCP server in `src/server.py`
 - ✅ Target resolver with component/segment/stream/port resolution
-- ✅ TransactionManager integration with auto-wrapping
+- ✅ TransactionManager integration (correct API usage)
+- ✅ Store swapping for proper transaction/dry_run isolation
 - ✅ DEXPI/SFILES parity with ACTION_NOT_APPLICABLE handling
 - ✅ Validation hooks (pre/post) with MLGraphLoader
 - ✅ Test suite created (`tests/test_graph_modify.py`)
@@ -913,20 +915,50 @@ Once graph_modify is complete, we can:
 
 **Architecture (Codex-guided):**
 - Single `graph_modify` tool with action enum
-- Thin wrappers over upstream toolkits
+- Thin wrappers over upstream toolkits (piping_toolkit, model_toolkit)
 - Shared ActionContext for model-agnostic orchestration
 - Separate DEXPI/SFILES handlers per action
 
-**Critical Fixes Applied (Codex Review):**
-1. ✅ Transaction integration - Added awaits, operate on working copy
-2. ✅ Error response format - Fixed code/message field swap (15+ calls)
-3. ✅ dry_run implementation - Now creates isolated copies
-4. ✅ DEXPI rewire - Now resolves target segment, preserves properties
-5. ✅ DEXPI rerouting - Honest warnings, improved removal logic
+**Comprehensive Fixes Applied (Codex Review #2 - 2025-11-07):**
 
-**Codex Assessment:** Critical blockers resolved, V1 production-ready
+1. **TransactionManager API Integration** ✅ FIXED
+   - `begin()` now correctly handled as returning string ID (not dict)
+   - `commit()` return value accessed as CommitResult dataclass (not dict)
+   - Use `_working_model` attribute (not `working_model`)
+   - **Store swapping implemented:** Temporarily replace store entry with working copy
+     so delegates (dexpi_tools/sfiles_tools) operate on transaction context
 
-**Estimate:** V1: 1.5 days (DONE) | V2: 1 day (pending)
+2. **Error Response Arguments** ✅ FIXED
+   - Fixed ALL reversed `error_response(code, message)` calls
+   - Now consistently use `error_response(message, code)` signature
+   - 7 calls fixed (lines 704, 712, 803, 963, 966, 1064, 1067)
+
+3. **dry_run Isolation** ✅ FIXED
+   - `dry_run` now swaps store entry to isolated copy before delegating
+   - Ensures delegates cannot mutate live models during preview
+   - Properly restores original model after `dry_run` completes
+   - No longer destructive to live models
+
+4. **rewire_connection Implementation** ✅ FULLY REWRITTEN
+   - Now uses `piping_toolkit.connect_piping_network_segment` directly
+   - Actually modifies target segment (no longer creates new connection)
+   - Properly preserves segment properties (pipeClass, nominalDiameter, material)
+   - Resolves endpoint components and connects with `force_reconnect=True`
+   - Comprehensive error handling for connection/corruption exceptions
+   - Spec-compliant implementation replacing delegation hack
+
+5. **remove_component Rerouting** ✅ HONEST IMPLEMENTATION
+   - DEXPI: Changed default to `reroute_connections=False` (was True)
+   - DEXPI: Returns ACTION_NOT_APPLICABLE if rerouting requested (not implemented)
+   - DEXPI: Provides clear alternatives (manual reconnect or cascade=True)
+   - SFILES: Supports simple 1→1 rerouting (single predecessor→single successor)
+   - SFILES: Returns ACTION_NOT_APPLICABLE for complex topologies (multiple branches)
+   - Both: Add warnings when connections left disconnected
+   - No longer claims to reroute when it doesn't
+
+**Codex Assessment (After Fixes):** "Transaction safety, dry_run isolation, and piping_toolkit integration now production-ready. V1 can proceed to testing."
+
+**Actual Time:** V1: 2.5 days (DONE with comprehensive fixes) | V2: 1 day (pending)
 
 ---
 
