@@ -40,7 +40,7 @@ class SchemaTools:
         return [
             Tool(
                 name="schema_list_classes",
-                description="List all available classes in DEXPI or SFILES schemas",
+                description="[DEPRECATED] List all available classes in DEXPI or SFILES schemas. Use schema_query(operation='list_classes') instead.",
                 inputSchema={
                     "type": "object",
                     "properties": {
@@ -61,7 +61,7 @@ class SchemaTools:
             ),
             Tool(
                 name="schema_describe_class",
-                description="Get detailed information about a specific class including attributes, methods, and inheritance",
+                description="[DEPRECATED] Get detailed information about a specific class including attributes, methods, and inheritance. Use schema_query(operation='describe_class') instead.",
                 inputSchema={
                     "type": "object",
                     "properties": {
@@ -85,7 +85,7 @@ class SchemaTools:
             ),
             Tool(
                 name="schema_find_class",
-                description="Search for classes by partial name or pattern",
+                description="[DEPRECATED] Search for classes by partial name or pattern. Use schema_query(operation='find_class') instead.",
                 inputSchema={
                     "type": "object",
                     "properties": {
@@ -105,7 +105,7 @@ class SchemaTools:
             ),
             Tool(
                 name="schema_get_hierarchy",
-                description="Get the inheritance hierarchy for a class or category",
+                description="[DEPRECATED] Get the inheritance hierarchy for a class or category. Use schema_query(operation='get_hierarchy') instead.",
                 inputSchema={
                     "type": "object",
                     "properties": {

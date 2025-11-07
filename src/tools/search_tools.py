@@ -35,7 +35,7 @@ class SearchTools:
         return [
             Tool(
                 name="search_by_tag",
-                description="Search for equipment, instruments, or nodes by tag pattern",
+                description="[DEPRECATED] Search for equipment, instruments, or nodes by tag pattern. Use search_execute(query_type='by_tag') instead.",
                 inputSchema={
                     "type": "object",
                     "properties": {
@@ -64,7 +64,7 @@ class SearchTools:
             ),
             Tool(
                 name="search_by_type",
-                description="Search for components by type (e.g., all pumps, all heat exchangers)",
+                description="[DEPRECATED] Search for components by type (e.g., all pumps, all heat exchangers). Use search_execute(query_type='by_type') instead.",
                 inputSchema={
                     "type": "object",
                     "properties": {
@@ -87,7 +87,7 @@ class SearchTools:
             ),
             Tool(
                 name="search_by_attributes",
-                description="Search for components by attribute values",
+                description="[DEPRECATED] Search for components by attribute values. Use search_execute(query_type='by_attributes') instead.",
                 inputSchema={
                     "type": "object",
                     "properties": {
@@ -111,7 +111,7 @@ class SearchTools:
             ),
             Tool(
                 name="search_connected",
-                description="Find all components connected to a specific node",
+                description="[DEPRECATED] Find all components connected to a specific node. Use search_execute(query_type='connected') instead.",
                 inputSchema={
                     "type": "object",
                     "properties": {
@@ -140,7 +140,7 @@ class SearchTools:
             ),
             Tool(
                 name="query_model_statistics",
-                description="Get statistical summary of model contents",
+                description="[DEPRECATED] Get statistical summary of model contents. Use search_execute(query_type='statistics') instead.",
                 inputSchema={
                     "type": "object",
                     "properties": {
@@ -159,7 +159,7 @@ class SearchTools:
             ),
             Tool(
                 name="search_by_stream",
-                description="Search for streams by properties or connected units",
+                description="[DEPRECATED] Search for streams by properties or connected units. Use search_execute(query_type='by_stream') instead.",
                 inputSchema={
                     "type": "object",
                     "properties": {

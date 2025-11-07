@@ -1087,6 +1087,38 @@ Once graph_modify is complete, we can:
 
 ---
 
+### Phase 3.1: Deprecation Notices - ✅ COMPLETE
+
+**Status:** ✅ COMPLETED (2025-11-07)
+**Duration:** 0.5 hours
+
+**Completed:**
+1. ✅ Added deprecation notices to 4 schema tools (schema_list_classes, schema_describe_class, schema_find_class, schema_get_hierarchy)
+2. ✅ Added deprecation notices to 6 search tools (search_by_tag, search_by_type, search_by_attributes, search_connected, query_model_statistics, search_by_stream)
+3. ✅ Verified all tests pass (21/21 tests passing)
+4. ✅ Updated tool descriptions with migration guidance
+
+**Changes Made:**
+- Modified `src/tools/schema_tools.py` - Added [DEPRECATED] prefix and migration instructions to 4 tools
+- Modified `src/tools/search_tools.py` - Added [DEPRECATED] prefix and migration instructions to 6 tools
+
+**Migration Instructions Format:**
+```
+[DEPRECATED] <original description>. Use <unified_tool>(operation='<operation>') instead.
+```
+
+**Example:**
+- Old: `schema_list_classes` - "List all available classes in DEXPI or SFILES schemas"
+- New: `[DEPRECATED] List all available classes in DEXPI or SFILES schemas. Use schema_query(operation='list_classes') instead.`
+
+**Next Steps:**
+- Phase 3.2: Create user-facing migration guide
+- Phase 3.3: Monitor usage and eventually remove deprecated tools
+
+**Actual Time:** 0.5 hours
+
+---
+
 ### Tool Consolidation (51 → 12 Tools) - NOT STARTED 🔴
 **Status:** Awaiting completion of testing phase
 
