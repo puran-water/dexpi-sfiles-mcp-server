@@ -394,31 +394,39 @@ class GraphModifyTools:
 
         # Transaction wrapping
         if options.get("create_transaction") and not options.get("dry_run"):
-            tx_result = await self.transaction_manager.begin(model_id)
-            if not tx_result.get("ok"):
-                return error_response(
-                    f"Transaction begin failed: {tx_result.get('error')}",
-                    "TRANSACTION_FAILED"
-                )
-            ctx.transaction_id = tx_result["data"]["transaction_id"]
+            # begin() returns string transaction_id, not dict
+            ctx.transaction_id = await self.transaction_manager.begin(model_id)
 
-            # Get working model from transaction
+            # Get working model from transaction (_working_model is private attribute)
+            transaction = self.transaction_manager.transactions[ctx.transaction_id]
+            ctx.model = transaction._working_model
+
+            # CRITICAL: Temporarily swap store entry so delegates operate on working copy
+            # This ensures all mutations (via dexpi_tools/sfiles_tools) affect the transaction
             if ctx.model_type == "dexpi":
-                ctx.model = self.transaction_manager.transactions[ctx.transaction_id].working_model
+                self._original_model = self.dexpi_models[model_id]  # Save original
+                self.dexpi_models[model_id] = ctx.model  # Point to working copy
             elif ctx.model_type == "sfiles":
-                ctx.model = self.transaction_manager.transactions[ctx.transaction_id].working_model
+                self._original_model = self.flowsheets[model_id]  # Save original
+                self.flowsheets[model_id] = ctx.model  # Point to working copy
 
-        # For dry_run, work on a copy
+        # For dry_run, work on a copy and swap stores
         elif options.get("dry_run"):
             if ctx.model_type == "dexpi":
                 import copy
                 ctx.model = copy.deepcopy(ctx.model)
+                # Swap store entry so delegates operate on copy
+                self._original_model = self.dexpi_models[model_id]
+                self.dexpi_models[model_id] = ctx.model
             elif ctx.model_type == "sfiles":
                 # SFILES: create copy via serialize/deserialize
                 sfiles_str = ctx.model.convert_to_sfiles()
                 from src.adapters.sfiles_adapter import create_flowsheet
                 ctx.model = create_flowsheet()
                 ctx.model.create_from_sfiles(sfiles_str)
+                # Swap store entry so delegates operate on copy
+                self._original_model = self.flowsheets[model_id]
+                self.flowsheets[model_id] = ctx.model
 
         try:
             # Dispatch to action handler
@@ -440,17 +448,19 @@ class GraphModifyTools:
 
             # Commit transaction (not for dry_run)
             if ctx.transaction_id and not options.get("dry_run"):
+                # commit() returns CommitResult dataclass, not dict
                 commit_result = await self.transaction_manager.commit(ctx.transaction_id)
-                if not commit_result.get("ok"):
-                    return error_response(
-                        f"Transaction commit failed: {commit_result.get('error')}",
-                        "TRANSACTION_FAILED"
-                    )
 
-                # Add diff from transaction
+                # Add diff from transaction (access dataclass attributes)
                 if "data" not in result:
                     result["data"] = {}
-                result["data"]["diff"] = commit_result["data"]["diff"]
+                result["data"]["diff"] = {
+                    "added": commit_result.diff.added,
+                    "removed": commit_result.diff.removed,
+                    "modified": commit_result.diff.modified,
+                    "metadata": commit_result.diff.metadata
+                }
+                result["data"]["operations_applied"] = commit_result.operations_applied
 
             # For dry_run, indicate no changes were made
             if options.get("dry_run"):
@@ -458,16 +468,44 @@ class GraphModifyTools:
                     result["data"] = {}
                 result["data"]["dry_run"] = True
 
+                # Restore original model from store (dry_run shouldn't persist)
+                if hasattr(self, '_original_model'):
+                    if ctx.model_type == "dexpi":
+                        self.dexpi_models[model_id] = self._original_model
+                    elif ctx.model_type == "sfiles":
+                        self.flowsheets[model_id] = self._original_model
+                    delattr(self, '_original_model')
+
             return result
 
         except Exception as e:
             logger.error(f"graph_modify error: {e}", exc_info=True)
             if ctx.transaction_id:
                 await self.transaction_manager.rollback(ctx.transaction_id)
+
+            # Restore original model on error
+            if hasattr(self, '_original_model'):
+                if ctx.model_type == "dexpi":
+                    self.dexpi_models[model_id] = self._original_model
+                elif ctx.model_type == "sfiles":
+                    self.flowsheets[model_id] = self._original_model
+                delattr(self, '_original_model')
+
             return error_response(
                 f"Action execution failed: {str(e)}",
                 "EXECUTION_ERROR"
             )
+
+        finally:
+            # Always restore original model if we swapped stores (transaction commit handles persistence)
+            if hasattr(self, '_original_model') and ctx.transaction_id:
+                if ctx.model_type == "dexpi":
+                    # Don't restore - commit already updated the store
+                    pass
+                elif ctx.model_type == "sfiles":
+                    # Don't restore - commit already updated the store
+                    pass
+                delattr(self, '_original_model')
 
     async def _dispatch_action(self, action: GraphAction, ctx: ActionContext) -> dict:
         """Dispatch to specific action handler."""
@@ -663,7 +701,7 @@ class GraphModifyTools:
                 }
             })
 
-        return error_response("TARGET_NOT_FOUND", f"Unit not found: {unit_name}")
+        return error_response(f"Unit not found: {unit_name}", "TARGET_NOT_FOUND")
 
     async def _handle_insert_inline_component(self, ctx: ActionContext) -> dict:
         """Action 3: Insert component inline (DEXPI only)."""
@@ -671,7 +709,7 @@ class GraphModifyTools:
             return self._action_not_applicable(ctx, "insert_inline_component")
 
         if not self.dexpi_tools:
-            return error_response("MISSING_DEPENDENCY", "dexpi_tools not available")
+            return error_response("dexpi_tools not available", "MISSING_DEPENDENCY")
 
         # Delegate to existing _insert_valve_in_segment infrastructure
         valve_args = {
@@ -714,15 +752,24 @@ class GraphModifyTools:
         return self._action_not_applicable(ctx, "rewire_connection")
 
     async def _handle_rewire_connection_dexpi(self, ctx: ActionContext) -> dict:
-        """DEXPI: Rewire existing segment to new endpoints."""
+        """DEXPI: Rewire existing segment to new endpoints using piping_toolkit."""
+        from pydexpi.toolkits import piping_toolkit as pt
+
         # Resolve target segment
         success, segment, error = self.resolver.resolve(ctx.target, ctx.model, ctx.model_type)
         if not success:
             return error_response(error, "TARGET_NOT_FOUND")
 
+        # Validate segment type
+        if not hasattr(segment, '__class__') or 'PipingNetworkSegment' not in segment.__class__.__name__:
+            return error_response(
+                f"Target is not a PipingNetworkSegment: {type(segment).__name__}",
+                "INVALID_TARGET_TYPE"
+            )
+
         # Get new endpoints
-        new_from = ctx.payload.get("from")
-        new_to = ctx.payload.get("to")
+        new_from = ctx.payload.get("from")  # Component/nozzle to connect as source
+        new_to = ctx.payload.get("to")      # Component/nozzle to connect as target
         preserve_props = ctx.payload.get("preserve_properties", True)
 
         if not new_from and not new_to:
@@ -731,51 +778,65 @@ class GraphModifyTools:
                 "INVALID_PAYLOAD"
             )
 
-        # Get current segment properties
+        # Save segment properties if preserving
         segment_props = {}
-        if preserve_props and hasattr(segment, '__dict__'):
+        if preserve_props:
             segment_props = {
-                'pipe_class': getattr(segment, 'pipeClass', 'CS150'),
-                'nominal_diameter': getattr(segment, 'nominalDiameter', 'DN50'),
-                'material': getattr(segment, 'material', 'Carbon Steel')
+                'pipeClass': getattr(segment, 'pipeClass', None),
+                'nominalDiameter': getattr(segment, 'nominalDiameter', None),
+                'material': getattr(segment, 'material', None)
             }
 
-        # Get current connections (simplified - actual implementation more complex)
-        old_from = None
-        old_to = None
-        if hasattr(segment, 'connections') and segment.connections:
-            if len(segment.connections) >= 2:
-                old_from = segment.connections[0]
-                old_to = segment.connections[1]
+        # Resolve new endpoint entities
+        def resolve_endpoint(endpoint_spec):
+            """Resolve endpoint to equipment/nozzle object."""
+            if isinstance(endpoint_spec, str):
+                # Look up component by tag
+                from pydexpi.toolkits import model_toolkit as mt
+                equipments = mt.get_all_instances_in_model(ctx.model, 'Equipment')
+                for eq in equipments:
+                    if getattr(eq, 'tagName', None) == endpoint_spec:
+                        return eq
+                return None
+            return endpoint_spec  # Assume already an object
 
-        # Use provided endpoints or keep current
-        final_from = new_from if new_from else old_from
-        final_to = new_to if new_to else old_to
+        # Reconnect using piping_toolkit
+        try:
+            # Rewire source connection
+            if new_from:
+                from_obj = resolve_endpoint(new_from)
+                if not from_obj:
+                    return error_response(f"Cannot resolve 'from' endpoint: {new_from}", "TARGET_NOT_FOUND")
 
-        if not final_from or not final_to:
-            return error_response(
-                "Cannot determine connection endpoints for rewiring",
-                "INVALID_SEGMENT"
-            )
+                # Disconnect current source and connect to new one
+                pt.connect_piping_network_segment(
+                    piping_segment=segment,
+                    connector_item=from_obj,
+                    as_source=False,  # Connecting TO the segment (segment receives flow FROM this)
+                    force_reconnect=True
+                )
 
-        # Use piping_toolkit to create new connection
-        # Note: This simplified version delegates to dexpi_tools
-        # A full implementation would use pt.connect_piping_network_segment directly
-        if not self.dexpi_tools:
-            return error_response("dexpi_tools not available", "MISSING_DEPENDENCY")
+            # Rewire target connection
+            if new_to:
+                to_obj = resolve_endpoint(new_to)
+                if not to_obj:
+                    return error_response(f"Cannot resolve 'to' endpoint: {new_to}", "TARGET_NOT_FOUND")
 
-        connect_args = {
-            "model_id": ctx.model_id,
-            "from_component": final_from if isinstance(final_from, str) else getattr(final_from, 'tagName', str(final_from)),
-            "to_component": final_to if isinstance(final_to, str) else getattr(final_to, 'tagName', str(final_to)),
-            "pipe_class": segment_props.get('pipe_class', 'CS150')
-        }
+                # Disconnect current target and connect to new one
+                pt.connect_piping_network_segment(
+                    piping_segment=segment,
+                    connector_item=to_obj,
+                    as_source=True,  # Connecting FROM the segment (segment sends flow TO this)
+                    force_reconnect=True
+                )
 
-        # Create new connection
-        result = await self.dexpi_tools.handle_tool("dexpi_connect_components", connect_args)
+            # Restore properties if preserving
+            if preserve_props:
+                for key, value in segment_props.items():
+                    if value is not None:
+                        setattr(segment, key, value)
 
-        if result.get("ok") or result.get("status") == "success":
-            # Track segment as updated (not fully removed/added due to preservation)
+            # Track segment as updated
             segment_id = getattr(segment, 'id', None) or getattr(segment, 'tagName', 'segment')
             ctx.mutated_entities.append(str(segment_id))
 
@@ -792,7 +853,18 @@ class GraphModifyTools:
                 }
             })
 
-        return result
+        except (pt.DexpiConnectionException, pt.DexpiCorruptPipingSegmentException, ValueError) as e:
+            logger.error(f"Rewire connection failed: {e}")
+            return error_response(
+                f"Failed to rewire segment: {str(e)}",
+                "REWIRE_FAILED"
+            )
+        except Exception as e:
+            logger.error(f"Unexpected error in rewire_connection: {e}", exc_info=True)
+            return error_response(
+                f"Rewire operation failed: {str(e)}",
+                "EXECUTION_ERROR"
+            )
 
     def _handle_rewire_connection_sfiles(self, ctx: ActionContext) -> dict:
         """SFILES: NetworkX edge manipulation + canonicalize."""
@@ -849,30 +921,32 @@ class GraphModifyTools:
         return self._action_not_applicable(ctx, "remove_component")
 
     def _handle_remove_component_dexpi(self, ctx: ActionContext, component: Any) -> dict:
-        """DEXPI: Remove equipment from model."""
+        """DEXPI: Remove equipment from model.
+
+        Note: Automatic rerouting is NOT implemented in v1.
+        If reroute_connections is requested, returns ACTION_NOT_APPLICABLE.
+        """
         cascade = ctx.payload.get("cascade", False)
-        reroute = ctx.payload.get("reroute_connections", True)
+        reroute = ctx.payload.get("reroute_connections", False)  # Changed default to False
 
         tag = getattr(component, 'tagName', None) or getattr(component, 'tag', None)
 
-        # Find connected nozzles and segments
-        inlet_nozzles = []
-        outlet_nozzles = []
-
-        if hasattr(component, 'nozzles'):
-            for nozzle in component.nozzles:
-                # Simple heuristic: check subTagName for inlet/outlet
-                nozzle_name = getattr(nozzle, 'subTagName', '').lower()
-                if 'inlet' in nozzle_name or 'in' in nozzle_name:
-                    inlet_nozzles.append(nozzle)
-                elif 'outlet' in nozzle_name or 'out' in nozzle_name:
-                    outlet_nozzles.append(nozzle)
-                else:
-                    # Default: first half are inlets, second half are outlets
-                    if len(inlet_nozzles) < len(component.nozzles) // 2:
-                        inlet_nozzles.append(nozzle)
-                    else:
-                        outlet_nozzles.append(nozzle)
+        # Check if rerouting was explicitly requested
+        if reroute:
+            return error_response(
+                f"Automatic rerouting not implemented. To remove {tag}, set reroute_connections=False "
+                f"and manually reconnect piping, or use cascade=True to remove connected segments.",
+                "ACTION_NOT_APPLICABLE",
+                details={
+                    "component": str(tag),
+                    "requested_feature": "reroute_connections",
+                    "status": "not_implemented",
+                    "alternatives": [
+                        "Set reroute_connections=False and manually reconnect piping",
+                        "Use cascade=True to remove component and connected segments"
+                    ]
+                }
+            )
 
         # Remove component from model
         if hasattr(ctx.model, 'equipment') and isinstance(ctx.model.equipment, list):
@@ -886,21 +960,12 @@ class GraphModifyTools:
 
         ctx.mutated_entities.append(str(tag))
 
-        # Simplified rerouting: Connect first inlet predecessor to first outlet successor
-        # Note: Full implementation would handle multiple connections, check actual connectivity
-        rerouted = []
-        if reroute and not cascade and inlet_nozzles and outlet_nozzles:
-            logger.info(f"Attempting to reroute connections around removed component {tag}")
-
-            # This is a simplified placeholder - real implementation would:
-            # 1. Find actual connected segments via piping_toolkit
-            # 2. Identify upstream/downstream components
-            # 3. Use pt.connect_piping_network_segment to reroute
-            # For v1 fixes, we log the attempt but don't implement full rerouting
-            logger.warning(f"Rerouting partially implemented - {len(inlet_nozzles)} inlets, {len(outlet_nozzles)} outlets detected")
+        # Add warning about connected piping
+        if hasattr(component, 'nozzles') and component.nozzles:
             ctx.validation_warnings.append({
-                "code": "REROUTING_LIMITED",
-                "message": f"Component {tag} removed but automatic rerouting not fully implemented. Manual piping review required."
+                "code": "MANUAL_REROUTE_REQUIRED",
+                "message": f"Component {tag} removed. {len(component.nozzles)} nozzles were connected - "
+                          f"piping segments may now be disconnected and require manual reconnection."
             })
 
         return success_response({
@@ -908,7 +973,7 @@ class GraphModifyTools:
             "diff": {
                 "added": [],
                 "removed": [str(tag)],
-                "updated": rerouted  # List of rerouted segments (if any)
+                "updated": []  # No rerouting in v1
             },
             "validation": {
                 "errors": ctx.validation_errors,
@@ -917,30 +982,60 @@ class GraphModifyTools:
         })
 
     def _handle_remove_component_sfiles(self, ctx: ActionContext, unit_name: str) -> dict:
-        """SFILES: Remove unit from flowsheet."""
+        """SFILES: Remove unit from flowsheet.
+
+        Note: Automatic rerouting is NOT implemented in v1.
+        If reroute_connections is requested, returns ACTION_NOT_APPLICABLE.
+        """
         cascade = ctx.payload.get("cascade", False)
-        reroute = ctx.payload.get("reroute_connections", True)
+        reroute = ctx.payload.get("reroute_connections", False)  # Changed default to False
 
         if not hasattr(ctx.model, 'state'):
             return error_response("Model has no state graph", "INVALID_MODEL")
 
         if not ctx.model.state.has_node(unit_name):
-            return error_response("TARGET_NOT_FOUND", f"Unit not found: {unit_name}")
+            return error_response(f"Unit not found: {unit_name}", "TARGET_NOT_FOUND")
 
-        # Get connected edges for potential rerouting
+        # Get connected edges
         predecessors = list(ctx.model.state.predecessors(unit_name))
         successors = list(ctx.model.state.successors(unit_name))
+
+        # Check if rerouting is explicitly requested
+        # For SFILES, we have basic implementation (connect predecessors to successors)
+        if reroute and (len(predecessors) > 1 or len(successors) > 1):
+            # Complex rerouting (multiple branches) not supported
+            return error_response(
+                f"Cannot reroute complex topology around {unit_name}. "
+                f"Found {len(predecessors)} predecessors and {len(successors)} successors. "
+                f"Set reroute_connections=False and manually reconnect streams.",
+                "ACTION_NOT_APPLICABLE",
+                details={
+                    "unit": unit_name,
+                    "predecessors": predecessors,
+                    "successors": successors,
+                    "status": "complex_topology_not_supported"
+                }
+            )
 
         # Remove node
         ctx.model.state.remove_node(unit_name)
 
-        # Simple rerouting: connect predecessors to successors
-        if reroute and not cascade and predecessors and successors:
-            for pred in predecessors:
-                for succ in successors:
-                    if not ctx.model.state.has_edge(pred, succ):
-                        ctx.model.state.add_edge(pred, succ, name=f"{pred}-{succ}")
-                        logger.info(f"Rerouted {pred} -> {succ} around removed {unit_name}")
+        # Simple rerouting: connect single predecessor to single successor
+        rerouted_streams = []
+        if reroute and not cascade and len(predecessors) == 1 and len(successors) == 1:
+            pred = predecessors[0]
+            succ = successors[0]
+            if not ctx.model.state.has_edge(pred, succ):
+                ctx.model.state.add_edge(pred, succ, name=f"{pred}-{succ}")
+                rerouted_streams.append(f"{pred}-{succ}")
+                logger.info(f"Rerouted {pred} -> {succ} around removed {unit_name}")
+        elif (predecessors or successors) and not reroute:
+            # Warn about disconnected streams
+            ctx.validation_warnings.append({
+                "code": "MANUAL_REROUTE_REQUIRED",
+                "message": f"Unit {unit_name} removed with {len(predecessors)} incoming and "
+                          f"{len(successors)} outgoing streams. Manual reconnection may be required."
+            })
 
         # Re-canonicalize
         if hasattr(ctx.model, 'convert_to_sfiles'):
@@ -951,7 +1046,7 @@ class GraphModifyTools:
         return success_response({
             "mutated_entities": ctx.mutated_entities,
             "diff": {
-                "added": [],
+                "added": rerouted_streams if reroute else [],  # New streams created by rerouting
                 "removed": [unit_name],
                 "updated": []
             },
@@ -1026,7 +1121,7 @@ class GraphModifyTools:
             return error_response("Model has no state graph", "INVALID_MODEL")
 
         if not ctx.model.state.has_node(unit_name):
-            return error_response("TARGET_NOT_FOUND", f"Unit not found: {unit_name}")
+            return error_response(f"Unit not found: {unit_name}", "TARGET_NOT_FOUND")
 
         # Rename node if new_tag provided
         if new_tag and new_tag != unit_name:
