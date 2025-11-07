@@ -8,7 +8,7 @@ from pydexpi.dexpi_classes.equipment import Tank
 from src.tools.graph_modify_tools import GraphModifyTools, GraphAction, TargetKind
 from src.tools.dexpi_tools import DexpiTools
 from src.tools.sfiles_tools import SfilesTools
-from src.adapters.sfiles_adapter import create_flowsheet
+from src.adapters.sfiles_adapter import get_flowsheet_class
 
 
 @pytest.fixture
@@ -41,10 +41,6 @@ def sample_dexpi_model(model_stores):
     dexpi_models, _ = model_stores
 
     model = DexpiModel()
-    model.meta = MetaData()
-    model.meta.projectName = "Test Project"
-    model.meta.drawingNumber = "TEST-001"
-
     model_id = "test-dexpi-01"
     dexpi_models[model_id] = model
 
@@ -56,11 +52,15 @@ def sample_sfiles_model(model_stores):
     """Create a sample SFILES flowsheet."""
     _, flowsheets = model_stores
 
-    flowsheet = create_flowsheet()
-    flowsheet_id = "test-sfiles-01"
-    flowsheets[flowsheet_id] = flowsheet
+    try:
+        Flowsheet = get_flowsheet_class()
+        flowsheet = Flowsheet()
+        flowsheet_id = "test-sfiles-01"
+        flowsheets[flowsheet_id] = flowsheet
 
-    return flowsheet_id, flowsheet
+        return flowsheet_id, flowsheet
+    except ImportError:
+        pytest.skip("SFILES not available")
 
 
 # ========== ACTION 1: insert_component ==========
@@ -260,16 +260,38 @@ async def test_action_not_applicable(graph_modify_tools, sample_sfiles_model):
     assert result.get("error", {}).get("code") == "ACTION_NOT_APPLICABLE"
 
 
-# ========== V2 ACTIONS (NOT IMPLEMENTED) ==========
+# ========== V2 ACTIONS (4 additional operations) ==========
 
 @pytest.mark.asyncio
-async def test_v2_action_not_implemented(graph_modify_tools, sample_dexpi_model):
-    """Test that v2 actions return NOT_IMPLEMENTED."""
+async def test_split_segment_returns_not_implemented(graph_modify_tools, sample_dexpi_model):
+    """Test split_segment action returns NOT_IMPLEMENTED with helpful guidance."""
     model_id, _ = sample_dexpi_model
 
     args = {
         "model_id": model_id,
-        "action": GraphAction.SPLIT_SEGMENT.value,  # V2 action
+        "action": GraphAction.SPLIT_SEGMENT.value,
+        "target": {"kind": "segment", "identifier": "SEG-01"},
+        "payload": {"split_point": 0.5},
+        "options": {"create_transaction": False}
+    }
+
+    result = await graph_modify_tools.handle_tool("graph_modify", args)
+
+    # Should return NOT_IMPLEMENTED with alternative guidance
+    assert not result.get("ok")
+    assert result.get("error", {}).get("code") == "NOT_IMPLEMENTED"
+    assert "insert_inline_component" in result.get("error", {}).get("message", "")
+    assert "alternative" in result.get("error", {}).get("details", {})
+
+
+@pytest.mark.asyncio
+async def test_split_segment_sfiles_not_applicable(graph_modify_tools, sample_sfiles_model):
+    """Test split_segment on SFILES returns ACTION_NOT_APPLICABLE."""
+    model_id, _ = sample_sfiles_model
+
+    args = {
+        "model_id": model_id,
+        "action": GraphAction.SPLIT_SEGMENT.value,
         "target": {"kind": "segment", "identifier": "SEG-01"},
         "payload": {"split_point": 0.5},
         "options": {"create_transaction": False}
@@ -278,7 +300,118 @@ async def test_v2_action_not_implemented(graph_modify_tools, sample_dexpi_model)
     result = await graph_modify_tools.handle_tool("graph_modify", args)
 
     assert not result.get("ok")
+    assert result.get("error", {}).get("code") == "ACTION_NOT_APPLICABLE"
+
+
+@pytest.mark.asyncio
+async def test_merge_segments_returns_not_implemented(graph_modify_tools, sample_dexpi_model):
+    """Test merge_segments action returns NOT_IMPLEMENTED with helpful guidance."""
+    model_id, _ = sample_dexpi_model
+
+    args = {
+        "model_id": model_id,
+        "action": GraphAction.MERGE_SEGMENTS.value,
+        "target": {"kind": "segment", "identifier": "SEG-01"},
+        "payload": {"second_segment_id": "SEG-02"},
+        "options": {"create_transaction": False}
+    }
+
+    result = await graph_modify_tools.handle_tool("graph_modify", args)
+
+    # Should return NOT_IMPLEMENTED with alternative guidance
+    assert not result.get("ok")
     assert result.get("error", {}).get("code") == "NOT_IMPLEMENTED"
+    message = result.get("error", {}).get("message", "")
+    assert "remove" in message.lower() and "rewire" in message.lower()
+    assert "alternative" in result.get("error", {}).get("details", {})
+
+
+@pytest.mark.asyncio
+async def test_update_stream_properties_sfiles(graph_modify_tools, sample_sfiles_model):
+    """Test update_stream_properties action for SFILES."""
+    model_id, flowsheet = sample_sfiles_model
+
+    # First add two units and connect them using NetworkX
+    import networkx as nx
+    flowsheet.state = nx.DiGraph()
+    flowsheet.state.add_node("reactor-1", unit_type="reactor")
+    flowsheet.state.add_node("tank-2", unit_type="tank")
+    flowsheet.state.add_edge("reactor-1", "tank-2")
+
+    args = {
+        "model_id": model_id,
+        "action": GraphAction.UPDATE_STREAM_PROPERTIES.value,
+        "target": {
+            "kind": TargetKind.STREAM.value,
+            "identifier": "reactor-1->tank-2"
+        },
+        "payload": {
+            "properties": {
+                "flow": 150,
+                "temperature": 25,
+                "pressure": 2.5
+            },
+            "merge": True
+        },
+        "options": {
+            "create_transaction": False,
+            "validate_before": False
+        }
+    }
+
+    result = await graph_modify_tools.handle_tool("graph_modify", args)
+
+    assert result.get("ok") or result.get("status") == "success"
+    # Check that properties were updated
+    data = result.get("data", {})
+    assert "stream" in data
+    assert "properties_updated" in data
+    assert "flow" in data["properties_updated"]
+
+
+@pytest.mark.asyncio
+async def test_update_stream_properties_dexpi_not_applicable(graph_modify_tools, sample_dexpi_model):
+    """Test update_stream_properties on DEXPI returns ACTION_NOT_APPLICABLE."""
+    model_id, _ = sample_dexpi_model
+
+    args = {
+        "model_id": model_id,
+        "action": GraphAction.UPDATE_STREAM_PROPERTIES.value,
+        "target": {"kind": "stream", "identifier": "stream-1"},
+        "payload": {"properties": {"flow": 100}},
+        "options": {"create_transaction": False}
+    }
+
+    result = await graph_modify_tools.handle_tool("graph_modify", args)
+
+    assert not result.get("ok")
+    assert result.get("error", {}).get("code") == "ACTION_NOT_APPLICABLE"
+
+
+@pytest.mark.asyncio
+async def test_toggle_instrumentation_returns_not_implemented(graph_modify_tools, sample_dexpi_model):
+    """Test toggle_instrumentation returns NOT_IMPLEMENTED with helpful guidance."""
+    model_id, _ = sample_dexpi_model
+
+    args = {
+        "model_id": model_id,
+        "action": GraphAction.TOGGLE_INSTRUMENTATION.value,
+        "target": {"kind": "component", "identifier": "TK-101"},
+        "payload": {
+            "operation": "add",
+            "instrument_type": "FlowTransmitter",
+            "tag": "FT-101"
+        },
+        "options": {"create_transaction": False}
+    }
+
+    result = await graph_modify_tools.handle_tool("graph_modify", args)
+
+    # Should return NOT_IMPLEMENTED with alternative guidance
+    assert not result.get("ok")
+    assert result.get("error", {}).get("code") == "NOT_IMPLEMENTED"
+    assert "dexpi_add_instrumentation" in result.get("error", {}).get("message", "")
+    assert "alternative" in result.get("error", {}).get("details", {})
 
 
 if __name__ == "__main__":

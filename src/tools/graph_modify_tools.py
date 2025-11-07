@@ -549,24 +549,17 @@ class GraphModifyTools:
 
         # V2 actions (4 additional operations)
         elif action == GraphAction.SPLIT_SEGMENT:
-            return self._not_implemented(action.value)
+            return await self._handle_split_segment(ctx)
         elif action == GraphAction.MERGE_SEGMENTS:
-            return self._not_implemented(action.value)
+            return await self._handle_merge_segments(ctx)
         elif action == GraphAction.UPDATE_STREAM_PROPERTIES:
-            return self._not_implemented(action.value)
+            return await self._handle_update_stream_properties(ctx)
         elif action == GraphAction.TOGGLE_INSTRUMENTATION:
-            return self._not_implemented(action.value)
+            return await self._handle_toggle_instrumentation(ctx)
 
         return error_response(
             f"Action not implemented: {action.value}",
             "UNKNOWN_ACTION"
-        )
-
-    def _not_implemented(self, action: str) -> dict:
-        """Placeholder for V2 actions."""
-        return error_response(
-            f"Action '{action}' will be implemented in v2",
-            "NOT_IMPLEMENTED"
         )
 
     # ========== V1 ACTION HANDLERS (6 core operations) ==========
@@ -1232,6 +1225,254 @@ class GraphModifyTools:
                 )
 
         return success_response({"validated": True})
+
+    # ================================================================
+    # V2 ACTION HANDLERS (4 additional operations)
+    # ================================================================
+
+    async def _handle_split_segment(self, ctx: ActionContext) -> dict:
+        """Split a piping segment at a specific position (DEXPI only)."""
+        if ctx.model_type == "sfiles":
+            return self._action_not_applicable(ctx, "split_segment")
+
+        # DEXPI implementation
+        return await self._handle_split_segment_dexpi(ctx)
+
+    async def _handle_split_segment_dexpi(self, ctx: ActionContext) -> dict:
+        """DEXPI: Split segment using pyDEXPI utilities."""
+        payload = ctx.payload
+
+        # Validate payload
+        if "split_point" not in payload:
+            return error_response("Missing required field: split_point", "INVALID_PAYLOAD")
+
+        split_point = payload.get("split_point", 0.5)
+        if not (0.0 < split_point < 1.0):
+            return error_response(
+                "split_point must be between 0.0 and 1.0 (exclusive)",
+                "INVALID_PAYLOAD"
+            )
+
+        # For now, return NOT_IMPLEMENTED with detailed guidance (skip segment resolution)
+        # Full implementation would require:
+        # 1. Find segment start/end connections
+        # 2. Create two new segments at split point
+        # 3. Optionally insert component at split
+        # 4. Remove old segment, add new segments
+        # 5. Validate with piping_network_segment_validity_check
+        return error_response(
+            "split_segment requires custom segment surgery logic not yet implemented. "
+            "Use insert_inline_component instead for adding components to segments.",
+            "NOT_IMPLEMENTED",
+            details={
+                "alternative": "Use insert_inline_component to add components at specific positions",
+                "specification": "See docs/api/graph_modify_spec.md lines 247-319"
+            }
+        )
+
+    async def _handle_merge_segments(self, ctx: ActionContext) -> dict:
+        """Combine two adjacent segments into one (DEXPI only)."""
+        if ctx.model_type == "sfiles":
+            return self._action_not_applicable(ctx, "merge_segments")
+
+        # DEXPI implementation
+        return await self._handle_merge_segments_dexpi(ctx)
+
+    async def _handle_merge_segments_dexpi(self, ctx: ActionContext) -> dict:
+        """DEXPI: Merge adjacent segments with validity checks."""
+        payload = ctx.payload
+
+        # Validate payload
+        if "second_segment_id" not in payload:
+            return error_response("Missing required field: second_segment_id", "INVALID_PAYLOAD")
+
+        # For now, return NOT_IMPLEMENTED with detailed guidance (skip segment resolution)
+        # Full implementation would require:
+        # 1. Verify segments are adjacent (share connection point)
+        # 2. Create merged segment from start of seg1 to end of seg2
+        # 3. Inherit properties based on payload.inherit_properties
+        # 4. Remove both old segments, add merged segment
+        # 5. Validate with piping_network_segment_validity_check
+        return error_response(
+            "merge_segments requires adjacency checking and segment surgery not yet implemented. "
+            "Merge can be achieved manually by: (1) remove intermediate component, (2) rewire_connection.",
+            "NOT_IMPLEMENTED",
+            details={
+                "alternative": "Use remove_component + rewire_connection for similar effect",
+                "specification": "See docs/api/graph_modify_spec.md lines 323-362"
+            }
+        )
+
+    async def _handle_update_stream_properties(self, ctx: ActionContext) -> dict:
+        """Update stream properties (SFILES only)."""
+        if ctx.model_type == "dexpi":
+            return self._action_not_applicable(ctx, "update_stream_properties")
+
+        # SFILES implementation
+        return await self._handle_update_stream_properties_sfiles(ctx)
+
+    async def _handle_update_stream_properties_sfiles(self, ctx: ActionContext) -> dict:
+        """SFILES: Update stream properties with re-canonicalization."""
+        payload = ctx.payload
+        flowsheet = ctx.model
+
+        # Validate payload
+        if "properties" not in payload:
+            return error_response("Missing required field: properties", "INVALID_PAYLOAD")
+
+        properties = payload["properties"]
+        merge = payload.get("merge", True)
+
+        # Resolve stream from target
+        target_id = ctx.target.get("identifier", "")
+
+        # Parse stream identifier (format: "from_unit->to_unit" or stream name)
+        if "->" in target_id:
+            parts = target_id.split("->")
+            if len(parts) != 2:
+                return error_response(
+                    "Stream identifier must be 'from_unit->to_unit' format",
+                    "INVALID_TARGET"
+                )
+            from_unit, to_unit = parts[0].strip(), parts[1].strip()
+        else:
+            # Try to find stream by name in flowsheet
+            return error_response(
+                "Stream lookup by name not yet implemented. Use 'from_unit->to_unit' format.",
+                "NOT_IMPLEMENTED",
+                details={"example": "reactor-1->tank-2"}
+            )
+
+        # Check if edge exists
+        if not flowsheet.state.has_edge(from_unit, to_unit):
+            return error_response(
+                f"Stream edge not found: {from_unit} -> {to_unit}",
+                "TARGET_NOT_FOUND"
+            )
+
+        # Update properties
+        edge_data = flowsheet.state[from_unit][to_unit]
+
+        if merge:
+            # Merge new properties into existing
+            edge_data.update(properties)
+        else:
+            # Replace all properties
+            # Keep system properties (if any), replace user properties
+            flowsheet.state.remove_edge(from_unit, to_unit)
+            flowsheet.state.add_edge(from_unit, to_unit, **properties)
+
+        # Re-canonicalize SFILES representation
+        try:
+            flowsheet.convert_to_sfiles(version="v2", canonical=True)
+        except Exception as e:
+            logger.error(f"SFILES canonicalization failed after property update: {e}")
+            return error_response(
+                f"Failed to re-canonicalize SFILES: {str(e)}",
+                "CANONICALIZATION_FAILED"
+            )
+
+        ctx.mutated_entities.append(f"stream:{from_unit}->{to_unit}")
+
+        return success_response({
+            "mutated": ctx.mutated_entities,
+            "stream": f"{from_unit} -> {to_unit}",
+            "properties_updated": list(properties.keys()),
+            "merge_mode": merge
+        })
+
+    async def _handle_toggle_instrumentation(self, ctx: ActionContext) -> dict:
+        """Add or remove instrumentation."""
+        payload = ctx.payload
+
+        # Validate operation
+        operation = payload.get("operation")
+        if operation not in ["add", "remove"]:
+            return error_response(
+                "operation must be 'add' or 'remove'",
+                "INVALID_PAYLOAD"
+            )
+
+        if ctx.model_type == "dexpi":
+            return await self._handle_toggle_instrumentation_dexpi(ctx)
+        else:
+            return await self._handle_toggle_instrumentation_sfiles(ctx)
+
+    async def _handle_toggle_instrumentation_dexpi(self, ctx: ActionContext) -> dict:
+        """DEXPI: Add/remove instruments and signal lines."""
+        payload = ctx.payload
+        operation = payload["operation"]
+
+        if operation == "add":
+            # Use dexpi_add_instrumentation or dexpi_add_control_loop
+            instrument_type = payload.get("instrument_type")
+            tag = payload.get("tag")
+
+            if not instrument_type or not tag:
+                return error_response(
+                    "Missing required fields: instrument_type, tag",
+                    "INVALID_PAYLOAD"
+                )
+
+            # For now, delegate to existing dexpi_tools
+            return error_response(
+                "toggle_instrumentation (add) should use dexpi_add_instrumentation or dexpi_add_control_loop directly. "
+                "This action is redundant with existing specialized tools.",
+                "NOT_IMPLEMENTED",
+                details={
+                    "alternative": "Use dexpi_add_instrumentation or dexpi_add_control_loop",
+                    "reason": "Dedicated tools provide better parameter validation and documentation"
+                }
+            )
+        else:  # remove
+            # Need to find and remove instrument by tag
+            return error_response(
+                "toggle_instrumentation (remove) requires traversing signal lines and removing instruments, "
+                "not yet implemented. Use remove_component for simple instrument removal.",
+                "NOT_IMPLEMENTED",
+                details={
+                    "alternative": "Use remove_component to remove instrument by tag",
+                    "specification": "See docs/api/graph_modify_spec.md lines 549-587"
+                }
+            )
+
+    async def _handle_toggle_instrumentation_sfiles(self, ctx: ActionContext) -> dict:
+        """SFILES: Add/remove control tags."""
+        payload = ctx.payload
+        operation = payload["operation"]
+
+        if operation == "add":
+            # Use sfiles_add_control
+            control_type = payload.get("instrument_type")  # FC, LC, TC, PC, etc.
+            tag = payload.get("tag")
+            connected_unit = payload.get("sensing_location")  # Where to attach control
+
+            if not all([control_type, tag, connected_unit]):
+                return error_response(
+                    "Missing required fields: instrument_type, tag, sensing_location",
+                    "INVALID_PAYLOAD"
+                )
+
+            # Delegate to sfiles_add_control
+            return error_response(
+                "toggle_instrumentation (add) should use sfiles_add_control directly. "
+                "This action is redundant with existing specialized tools.",
+                "NOT_IMPLEMENTED",
+                details={
+                    "alternative": "Use sfiles_add_control",
+                    "reason": "Dedicated tool provides better parameter validation and documentation"
+                }
+            )
+        else:  # remove
+            # Need to find and remove control tag
+            return error_response(
+                "toggle_instrumentation (remove) requires finding control nodes in flowsheet, "
+                "not yet implemented.",
+                "NOT_IMPLEMENTED",
+                details={
+                    "specification": "See docs/api/graph_modify_spec.md lines 549-587"
+                }
+            )
 
     def _action_not_applicable(self, ctx: ActionContext, action: str) -> dict:
         """Return ACTION_NOT_APPLICABLE error."""
