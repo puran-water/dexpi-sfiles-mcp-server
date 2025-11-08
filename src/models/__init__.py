@@ -26,6 +26,17 @@ from .layout_metadata import (
     LayoutMetadata,
     LayoutCollection,
 )
+from .bfd import (
+    BfdPortType,
+    BfdPortSpec,
+    BfdCreateArgs,
+    BfdBlockArgs,
+    BfdFlowArgs,
+    BfdBlockMetadata,
+    BfdFlowMetadata,
+    BfdToPfdExpansionOption,
+    BfdToPfdExpansionPlan,
+)
 
 # Re-export all DEXPI enumerations from centralized module
 from . import dexpi_enums
@@ -47,6 +58,17 @@ __all__ = [
     "BoundingBox",
     "LayoutMetadata",
     "LayoutCollection",
+
+    # BFD models
+    "BfdPortType",
+    "BfdPortSpec",
+    "BfdCreateArgs",
+    "BfdBlockArgs",
+    "BfdFlowArgs",
+    "BfdBlockMetadata",
+    "BfdFlowMetadata",
+    "BfdToPfdExpansionOption",
+    "BfdToPfdExpansionPlan",
 
     # DEXPI enumerations (re-export entire module)
     "dexpi_enums",
