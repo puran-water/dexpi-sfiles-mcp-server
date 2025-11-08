@@ -21,6 +21,7 @@ from enum import Enum
 from pydantic import BaseModel, Field, field_validator
 
 from .graph_metadata import NodeMetadata, EdgeMetadata
+from .port_spec import PortSpec, CardinalDirection
 
 
 class BfdPortType(str, Enum):
@@ -30,35 +31,29 @@ class BfdPortType(str, Enum):
     BIDIRECTIONAL = "bidirectional"
 
 
-class CardinalDirection(str, Enum):
-    """Cardinal directions for BFD port layout (simplified from Sprint 1)."""
-    NORTH = "N"
-    SOUTH = "S"
-    EAST = "E"
-    WEST = "W"
-
-
 class BfdPortSpec(BaseModel):
-    """BFD-specific port specification (simplified, not DEXPI-based).
+    """BFD-specific port specification wrapping Sprint 1 PortSpec.
 
-    BFD operates at high level and doesn't need DEXPI classifications.
-    This is a simpler port model optimized for BFD conceptual diagrams.
+    Architecture (Codex Review #7):
+        BFD ports are lightweight during conceptual modeling but must maintain
+        a path to canonical DEXPI PortSpec for downstream BFD→PFD→P&ID expansion.
+
+    Design Pattern:
+        - BFD-level fields: port_id, port_type, stream_type, cardinal_direction
+        - canonical field: Optional PortSpec populated during expansion to PFD/P&ID
+        - This preserves BFD simplicity while enabling structured expansion
 
     Attributes:
-        port_id: Unique port identifier
-        direction: Cardinal direction for layout (N/S/E/W)
-        port_type: BFD port type (input, output, bidirectional)
+        port_id: Unique port identifier (BFD-level)
+        port_type: BFD semantic type (input, output, bidirectional)
         stream_type: Optional stream classification (material, energy, information)
+        cardinal_direction: Layout hint (N/S/E/W) - reuses Sprint 1 enum
+        canonical: Optional DEXPI PortSpec for expansion pipeline
     """
 
     port_id: str = Field(
         ...,
         description="Unique port identifier"
-    )
-
-    direction: CardinalDirection = Field(
-        ...,
-        description="Cardinal direction for layout (N/S/E/W)"
     )
 
     port_type: BfdPortType = Field(
@@ -69,6 +64,16 @@ class BfdPortSpec(BaseModel):
     stream_type: Optional[str] = Field(
         None,
         description="Stream classification (material, energy, information)"
+    )
+
+    cardinal_direction: CardinalDirection = Field(
+        ...,
+        description="Cardinal direction for layout (N/S/E/W) - Sprint 1 enum"
+    )
+
+    canonical: Optional[PortSpec] = Field(
+        None,
+        description="Optional canonical DEXPI PortSpec (populated during BFD→PFD→P&ID expansion)"
     )
 
 
@@ -326,7 +331,7 @@ class BfdToPfdExpansionPlan(BaseModel):
 __all__ = [
     # Enums
     "BfdPortType",
-    "CardinalDirection",
+    # Note: CardinalDirection imported from port_spec, not re-exported
 
     # Port specifications
     "BfdPortSpec",

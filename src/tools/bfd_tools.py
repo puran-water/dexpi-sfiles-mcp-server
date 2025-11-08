@@ -6,6 +6,35 @@ creating tools with unique logic.
 
 Architecture Decision (Codex Review #6):
     "Limit new tools to just bfd_to_pfd_plan. Move validation to existing SFILES tools."
+
+BFD→PFD→P&ID Expansion Pipeline (Codex Review #7):
+    The expansion process follows a structured metadata enrichment pattern:
+
+    1. **BFD Level (Conceptual)**:
+       - Blocks have process types (e.g., "Aeration Tank")
+       - Ports use BfdPortSpec with BFD-level metadata
+       - Streams have stream_type (material, energy, information)
+       - All metadata persists to NetworkX graph
+
+    2. **BFD→PFD Expansion** (this tool):
+       - Maps BFD process types to PFD equipment configurations
+       - Returns expansion options (equipment types, counts, configurations)
+       - Future: Populate BfdPortSpec.canonical field with PortSpec during instantiation
+
+    3. **PFD Level (Process Design)**:
+       - Equipment with typed nozzles/ports
+       - BfdPortSpec.canonical becomes populated with DEXPI NumberOfPortsClassification
+       - Piping classes and nominal sizes added
+
+    4. **PFD→P&ID Expansion**:
+       - DEXPI PortSpec used to generate nozzles with full classifications
+       - ISA S5.1 instrumentation tags added
+       - Detailed P&ID symbols instantiated
+
+    Key Design Pattern:
+        BfdPortSpec wraps (not forks) PortSpec via optional 'canonical' field.
+        This preserves BFD simplicity while maintaining a structured path to
+        canonical DEXPI data for downstream expansion.
 """
 
 import json

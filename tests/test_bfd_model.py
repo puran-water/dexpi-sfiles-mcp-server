@@ -43,12 +43,12 @@ class TestBfdPortSpec:
         """Test creating input port specification."""
         port = BfdPortSpec(
             port_id="inlet",
-            direction=CardinalDirection.WEST,
+            cardinal_direction=CardinalDirection.WEST,
             port_type=BfdPortType.INPUT,
             stream_type="material"
         )
         assert port.port_id == "inlet"
-        assert port.direction == CardinalDirection.WEST
+        assert port.cardinal_direction == CardinalDirection.WEST
         assert port.port_type == BfdPortType.INPUT
         assert port.stream_type == "material"
 
@@ -56,7 +56,7 @@ class TestBfdPortSpec:
         """Test creating output port specification."""
         port = BfdPortSpec(
             port_id="outlet",
-            direction=CardinalDirection.EAST,
+            cardinal_direction=CardinalDirection.EAST,
             port_type=BfdPortType.OUTPUT,
             stream_type="material"
         )
@@ -66,7 +66,7 @@ class TestBfdPortSpec:
         """Test creating bidirectional port."""
         port = BfdPortSpec(
             port_id="service",
-            direction=CardinalDirection.SOUTH,
+            cardinal_direction=CardinalDirection.SOUTH,
             port_type=BfdPortType.BIDIRECTIONAL,
             stream_type="energy"
         )
@@ -76,10 +76,19 @@ class TestBfdPortSpec:
         """Test that stream_type is optional."""
         port = BfdPortSpec(
             port_id="generic",
-            direction=CardinalDirection.NORTH,
+            cardinal_direction=CardinalDirection.NORTH,
             port_type=BfdPortType.INPUT
         )
         assert port.stream_type is None
+
+    def test_canonical_port_spec_optional(self):
+        """Test that canonical PortSpec is optional (Codex Review #7)."""
+        port = BfdPortSpec(
+            port_id="inlet",
+            cardinal_direction=CardinalDirection.WEST,
+            port_type=BfdPortType.INPUT
+        )
+        assert port.canonical is None  # Not populated during BFD modeling
 
 
 class TestBfdCreateArgs:
@@ -169,12 +178,12 @@ class TestBfdBlockArgs:
         """Test adding typed ports to block."""
         port1 = BfdPortSpec(
             port_id="inlet",
-            direction=CardinalDirection.WEST,
+            cardinal_direction=CardinalDirection.WEST,
             port_type=BfdPortType.INPUT
         )
         port2 = BfdPortSpec(
             port_id="outlet",
-            direction=CardinalDirection.EAST,
+            cardinal_direction=CardinalDirection.EAST,
             port_type=BfdPortType.OUTPUT
         )
 

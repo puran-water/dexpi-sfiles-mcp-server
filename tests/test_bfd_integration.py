@@ -360,6 +360,96 @@ class TestBfdToPfdPlanning:
         assert "not a BFD" in error_msg
 
 
+class TestBfdMetadataPersistence:
+    """Test metadata persistence to graph (Codex Review #7)."""
+
+    @pytest.mark.asyncio
+    async def test_port_specs_persist_to_graph(self, sfiles_tools):
+        """Test that port_specs are stored in flowsheet graph."""
+        from src.models.bfd import BfdPortSpec, BfdPortType, CardinalDirection
+
+        # Create BFD
+        fs_result = await sfiles_tools._create_flowsheet({
+            "name": "Test Plant",
+            "type": "BFD"
+        })
+        flowsheet_id = fs_result["data"]["flowsheet_id"]
+
+        # Create port specs
+        port1 = BfdPortSpec(
+            port_id="inlet",
+            cardinal_direction=CardinalDirection.WEST,
+            port_type=BfdPortType.INPUT,
+            stream_type="material"
+        )
+        port2 = BfdPortSpec(
+            port_id="outlet",
+            cardinal_direction=CardinalDirection.EAST,
+            port_type=BfdPortType.OUTPUT,
+            stream_type="material"
+        )
+
+        # Add block with port specs
+        block_result = await sfiles_tools._add_unit({
+            "flowsheet_id": flowsheet_id,
+            "unit_type": "Aeration Tank",
+            "port_specs": [port1, port2]
+        })
+
+        assert block_result["ok"] is True
+        unit_id = block_result["data"]["unit_id"]
+
+        # Verify port specs are in the graph
+        flowsheet = sfiles_tools.flowsheets[flowsheet_id]
+        node_data = flowsheet.state.nodes[unit_id]
+
+        assert "port_specs" in node_data
+        assert node_data["port_specs"] is not None
+        assert len(node_data["port_specs"]) == 2
+        assert node_data["port_specs"][0]["port_id"] == "inlet"
+        assert node_data["port_specs"][1]["port_id"] == "outlet"
+
+    @pytest.mark.asyncio
+    async def test_stream_type_persists_to_edge(self, sfiles_tools):
+        """Test that stream_type is stored on edges."""
+        # Create BFD and blocks
+        fs_result = await sfiles_tools._create_flowsheet({
+            "name": "Test Plant",
+            "type": "BFD"
+        })
+        flowsheet_id = fs_result["data"]["flowsheet_id"]
+
+        block1 = await sfiles_tools._add_unit({
+            "flowsheet_id": flowsheet_id,
+            "unit_type": "Aeration Tank",
+            "sequence_number": 1
+        })
+        block2 = await sfiles_tools._add_unit({
+            "flowsheet_id": flowsheet_id,
+            "unit_type": "Aeration Tank",
+            "sequence_number": 2
+        })
+
+        # Add stream with stream_type
+        flow_result = await sfiles_tools._add_stream({
+            "flowsheet_id": flowsheet_id,
+            "from_unit": block1["data"]["unit_id"],
+            "to_unit": block2["data"]["unit_id"],
+            "stream_type": "material",
+            "properties": {"flow_rate": 1000}
+        })
+
+        assert flow_result["ok"] is True
+
+        # Verify stream_type is on the edge
+        flowsheet = sfiles_tools.flowsheets[flowsheet_id]
+        edge_data = flowsheet.state.edges[block1["data"]["unit_id"], block2["data"]["unit_id"]]
+
+        assert "stream_type" in edge_data
+        assert edge_data["stream_type"] == "material"
+        assert edge_data["flow_rate"] == 1000  # Other properties should also persist
+
+
 class TestBfdEndToEnd:
     """End-to-end BFD workflow tests."""
 

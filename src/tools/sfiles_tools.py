@@ -392,8 +392,15 @@ class SfilesTools:
                 seq = sequence_number or get_next_sequence_number(flowsheet, area, code)
                 equipment_tag = f"{area}-{code}-{seq:02d}"
                 
+                # Persist port_specs metadata (Codex Review #7)
+                port_specs_data = None
+                if args.get("port_specs"):
+                    # Convert port specs to dict format for graph storage
+                    port_specs_data = [ps.model_dump() if hasattr(ps, 'model_dump') else ps
+                                      for ps in args.get("port_specs", [])]
+
                 # Add node with semantic ID, store tag as metadata
-                flowsheet.state.add_node(semantic_id, 
+                flowsheet.state.add_node(semantic_id,
                     unit_type=process_info['canonical_name'],
                     name=unit_name or process_info['canonical_name'],
                     equipment_tag=equipment_tag,
@@ -403,6 +410,7 @@ class SfilesTools:
                     category=process_info.get('category', ''),
                     subcategory=process_info.get('subcategory', ''),
                     is_custom=process_info.get('is_custom', False),
+                    port_specs=port_specs_data,  # Persist BFD port metadata
                     **parameters
                 )
                 
@@ -472,13 +480,18 @@ class SfilesTools:
         stream_name = args.get("stream_name", f"{from_unit}_to_{to_unit}")
         tags = args.get("tags", {"he": [], "col": []})
         properties = args.get("properties", {})
-        
+
+        # Persist stream_type metadata for BFD (Codex Review #7)
+        stream_type = args.get("stream_type")
+        if stream_type:
+            properties["stream_type"] = stream_type
+
         # Ensure both units exist in the flowsheet
         if from_unit not in flowsheet.state.nodes:
             raise ValueError(f"Source unit {from_unit} not found in flowsheet")
         if to_unit not in flowsheet.state.nodes:
             raise ValueError(f"Target unit {to_unit} not found in flowsheet")
-        
+
         # Add stream using native Flowsheet method
         # This properly adds an edge to the NetworkX graph
         flowsheet.add_stream(
