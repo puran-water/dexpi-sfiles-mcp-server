@@ -20,6 +20,12 @@ from .port_spec import (
     PortSpec,
     PortLayout,
 )
+from .layout_metadata import (
+    NodePosition,
+    BoundingBox,
+    LayoutMetadata,
+    LayoutCollection,
+)
 
 # Re-export all DEXPI enumerations from centralized module
 from . import dexpi_enums
@@ -35,6 +41,12 @@ __all__ = [
     "CardinalDirection",
     "PortSpec",
     "PortLayout",
+
+    # Layout metadata
+    "NodePosition",
+    "BoundingBox",
+    "LayoutMetadata",
+    "LayoutCollection",
 
     # DEXPI enumerations (re-export entire module)
     "dexpi_enums",
