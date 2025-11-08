@@ -1621,20 +1621,47 @@ elif name in ["model_create", "model_load", "model_save"]:
 
 ---
 
-#### Sprint 2 (Weeks 3-4): BFD Model
-**What Needs to Be Done:**
-1. Create `src/models/bfd.py`
-2. Implement BFD with typed ports
-3. Create `src/tools/bfd_tools.py` (6 new tools)
-4. Unit tests
+#### Sprint 2 (Weeks 3-4): BFD Model ✅ COMPLETE
 
-**New MCP Tools:**
-- `bfd_create` - Initialize BFD
-- `bfd_add_block` - Add process block with ports
-- `bfd_add_flow` - Connect blocks
-- `bfd_export_graphml` - Export topology
-- `bfd_export_cir` - Export NetworkX JSON
-- `bfd_to_pfd_plan` - List PFD variant options
+**Implementation Notes (Codex Review #6 - Minimal Approach):**
+Following Codex guidance to avoid "pure indirection," Sprint 2 was implemented with:
+- **NO wrapper tools** - BFD validation integrated into existing SFILES tools
+- **Only 1 new tool** - `bfd_to_pfd_plan` (genuinely unique logic)
+- **Validation lives where logic lives** - Pydantic schemas in `sfiles_tools.py`
+
+**What Was Delivered:**
+1. ✅ Created `src/models/bfd.py` (327 lines)
+   - BfdPortType, BfdPortSpec with simplified cardinal directions
+   - BfdCreateArgs, BfdBlockArgs, BfdFlowArgs validation schemas
+   - BfdBlockMetadata, BfdFlowMetadata extending Sprint 1 models
+   - BfdToPfdExpansionPlan for planning tool output
+2. ✅ Added BFD validation to existing `src/tools/sfiles_tools.py`
+   - `_create_flowsheet`: Validates with BfdCreateArgs when type="BFD"
+   - `_add_unit`: Validates with BfdBlockArgs when flowsheet.type=="BFD"
+   - `_add_stream`: Validates with BfdFlowArgs when flowsheet.type=="BFD"
+3. ✅ Created `src/tools/bfd_tools.py` (1 new tool only)
+   - `bfd_to_pfd_plan` - Intelligent BFD-to-PFD expansion suggestions
+   - Includes 8 common wastewater treatment process mappings
+   - Generic fallbacks for unknown process types
+4. ✅ Comprehensive test coverage
+   - 28 model tests (test_bfd_model.py) - All passing
+   - 14 integration tests (test_bfd_integration.py) - All passing
+
+**Architectural Decision (Codex Review #6):**
+> "Adopt the minimal approach (1 new tool + BFD-aware validation in sfiles_*).
+> Validation lives where the logic lives: Adding Pydantic schemas inside
+> sfiles_tools keeps the validation right next to the code that actually
+> manipulates Flowsheet objects."
+
+**Tools NOT Created (Codex guidance):**
+- ❌ `bfd_create` - Uses existing `sfiles_create_flowsheet` with type="BFD"
+- ❌ `bfd_add_block` - Uses existing `sfiles_add_unit` with BFD validation
+- ❌ `bfd_add_flow` - Uses existing `sfiles_add_stream` with BFD validation
+- ❌ `bfd_export_graphml` - Uses existing `sfiles_export_graphml`
+- ❌ `bfd_export_cir` - Uses existing `sfiles_to_string`
+
+**New MCP Tool (Only 1):**
+- ✅ `bfd_to_pfd_plan` - Generate PFD expansion options for BFD blocks
 
 ---
 
