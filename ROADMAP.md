@@ -1548,7 +1548,7 @@ elif name in ["model_create", "model_load", "model_save"]:
 
 ---
 
-### Phase 1: Production-Ready Core (4-6 months) - NOT STARTED 🔴
+### Phase 1: Production-Ready Core (4-6 months) - 🔵 IN PROGRESS (Sprint 1 Started 2025-11-08)
 
 **⚠️ Timeline Risk (Codex Review #2):**
 > "The 6-9 month BFD plan assumes elkjs + drawsvg/ezdxf glue lands smoothly. Budget time for the Node/JS bridge and renderer symbol work—they're new stacks for this repo and may stretch the timeline."
@@ -1559,16 +1559,48 @@ elif name in ["model_create", "model_load", "model_save"]:
 - Node.js bridge is straightforward subprocess call, but test thoroughly
 - Add 2-week buffer to 6-9 month estimate if rendering work exceeds estimates
 
-#### Sprint 1 (Weeks 1-2): Foundation
+#### Sprint 1 (Weeks 1-2): Foundation - 🔵 IN PROGRESS
+
+**Status:** Started 2025-11-08 (Codex-validated plan leveraging upstream libraries)
+
+**Architecture Decision (Codex Review #3):**
+> "Don't re-invent typed metadata classes or port enumerations. Leverage the existing Pydantic models and the graph loader's attribute schema. For layout/position defaults, reuse `_add_positions` (pyDEXPI already imports the SFILES utility)."
+
+**Upstream Capabilities Discovered:**
+- ✅ pyDEXPI: NetworkX graphs with attributes, Pydantic models, `_add_positions`
+- ✅ SFILES2: DiGraph with metadata, `_add_positions` utility, visualization pipeline
+- ✅ DEXPI Spec: Official port/metadata definitions to align with
+
 **What Needs to Be Done:**
 1. ✅ Fix `src/utils/process_resolver.py` hardcoded path (DONE)
-2. Extend NetworkX with typed attributes
-3. Create `src/models/graph_metadata.py` (Pydantic schemas)
+2. 🔵 Fix README.md:54 architecture table outdated line (IN PROGRESS)
+3. 🔵 Create `src/models/graph_metadata.py` - Pydantic VALIDATORS for upstream formats
+   - Validate pyDEXPI/SFILES node/edge attribute dicts
+   - Ensure deterministic serialization (sorted keys)
+   - Don't replace, validate existing formats
+4. 🔵 Create `src/models/port_spec.py` - WRAPPER over DEXPI enums
+   - Import `NumberOfPortsClassification`, `PortStatusClassification` from pyDEXPI
+   - Map DEXPI enums → cardinal directions (N/S/E/W) as derived/optional
+   - Don't create competing enumerations
+5. 🔵 Create `src/models/layout_metadata.py` - PERSISTENCE for SFILES2 layouts
+   - Encapsulate SFILES2's `_add_positions` utility
+   - Define JSON schema for `pos` attributes
+   - Implement deterministic serialization
+   - Round-trip: NetworkX ↔ JSON
+6. 🔵 Integration tests with REAL upstream graphs (20+ tests)
+   - Test pyDEXPI Proteus XML graphs via `ml_graph_loader`
+   - Test SFILES2 flowsheet graphs
+   - Prove `graph_metadata.to_json()` round-trips
+7. 🔵 Document upstream compatibility
 
 **Deliverables:**
-- NetworkX graphs with rich metadata
-- Port specifications (N/S/E/W)
-- Layout storage schema
+- `src/models/graph_metadata.py` - Validators for upstream NetworkX formats
+- `src/models/port_spec.py` - DEXPI enum wrappers (not replacements)
+- `src/models/layout_metadata.py` - Layout persistence using `_add_positions`
+- 20+ integration tests with real pyDEXPI/SFILES graphs
+- Documentation showing DEXPI spec alignment
+
+**Key Principle:** Build thin validation layer over proven upstream libraries, not replacements
 
 ---
 

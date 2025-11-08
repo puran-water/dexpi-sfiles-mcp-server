@@ -51,7 +51,7 @@ This repository prioritizes data fidelity over drawing aesthetics: the authorita
 | `src/tools/*` | Tool implementations grouped by domain (DEXPI, SFILES, project, validation, schema, graph, search, batch, templates).
 | `src/persistence/project_persistence.py` | Saves/loads models, writes metadata, GraphML, and Plotly HTML artifacts, and performs git commits.
 | `src/templates/*.py` + `library/patterns/*.yaml` | Parametric template engine and YAML catalog (4 templates).
-| `src/managers/transaction_manager.py` & `src/registry/operation_registry.py` | Transaction and operation-registry infrastructure providing ACID semantics for `model_tx_*` tools (Phase 4 complete).
+| `src/managers/transaction_manager.py` & `src/registry/operation_registry.py` | ACID transaction infrastructure for `model_tx_*` tools (Phase 4 complete, production-ready).
 | `tests/` | Pytest suites covering graph export, template tooling, and TransactionManager behavior.
 
 ---
