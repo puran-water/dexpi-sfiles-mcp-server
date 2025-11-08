@@ -21,7 +21,6 @@ from enum import Enum
 from pydantic import BaseModel, Field, field_validator
 
 from .graph_metadata import NodeMetadata, EdgeMetadata
-from .port_spec import PortSpec, CardinalDirection
 
 
 class BfdPortType(str, Enum):
@@ -31,16 +30,36 @@ class BfdPortType(str, Enum):
     BIDIRECTIONAL = "bidirectional"
 
 
-class BfdPortSpec(PortSpec):
-    """BFD-specific port specification extending Sprint 1 PortSpec.
+class CardinalDirection(str, Enum):
+    """Cardinal directions for BFD port layout (simplified from Sprint 1)."""
+    NORTH = "N"
+    SOUTH = "S"
+    EAST = "E"
+    WEST = "W"
 
-    Adds port type (input/output/bidirectional) for BFD blocks.
-    Stored as metadata on nodes, not enforced by SFILES engine.
+
+class BfdPortSpec(BaseModel):
+    """BFD-specific port specification (simplified, not DEXPI-based).
+
+    BFD operates at high level and doesn't need DEXPI classifications.
+    This is a simpler port model optimized for BFD conceptual diagrams.
 
     Attributes:
+        port_id: Unique port identifier
+        direction: Cardinal direction for layout (N/S/E/W)
         port_type: BFD port type (input, output, bidirectional)
         stream_type: Optional stream classification (material, energy, information)
     """
+
+    port_id: str = Field(
+        ...,
+        description="Unique port identifier"
+    )
+
+    direction: CardinalDirection = Field(
+        ...,
+        description="Cardinal direction for layout (N/S/E/W)"
+    )
 
     port_type: BfdPortType = Field(
         ...,
@@ -307,6 +326,7 @@ class BfdToPfdExpansionPlan(BaseModel):
 __all__ = [
     # Enums
     "BfdPortType",
+    "CardinalDirection",
 
     # Port specifications
     "BfdPortSpec",
