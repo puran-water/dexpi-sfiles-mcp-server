@@ -15,10 +15,27 @@ from .graph_metadata import (
     GraphMetadata,
     GraphMetadataSerializer,
 )
+from .port_spec import (
+    CardinalDirection,
+    PortSpec,
+    PortLayout,
+)
+
+# Re-export all DEXPI enumerations from centralized module
+from . import dexpi_enums
 
 __all__ = [
+    # Graph metadata
     "NodeMetadata",
     "EdgeMetadata",
     "GraphMetadata",
     "GraphMetadataSerializer",
+
+    # Port specifications
+    "CardinalDirection",
+    "PortSpec",
+    "PortLayout",
+
+    # DEXPI enumerations (re-export entire module)
+    "dexpi_enums",
 ]
