@@ -235,6 +235,8 @@ DEXPI_ADD_EQUIPMENT = OperationDescriptor(
     },
     handler=add_equipment_handler,
     metadata=OperationMetadata(
+        # Note: Operation names mirror MCP tool names (1:1 mapping)
+        # No legacy aliases exist - this is a greenfield development project
         introduced="1.0.0",
         tags=["dexpi", "equipment", "creation"],
         diff_metadata=DiffMetadata(

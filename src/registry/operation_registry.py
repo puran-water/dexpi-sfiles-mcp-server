@@ -12,6 +12,12 @@ Provides:
 - Discoverability via schema_query
 - Validation hooks (pre/post-operation)
 - Diff metadata integration with TransactionManager
+
+Note on Operation Naming:
+- Operation names mirror MCP tool names (1:1 mapping)
+- Example: "dexpi_add_equipment" (tool) = "dexpi_add_equipment" (operation)
+- No legacy aliases exist - this is a greenfield development project
+- Alias infrastructure (metadata.replaces) is available for future evolution
 """
 
 import asyncio
@@ -218,10 +224,10 @@ class OperationRegistry:
 
     def get(self, name: str, version: Optional[str] = None) -> OperationDescriptor:
         """
-        Retrieve an operation by name.
+        Retrieve an operation by name or alias.
 
         Args:
-            name: Operation name
+            name: Operation name or legacy alias
             version: Optional specific version (default: latest)
 
         Returns:
@@ -230,10 +236,18 @@ class OperationRegistry:
         Raises:
             OperationNotFound: If operation doesn't exist
         """
-        if name not in self._operations:
-            raise OperationNotFound(f"Operation '{name}' not found")
+        # First try direct lookup
+        if name in self._operations:
+            return self._operations[name]
 
-        return self._operations[name]
+        # Try to find by alias (check metadata.replaces)
+        for op_name, op in self._operations.items():
+            if op.metadata and op.metadata.replaces and name in op.metadata.replaces:
+                logger.info(f"Resolved alias '{name}' to operation '{op_name}'")
+                return op
+
+        raise OperationNotFound(f"Operation '{name}' not found")
+
 
     def list(
         self,
@@ -272,8 +286,17 @@ class OperationRegistry:
         return operations
 
     def exists(self, name: str) -> bool:
-        """Check if operation exists."""
-        return name in self._operations
+        """Check if operation exists (by name or alias)."""
+        # Check direct name
+        if name in self._operations:
+            return True
+
+        # Check aliases
+        for op in self._operations.values():
+            if op.metadata and op.metadata.replaces and name in op.metadata.replaces:
+                return True
+
+        return False
 
     # ========================================================================
     # Execution

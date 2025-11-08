@@ -21,6 +21,8 @@ from .tools.search_tools import SearchTools
 from .tools.batch_tools import BatchTools
 from .tools.template_tools import TemplateTools
 from .tools.graph_modify_tools import GraphModifyTools
+from .tools.model_tools import ModelTools
+from .tools.transaction_tools import TransactionTools
 from .resources.graph_resources import GraphResourceProvider
 from .converters.graph_converter import UnifiedGraphConverter
 
@@ -66,7 +68,10 @@ class EngineeringDrawingMCPServer:
         """Initialize the MCP server with empty model stores."""
         self.dexpi_models: Dict[str, Any] = {}
         self.flowsheets: Dict[str, Any] = {}
-        
+
+        # Note: Operation registry is initialized defensively in TransactionManager
+        # No need to call register_all_operations() here - avoids duplicate registration
+
         # Initialize tool handlers with both stores for cross-conversion
         self.dexpi_tools = DexpiTools(self.dexpi_models, self.flowsheets)
         self.sfiles_tools = SfilesTools(self.flowsheets, self.dexpi_models)
@@ -89,7 +94,19 @@ class EngineeringDrawingMCPServer:
             self.sfiles_tools,
             self.search_tools
         )
-        
+
+        # Phase 4: Unified model and transaction tools
+        self.model_tools = ModelTools(
+            self.dexpi_models,
+            self.flowsheets,
+            self.dexpi_tools,
+            self.sfiles_tools
+        )
+        self.transaction_tools = TransactionTools(
+            self.dexpi_models,
+            self.flowsheets
+        )
+
         # Initialize converters and resources
         self.graph_converter = UnifiedGraphConverter()
         self.resource_provider = GraphResourceProvider(
@@ -111,6 +128,10 @@ class EngineeringDrawingMCPServer:
         async def handle_list_tools() -> list[Tool]:
             """List all available tools."""
             tools = []
+            # Phase 4: Unified tools first (recommended)
+            tools.extend(self.model_tools.get_tools())
+            tools.extend(self.transaction_tools.get_tools())
+            # Existing tools (maintained for backward compatibility)
             tools.extend(self.dexpi_tools.get_tools())
             tools.extend(self.sfiles_tools.get_tools())
             tools.extend(self.project_tools.get_tools())
@@ -127,8 +148,13 @@ class EngineeringDrawingMCPServer:
         async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
             """Route tool calls to appropriate handlers."""
             try:
+                # Phase 4: Unified tools (priority routing)
+                if name.startswith("model_tx_"):
+                    result = await self.transaction_tools.handle_tool(name, arguments)
+                elif name in ["model_create", "model_load", "model_save"]:
+                    result = await self.model_tools.handle_tool(name, arguments)
                 # Check explicit batch tools first (before prefix matching)
-                if name in ["model_batch_apply", "rules_apply", "graph_connect"]:
+                elif name in ["model_batch_apply", "rules_apply", "graph_connect"]:
                     result = await self.batch_tools.handle_tool(name, arguments)
                 elif name == "graph_modify":
                     result = await self.graph_modify_tools.handle_tool(name, arguments)

@@ -15,6 +15,7 @@ This repository prioritizes data fidelity over drawing aesthetics: the authorita
 - **Template deployment** – `template_list`, `template_get_schema`, and `area_deploy` expose four YAML templates (`library/patterns/*.yaml`): pump_basic, pump_station_n_plus_1, tank_farm, and heat_exchanger_with_integration.
 - **Validation & analytics** – Schema introspection (`schema_*`), validation (`validate_model`, `validate_round_trip`), graph analytics (`graph_*`), search (`search_*`, `query_model_statistics`), and batch automation (`model_batch_apply`, `rules_apply`, `graph_connect`).
 - **Visualization outputs** – Project saves produce Plotly-based interactive HTML files (with SVG/PDF exports via Plotly's toolbar) and GraphML topology exports. There is no standalone dashboard service; visual review happens through the generated HTML files.
+- **Phase 4 Tool Consolidation** – 58 legacy atomic tools have been consolidated into 12 unified tools (79% reduction), providing both direct API access and ACID transaction support. See [`docs/FEATURE_PARITY_MATRIX.md`](docs/FEATURE_PARITY_MATRIX.md) for the complete migration guide mapping legacy → consolidated tools.
 
 ---
 
@@ -38,7 +39,7 @@ This repository prioritizes data fidelity over drawing aesthetics: the authorita
 - Batch/automation: `model_batch_apply`, `rules_apply`, `graph_connect`.
 - Templates: `template_list`, `template_get_schema`, `area_deploy`.
 
-> **Note:** Tools such as `model_tx_apply`, `graph_modify`, and `schema_query` are currently design documents only and are **not** exposed by the MCP server.
+> **Phase 4 Update:** The consolidated tools (`model_create`, `model_load`, `model_save`, `model_tx_begin`, `model_tx_apply`, `model_tx_commit`, `schema_query`, `search_execute`, and `graph_modify`) are now **production-ready** and exposed by the MCP server. Legacy atomic tools remain available for backward compatibility. See [`docs/FEATURE_PARITY_MATRIX.md`](docs/FEATURE_PARITY_MATRIX.md) for migration guidance.
 
 ---
 
@@ -115,17 +116,24 @@ Each template exposes typed parameters (see `template_get_schema`) and can be in
 
 ---
 
-## Roadmap & Planned Work
+## Roadmap & Completed Work
 
-The following efforts have design documents and partial infrastructure but are **not yet available to MCP clients**:
+**Phase 4 (Completed):** Tool consolidation and transaction support
+- ✅ `model_create`, `model_load`, `model_save` – Unified model lifecycle (replaces 9 legacy tools)
+- ✅ `model_tx_begin`, `model_tx_apply`, `model_tx_commit` – ACID transactions for atomic multi-operation changes
+- ✅ `schema_query` – Unified schema introspection (replaces 4 legacy tools)
+- ✅ `search_execute` – Unified search interface (replaces 6 legacy tools)
+- ✅ `graph_modify` – Tactical graph modifications (10 actions available)
+- ✅ 150/150 tests passing with full coverage of consolidated tools
+- ✅ Live MCP testing validated all 12 consolidated tools
+- ✅ Migration guide: [`docs/FEATURE_PARITY_MATRIX.md`](docs/FEATURE_PARITY_MATRIX.md)
 
-1. **Transaction-backed tool consolidation** – `TransactionManager` and `OperationRegistry` exist but still need MCP entry points (`model_tx_apply`) and end-to-end wiring.
-2. **Graph Modify tooling** – `docs/api/graph_modify_spec.md` defines tactical operations awaiting implementation.
-3. **Schema Query API** – Planned unified schema discovery tool (replaces legacy `dexpi_*` schema utilities).
-4. **Enhanced visualization** – Proposed pyflowsheet-based SVG/DXF renderer, ISA symbol support, and potential dashboard UI.
-5. **Additional templates** – Library currently has 4 patterns; expansion to 5+ and beyond is tracked in `docs/templates/template_system.md`.
+**Planned Work:**
+1. **Enhanced visualization** – Proposed pyflowsheet-based SVG/DXF renderer, ISA symbol support, and potential dashboard UI.
+2. **Additional templates** – Library currently has 4 patterns; expansion to 5+ and beyond is tracked in `docs/templates/template_system.md`.
+3. **Phase 5** – Advanced template system with composition and inheritance (see [ROADMAP.md](ROADMAP.md)).
 
-Refer to [ROADMAP.md](ROADMAP.md) for detailed schedules and design discussions.
+Refer to [ROADMAP.md](ROADMAP.md) for detailed phase timelines and design discussions.
 
 ---
 

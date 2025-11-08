@@ -44,7 +44,7 @@ class DexpiTools:
         return [
             Tool(
                 name="dexpi_create_pid",
-                description="Initialize a new DEXPI P&ID model with metadata",
+                description="[Consolidated into model_create] Initialize a new DEXPI P&ID model with metadata. See docs/FEATURE_PARITY_MATRIX.md for migration guide.",
                 inputSchema={
                     "type": "object",
                     "properties": {
@@ -58,7 +58,7 @@ class DexpiTools:
             ),
             Tool(
                 name="dexpi_add_equipment",
-                description=f"Add equipment to the P&ID model ({len(equipment_types)} types available)",
+                description=f"[Available via model_tx_apply or direct call] Add equipment to the P&ID model ({len(equipment_types)} types available). See docs/FEATURE_PARITY_MATRIX.md for migration guide.",
                 inputSchema={
                     "type": "object",
                     "properties": {
@@ -91,7 +91,7 @@ class DexpiTools:
             ),
             Tool(
                 name="dexpi_add_piping",
-                description="Add piping segment to the P&ID model",
+                description="[Available via model_tx_apply or direct call] Add piping segment to the P&ID model. See docs/FEATURE_PARITY_MATRIX.md for migration guide.",
                 inputSchema={
                     "type": "object",
                     "properties": {
@@ -106,7 +106,7 @@ class DexpiTools:
             ),
             Tool(
                 name="dexpi_add_instrumentation",
-                description="Add instrumentation to the P&ID model",
+                description="[Available via model_tx_apply or direct call] Add instrumentation to the P&ID model. See docs/FEATURE_PARITY_MATRIX.md for migration guide.",
                 inputSchema={
                     "type": "object",
                     "properties": {
@@ -123,7 +123,7 @@ class DexpiTools:
             ),
             Tool(
                 name="dexpi_add_control_loop",
-                description="Add complete control loop with signal generating, control, and actuating functions",
+                description="[Available via model_tx_apply or direct call] Add complete control loop with signal generating, control, and actuating functions. See docs/FEATURE_PARITY_MATRIX.md for migration guide.",
                 inputSchema={
                     "type": "object",
                     "properties": {
@@ -145,7 +145,7 @@ class DexpiTools:
             ),
             Tool(
                 name="dexpi_connect_components",
-                description="Create piping connections between equipment and instruments",
+                description="[Available via model_tx_apply or direct call] Create piping connections between equipment and instruments. See docs/FEATURE_PARITY_MATRIX.md for migration guide.",
                 inputSchema={
                     "type": "object",
                     "properties": {
@@ -160,7 +160,7 @@ class DexpiTools:
             ),
             Tool(
                 name="dexpi_validate_model",
-                description="Validate P&ID for engineering rules and referential integrity",
+                description="[Available via model_tx_apply or direct call] Validate P&ID for engineering rules and referential integrity. NOTE: Requires at least one piping connection (will fail with 'null graph' error on models with no connections). See docs/FEATURE_PARITY_MATRIX.md for migration guide.",
                 inputSchema={
                     "type": "object",
                     "properties": {
@@ -176,7 +176,7 @@ class DexpiTools:
             ),
             Tool(
                 name="dexpi_export_json",
-                description="Export P&ID model as JSON",
+                description="[Consolidated into model_save] Export P&ID model as JSON. See docs/FEATURE_PARITY_MATRIX.md for migration guide.",
                 inputSchema={
                     "type": "object",
                     "properties": {
@@ -187,7 +187,7 @@ class DexpiTools:
             ),
             Tool(
                 name="dexpi_export_graphml",
-                description="Export P&ID topology as machine-readable GraphML",
+                description="[Consolidated into model_save] Export P&ID topology as machine-readable GraphML. See docs/FEATURE_PARITY_MATRIX.md for migration guide.",
                 inputSchema={
                     "type": "object",
                     "properties": {
@@ -203,7 +203,7 @@ class DexpiTools:
             ),
             Tool(
                 name="dexpi_import_json",
-                description="Import P&ID model from JSON",
+                description="[Consolidated into model_load] Import P&ID model from JSON. See docs/FEATURE_PARITY_MATRIX.md for migration guide.",
                 inputSchema={
                     "type": "object",
                     "properties": {
@@ -215,7 +215,7 @@ class DexpiTools:
             ),
             Tool(
                 name="dexpi_import_proteus_xml",
-                description="Import P&ID model from Proteus 4.2 XML file",
+                description="[Consolidated into model_load] Import P&ID model from Proteus 4.2 XML file. See docs/FEATURE_PARITY_MATRIX.md for migration guide.",
                 inputSchema={
                     "type": "object",
                     "properties": {
@@ -247,7 +247,7 @@ class DexpiTools:
             ),
             Tool(
                 name="dexpi_add_valve_between_components",
-                description="Add a valve between two components by connecting them and inserting the valve",
+                description="[Available via model_tx_apply or direct call] Add a valve between two components by connecting them and inserting the valve. See docs/FEATURE_PARITY_MATRIX.md for migration guide.",
                 inputSchema={
                     "type": "object",
                     "properties": {
@@ -268,7 +268,7 @@ class DexpiTools:
             ),
             Tool(
                 name="dexpi_insert_valve_in_segment",
-                description="Insert valve inline within an existing piping segment by splitting it",
+                description="[Available via model_tx_apply or direct call] Insert valve inline within an existing piping segment by splitting it. See docs/FEATURE_PARITY_MATRIX.md for migration guide.",
                 inputSchema={
                     "type": "object",
                     "properties": {
@@ -292,7 +292,7 @@ class DexpiTools:
             # - dexpi_check_connectivity -> use validate_model
             Tool(
                 name="dexpi_convert_from_sfiles",
-                description="Convert SFILES flowsheet to DEXPI P&ID model",
+                description="[Available via model_tx_apply or direct call] Convert SFILES flowsheet to DEXPI P&ID model. See docs/FEATURE_PARITY_MATRIX.md for migration guide.",
                 inputSchema={
                     "type": "object",
                     "properties": {
@@ -912,42 +912,56 @@ class DexpiTools:
         })
     
     async def _import_json(self, args: dict) -> dict:
-        """Import model from JSON."""
+        """
+        Import model from JSON.
+
+        Handles both raw JSON strings and double-encoded strings from MCP responses.
+        Uses in-memory parsing to avoid temp file issues.
+        """
+        import json
+
         json_content = args["json_content"]
         model_id = args.get("model_id", str(uuid4()))
-        
-        # Save to temporary file and load
-        import tempfile
-        import os
-        
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-            f.write(json_content)
-            temp_path = f.name
-        
-        # JsonSerializer.load expects (directory, filename without extension)
-        temp_dir = os.path.dirname(temp_path)
-        temp_filename = os.path.basename(temp_path)
-        # Remove the .json extension for JsonSerializer
-        if temp_filename.endswith('.json'):
-            temp_filename = temp_filename[:-5]
-        
+
+        # Fast path: If already valid JSON object, skip double-encoding check
+        stripped = json_content.strip()
+        if not (stripped.startswith('{') or stripped.startswith('[')):
+            # Detect and handle double-encoded JSON (from MCP response wrapping)
+            # If content starts/ends with quotes or contains literal \n, it's double-encoded
+            if (json_content.startswith('"') and json_content.endswith('"')) or '\\n' in json_content:
+                try:
+                    # First decode to get the actual JSON string
+                    json_content = json.loads(json_content)
+                    logger.info("Detected and unwrapped double-encoded JSON")
+                except json.JSONDecodeError:
+                    # If that fails, assume it's actually single-encoded
+                    pass
+
+        # Parse JSON string to dict
         try:
-            model = self.json_serializer.load(temp_dir, temp_filename)
-        except (KeyError, Exception) as e:
-            # Handle missing references or other errors in JSON
-            logger.warning(f"Error loading JSON with JsonSerializer: {e}")
-            # Try to load with dict_to_model as fallback
-            import json
-            with open(temp_path, 'r') as f:
-                model_dict = json.load(f)
-            # Use pyDEXPI's dict_to_model method
+            model_dict = json.loads(json_content)
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON parsing failed: {e}")
+            return error_response(
+                f"Invalid JSON format: {str(e)}",
+                "JSON_PARSE_ERROR",
+                details={"error": str(e)}
+            )
+
+        # Convert dict to DEXPI model using pyDEXPI's dict_to_model
+        try:
             model = self.json_serializer.dict_to_model(model_dict)
-        finally:
-            os.unlink(temp_path)
-        
+        except Exception as e:
+            logger.error(f"Failed to convert dict to DEXPI model: {e}")
+            return error_response(
+                f"Failed to construct DEXPI model from JSON: {str(e)}",
+                "MODEL_CONSTRUCTION_ERROR",
+                details={"error": str(e)}
+            )
+
         # Store model
         self.models[model_id] = model
-        
+
         return success_response({
             "model_id": model_id,
             "project_name": model.conceptualModel.metaData.projectName if model.conceptualModel and model.conceptualModel.metaData else "Unknown"

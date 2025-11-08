@@ -282,6 +282,14 @@ class TransactionManager:
         # Initialize operation registry
         self.registry = get_operation_registry()
 
+        # Defensive: Ensure operations are registered
+        # This allows TransactionManager to work in non-server contexts
+        # (tests, scripts, CLI tools) without requiring manual registry setup
+        if not self.registry._operations:
+            logger.info("Operation registry empty - registering default operations")
+            from ..registry.operations import register_all_operations
+            register_all_operations()
+
         logger.info("TransactionManager initialized")
 
     # ========================================================================

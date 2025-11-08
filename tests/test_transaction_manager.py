@@ -196,11 +196,11 @@ async def test_apply_operation_success(transaction_manager, dexpi_models, small_
 
     tx_id = await transaction_manager.begin(model_id)
 
-    # Apply operation
+    # Apply operation (using legacy alias)
     result = await transaction_manager.apply(
         tx_id,
         operation_name="add_equipment",
-        params={"tag_name": "T-102", "type": "Tank"}
+        params={"tag_name": "T-102", "equipment_type": "Tank"}
     )
 
     assert result is not None
@@ -229,7 +229,7 @@ async def test_apply_operation_with_executor(transaction_manager, dexpi_models, 
     result = await transaction_manager.apply(
         tx_id,
         operation_name="add_tank",
-        params={"tag_name": "T-103"},
+        params={"tag_name": "T-103", "equipment_type": "Tank"},
         executor=add_tank
     )
 
@@ -277,7 +277,7 @@ async def test_commit_transaction_success(transaction_manager, dexpi_models, sma
     await transaction_manager.apply(
         tx_id,
         operation_name="add_equipment",
-        params={"tag_name": "T-104"}
+        params={"tag_name": "T-104", "equipment_type": "Tank"}
     )
 
     # Commit
@@ -303,7 +303,7 @@ async def test_commit_with_validation(transaction_manager, dexpi_models, small_d
     await transaction_manager.apply(
         tx_id,
         operation_name="add_equipment",
-        params={"tag_name": "T-105"}
+        params={"tag_name": "T-105", "equipment_type": "Tank"}
     )
 
     # Commit with validation
@@ -329,7 +329,7 @@ async def test_rollback_transaction(transaction_manager, dexpi_models, small_dex
     await transaction_manager.apply(
         tx_id,
         operation_name="add_equipment",
-        params={"tag_name": "T-106"}
+        params={"tag_name": "T-106", "equipment_type": "Tank"}
     )
 
     # Rollback
@@ -354,7 +354,7 @@ async def test_diff_preview(transaction_manager, dexpi_models, small_dexpi_model
     await transaction_manager.apply(
         tx_id,
         operation_name="add_equipment",
-        params={"tag_name": "T-107"}
+        params={"tag_name": "T-107", "equipment_type": "Tank"}
     )
 
     # Get diff

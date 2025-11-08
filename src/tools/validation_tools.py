@@ -39,7 +39,7 @@ class ValidationTools:
         return [
             Tool(
                 name="validate_model",
-                description="Run comprehensive validation on a model",
+                description="Run comprehensive validation on a model. NOTE: 'connectivity' scope requires at least one piping connection (will fail with 'null graph' error on models with no connections).",
                 inputSchema={
                     "type": "object",
                     "properties": {

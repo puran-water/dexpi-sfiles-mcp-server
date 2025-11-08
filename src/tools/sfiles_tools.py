@@ -36,7 +36,7 @@ class SfilesTools:
         return [
             Tool(
                 name="sfiles_create_flowsheet",
-                description="Initialize a new flowsheet for BFD or PFD",
+                description="[Consolidated into model_create] Initialize a new flowsheet for BFD or PFD. See docs/FEATURE_PARITY_MATRIX.md for migration guide.",
                 inputSchema={
                     "type": "object",
                     "properties": {
@@ -53,7 +53,7 @@ class SfilesTools:
             ),
             Tool(
                 name="sfiles_add_unit",
-                description="Add a unit operation to the flowsheet",
+                description="[Available via model_tx_apply or direct call] Add a unit operation to the flowsheet. See docs/FEATURE_PARITY_MATRIX.md for migration guide.",
                 inputSchema={
                     "type": "object",
                     "properties": {
@@ -85,7 +85,7 @@ class SfilesTools:
             ),
             Tool(
                 name="sfiles_add_stream",
-                description="Add a stream connecting two units",
+                description="[Available via model_tx_apply or direct call] Add a stream connecting two units. See docs/FEATURE_PARITY_MATRIX.md for migration guide.",
                 inputSchema={
                     "type": "object",
                     "properties": {
@@ -119,7 +119,7 @@ class SfilesTools:
             ),
             Tool(
                 name="sfiles_to_string",
-                description="Convert flowsheet to compact SFILES string format",
+                description="[Consolidated into model_save] Convert flowsheet to compact SFILES string format. See docs/FEATURE_PARITY_MATRIX.md for migration guide.",
                 inputSchema={
                     "type": "object",
                     "properties": {
@@ -141,7 +141,7 @@ class SfilesTools:
             ),
             Tool(
                 name="sfiles_from_string",
-                description="Create flowsheet from SFILES string",
+                description="[Consolidated into model_load] Create flowsheet from SFILES string. See docs/FEATURE_PARITY_MATRIX.md for migration guide.",
                 inputSchema={
                     "type": "object",
                     "properties": {
@@ -167,7 +167,7 @@ class SfilesTools:
             ),
             Tool(
                 name="sfiles_export_graphml",
-                description="Export flowsheet topology as GraphML",
+                description="[Consolidated into model_save] Export flowsheet topology as GraphML. See docs/FEATURE_PARITY_MATRIX.md for migration guide.",
                 inputSchema={
                     "type": "object",
                     "properties": {
@@ -178,7 +178,7 @@ class SfilesTools:
             ),
             Tool(
                 name="sfiles_add_control",
-                description="Add control instrumentation to flowsheet",
+                description="[Available via model_tx_apply or direct call] Add control instrumentation to flowsheet. See docs/FEATURE_PARITY_MATRIX.md for migration guide.",
                 inputSchema={
                     "type": "object",
                     "properties": {
@@ -219,7 +219,7 @@ class SfilesTools:
             # - sfiles_validate_syntax -> use validate_model(scope="syntax")
             Tool(
                 name="sfiles_parse_and_validate",
-                description="Parse SFILES string and validate against regex patterns",
+                description="[Available via model_tx_apply or direct call] Parse SFILES string and validate against regex patterns. See docs/FEATURE_PARITY_MATRIX.md for migration guide.",
                 inputSchema={
                     "type": "object",
                     "properties": {
@@ -231,7 +231,7 @@ class SfilesTools:
             ),
             Tool(
                 name="sfiles_canonical_form",
-                description="Convert SFILES string to canonical form for comparison",
+                description="[Available via model_tx_apply or direct call] Convert SFILES string to canonical form for comparison. See docs/FEATURE_PARITY_MATRIX.md for migration guide.",
                 inputSchema={
                     "type": "object",
                     "properties": {
@@ -258,7 +258,7 @@ class SfilesTools:
             # Project tools removed - now handled by unified ProjectTools
             Tool(
                 name="sfiles_convert_from_dexpi",
-                description="Convert DEXPI P&ID model to SFILES flowsheet",
+                description="[Available via model_tx_apply or direct call] Convert DEXPI P&ID model to SFILES flowsheet. See docs/FEATURE_PARITY_MATRIX.md for migration guide.",
                 inputSchema={
                     "type": "object",
                     "properties": {
@@ -270,7 +270,7 @@ class SfilesTools:
             ),
             Tool(
                 name="sfiles_generalize",
-                description="Generalize SFILES flowsheet by removing unit numbers for pattern matching and template creation",
+                description="[Available via model_tx_apply or direct call] Generalize SFILES flowsheet by removing unit numbers for pattern matching and template creation. See docs/FEATURE_PARITY_MATRIX.md for migration guide.",
                 inputSchema={
                     "type": "object",
                     "properties": {
