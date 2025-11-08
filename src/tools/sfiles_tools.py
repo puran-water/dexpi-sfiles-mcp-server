@@ -315,11 +315,17 @@ class SfilesTools:
     
     async def _create_flowsheet(self, args: dict) -> dict:
         """Create a new flowsheet."""
+        # BFD validation (Sprint 2 - Codex Review #6)
+        if args.get("type") == "BFD":
+            from src.models.bfd import BfdCreateArgs
+            validated = BfdCreateArgs(**args)
+            args = validated.model_dump()
+
         flowsheet_id = str(uuid4())
-        
+
         # Create new flowsheet
         flowsheet = Flowsheet()
-        
+
         # Set metadata as attributes
         flowsheet.name = args["name"]
         flowsheet.type = args.get("type", "PFD")
@@ -342,8 +348,15 @@ class SfilesTools:
         flowsheet_id = args["flowsheet_id"]
         if flowsheet_id not in self.flowsheets:
             raise ValueError(f"Flowsheet {flowsheet_id} not found")
-        
+
         flowsheet = self.flowsheets[flowsheet_id]
+
+        # BFD validation (Sprint 2 - Codex Review #6)
+        if hasattr(flowsheet, 'type') and flowsheet.type == "BFD":
+            from src.models.bfd import BfdBlockArgs
+            validated = BfdBlockArgs(**args)
+            args = validated.model_dump()
+
         unit_type = args["unit_type"]
         unit_name = args.get("unit_name")
         sequence_number = args.get("sequence_number")
@@ -438,15 +451,22 @@ class SfilesTools:
     
     async def _add_stream(self, args: dict) -> dict:
         """Add a stream between units using native graph methods.
-        
-        Supports splits (multiple streams from one unit) and 
+
+        Supports splits (multiple streams from one unit) and
         merges (multiple streams to one unit).
         """
         flowsheet_id = args["flowsheet_id"]
         if flowsheet_id not in self.flowsheets:
             raise ValueError(f"Flowsheet {flowsheet_id} not found")
-        
+
         flowsheet = self.flowsheets[flowsheet_id]
+
+        # BFD validation (Sprint 2 - Codex Review #6)
+        if hasattr(flowsheet, 'type') and flowsheet.type == "BFD":
+            from src.models.bfd import BfdFlowArgs
+            validated = BfdFlowArgs(**args)
+            args = validated.model_dump()
+
         from_unit = args["from_unit"]
         to_unit = args["to_unit"]
         stream_name = args.get("stream_name", f"{from_unit}_to_{to_unit}")
