@@ -13,6 +13,7 @@ from mcp.types import TextContent
 
 from .tools.dexpi_tools import DexpiTools
 from .tools.sfiles_tools import SfilesTools
+from .tools.bfd_tools import BfdTools
 from .tools.project_tools import ProjectTools
 from .tools.validation_tools import ValidationTools
 from .tools.schema_tools import SchemaTools
@@ -75,6 +76,7 @@ class EngineeringDrawingMCPServer:
         # Initialize tool handlers with both stores for cross-conversion
         self.dexpi_tools = DexpiTools(self.dexpi_models, self.flowsheets)
         self.sfiles_tools = SfilesTools(self.flowsheets, self.dexpi_models)
+        self.bfd_tools = BfdTools(self.flowsheets)
         self.project_tools = ProjectTools(self.dexpi_models, self.flowsheets)
         self.validation_tools = ValidationTools(self.dexpi_models, self.flowsheets)
         self.schema_tools = SchemaTools()
@@ -134,6 +136,7 @@ class EngineeringDrawingMCPServer:
             # Existing tools (maintained for backward compatibility)
             tools.extend(self.dexpi_tools.get_tools())
             tools.extend(self.sfiles_tools.get_tools())
+            tools.extend(self.bfd_tools.get_tools())
             tools.extend(self.project_tools.get_tools())
             tools.extend(self.validation_tools.get_tools())
             tools.extend(self.schema_tools.get_tools())
@@ -164,6 +167,8 @@ class EngineeringDrawingMCPServer:
                     result = await self.dexpi_tools.handle_tool(name, arguments)
                 elif name.startswith("sfiles_"):
                     result = await self.sfiles_tools.handle_tool(name, arguments)
+                elif name.startswith("bfd_"):
+                    result = await self.bfd_tools.execute(name, arguments)
                 elif name.startswith("project_"):
                     result = await self.project_tools.handle_tool(name, arguments)
                 elif name.startswith("validate_"):
