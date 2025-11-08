@@ -26,47 +26,39 @@ logger = logging.getLogger(__name__)
 class NodePosition(BaseModel):
     """Position of a single node in 2D layout space.
 
+    BFD/PFD/P&ID diagrams are strictly 2D - no depth coordinate needed.
+
     Attributes:
         x: Horizontal coordinate
         y: Vertical coordinate
-        z: Optional depth coordinate (for 3D layouts)
     """
 
     x: float = Field(..., description="Horizontal coordinate")
     y: float = Field(..., description="Vertical coordinate")
-    z: Optional[float] = Field(None, description="Depth coordinate (optional for 3D)")
 
     @classmethod
     def from_list(cls, pos: List[float]) -> "NodePosition":
-        """Create NodePosition from [x, y] or [x, y, z] list.
+        """Create NodePosition from [x, y] list.
 
         Args:
-            pos: Position as [x, y] or [x, y, z]
+            pos: Position as [x, y]
 
         Returns:
             NodePosition instance
 
         Raises:
-            ValueError: If pos doesn't have 2 or 3 elements
+            ValueError: If pos doesn't have exactly 2 elements
         """
-        if len(pos) == 2:
-            return cls(x=pos[0], y=pos[1])
-        elif len(pos) == 3:
-            return cls(x=pos[0], y=pos[1], z=pos[2])
-        else:
-            raise ValueError(f"Position must be [x, y] or [x, y, z], got {len(pos)} elements")
+        if len(pos) != 2:
+            raise ValueError(f"Position must be [x, y], got {len(pos)} elements")
+        return cls(x=pos[0], y=pos[1])
 
-    def to_list(self, include_z: bool = False) -> List[float]:
-        """Convert to list format [x, y] or [x, y, z].
-
-        Args:
-            include_z: Include z coordinate even if None (as 0.0)
+    def to_list(self) -> List[float]:
+        """Convert to list format [x, y].
 
         Returns:
-            Position as list
+            Position as [x, y] list
         """
-        if include_z or self.z is not None:
-            return [self.x, self.y, self.z or 0.0]
         return [self.x, self.y]
 
 

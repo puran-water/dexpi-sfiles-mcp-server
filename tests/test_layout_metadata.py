@@ -15,58 +15,32 @@ from src.models.layout_metadata import (
 
 
 class TestNodePosition:
-    """Test NodePosition model."""
+    """Test NodePosition model (2D only for BFD/PFD/P&ID)."""
 
-    def test_create_2d_position(self):
+    def test_create_position(self):
         """Test creating 2D position."""
         pos = NodePosition(x=100.0, y=200.0)
         assert pos.x == 100.0
         assert pos.y == 200.0
-        assert pos.z is None
 
-    def test_create_3d_position(self):
-        """Test creating 3D position."""
-        pos = NodePosition(x=100.0, y=200.0, z=300.0)
-        assert pos.x == 100.0
-        assert pos.y == 200.0
-        assert pos.z == 300.0
-
-    def test_from_list_2d(self):
+    def test_from_list(self):
         """Test creating from [x, y] list."""
         pos = NodePosition.from_list([100.0, 200.0])
         assert pos.x == 100.0
         assert pos.y == 200.0
-        assert pos.z is None
-
-    def test_from_list_3d(self):
-        """Test creating from [x, y, z] list."""
-        pos = NodePosition.from_list([100.0, 200.0, 300.0])
-        assert pos.x == 100.0
-        assert pos.y == 200.0
-        assert pos.z == 300.0
 
     def test_from_list_invalid_length(self):
         """Test that invalid list length raises error."""
-        with pytest.raises(ValueError, match="must be \\[x, y\\] or \\[x, y, z\\]"):
+        with pytest.raises(ValueError, match="must be \\[x, y\\]"):
             NodePosition.from_list([100.0])  # Only one element
 
-        with pytest.raises(ValueError, match="must be \\[x, y\\] or \\[x, y, z\\]"):
-            NodePosition.from_list([100.0, 200.0, 300.0, 400.0])  # Four elements
+        with pytest.raises(ValueError, match="must be \\[x, y\\]"):
+            NodePosition.from_list([100.0, 200.0, 300.0])  # Three elements
 
-    def test_to_list_2d(self):
-        """Test converting 2D position to list."""
+    def test_to_list(self):
+        """Test converting position to list."""
         pos = NodePosition(x=100.0, y=200.0)
         assert pos.to_list() == [100.0, 200.0]
-
-    def test_to_list_3d(self):
-        """Test converting 3D position to list."""
-        pos = NodePosition(x=100.0, y=200.0, z=300.0)
-        assert pos.to_list() == [100.0, 200.0, 300.0]
-
-    def test_to_list_with_include_z(self):
-        """Test converting 2D position to 3D list with z=0."""
-        pos = NodePosition(x=100.0, y=200.0)
-        assert pos.to_list(include_z=True) == [100.0, 200.0, 0.0]
 
 
 class TestBoundingBox:
@@ -169,16 +143,6 @@ class TestLayoutMetadata:
         assert layout.positions["N1"].x == 0.0
         assert layout.positions["N2"].x == 100.0
 
-    def test_from_networkx_graph_3d(self):
-        """Test extracting 3D layout from NetworkX graph."""
-        graph = nx.DiGraph()
-        graph.add_node("N1", pos=[0.0, 0.0, 10.0])
-        graph.add_node("N2", pos=[100.0, 50.0, 20.0])
-
-        layout = LayoutMetadata.from_networkx_graph(graph, algorithm="spring_3d")
-
-        assert layout.positions["N1"].z == 10.0
-        assert layout.positions["N2"].z == 20.0
 
     def test_from_networkx_graph_missing_pos(self):
         """Test that missing 'pos' attribute raises error."""
