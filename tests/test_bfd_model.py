@@ -90,6 +90,35 @@ class TestBfdPortSpec:
         )
         assert port.canonical is None  # Not populated during BFD modeling
 
+    def test_canonical_port_spec_population(self):
+        """Test populating canonical PortSpec during expansion (Codex Review #7)."""
+        from src.models.port_spec import PortSpec, NumberOfPortsClassification
+
+        # Create BFD port
+        bfd_port = BfdPortSpec(
+            port_id="inlet",
+            cardinal_direction=CardinalDirection.WEST,
+            port_type=BfdPortType.INPUT
+        )
+
+        # Simulate Sprint 3 expansion: populate canonical field
+        canonical_port = PortSpec(
+            dexpi_classification=NumberOfPortsClassification.TwoPortValve,
+            cardinal_direction=CardinalDirection.WEST,
+            sub_tag="N1",
+            nominal_diameter="DN50"
+        )
+        bfd_port.canonical = canonical_port
+
+        # Verify canonical field is populated
+        assert bfd_port.canonical is not None
+        assert bfd_port.canonical.dexpi_classification == NumberOfPortsClassification.TwoPortValve
+        assert bfd_port.canonical.nominal_diameter == "DN50"
+
+        # Verify BFD-level metadata still accessible
+        assert bfd_port.port_type == BfdPortType.INPUT
+        assert bfd_port.cardinal_direction == CardinalDirection.WEST
+
 
 class TestBfdCreateArgs:
     """Test BfdCreateArgs validation schema."""
