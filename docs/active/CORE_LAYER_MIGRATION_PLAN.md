@@ -110,8 +110,20 @@ visualization/catalog.py:  P-01-01 (hyphens, 2 digits)
 **Duration**: 1 day (originally estimated 3 days)
 **Priority**: P1
 **Risk**: LOW (new code path, old code unchanged)
+**Codex Approval**: ✅ Granted January 10, 2025
 
 All tool consumers successfully migrated to core layer with direct replacement approach (no backward compatibility needed per user decision).
+
+**Key Discovery**: Phase 1 was not just a refactor - it was a **bug fix**. Legacy SFILES mapper was broken (0 equipment for all conversions). Core engine correctly creates 2-3 equipment items per model.
+
+**Completion Status**:
+- ✅ Tool migrations (dexpi_tools, sfiles_tools, validation_tools)
+- ✅ Mapper deprecation (588→98 lines, -83%)
+- ✅ Control/instrumentation restoration (FC, LC, TC, PC support)
+- ✅ Frozen legacy baseline (tests/fixtures/legacy_sfiles_mapper.py)
+- ✅ 21 equivalence/regression tests (renamed to test_improves_baseline_*)
+- ✅ 5 control instrumentation tests
+- ✅ Visualization test fixes (adaptive renderer availability)
 
 #### 1.1: Migrate `dexpi_tools.py` equipment creation (Day 1)
 

@@ -1,27 +1,47 @@
 {
   "case_0": {
-    "input": "tank[storage]->pump[centrifugal]",
-    "error": "'SfilesModel' object has no attribute 'state'",
-    "status": "FAILED"
+    "input": "tank[tank]->pump[pump_centrifugal]",
+    "equipment_count": 0,
+    "instrumentation_count": 0,
+    "connection_count": 0,
+    "unit_count": 0,
+    "stream_count": 0,
+    "status": "SUCCESS"
   },
   "case_1": {
-    "input": "pump[centrifugal]->tank[storage]",
-    "error": "'SfilesModel' object has no attribute 'state'",
-    "status": "FAILED"
+    "input": "pump[pump_centrifugal]->tank[tank]",
+    "equipment_count": 0,
+    "instrumentation_count": 0,
+    "connection_count": 0,
+    "unit_count": 0,
+    "stream_count": 0,
+    "status": "SUCCESS"
   },
   "case_2": {
-    "input": "tank[storage]->pump[centrifugal]->reactor[vessel]",
-    "error": "'SfilesModel' object has no attribute 'state'",
-    "status": "FAILED"
+    "input": "tank[tank]->pump[pump_centrifugal]->heater[heater]",
+    "equipment_count": 0,
+    "instrumentation_count": 0,
+    "connection_count": 0,
+    "unit_count": 0,
+    "stream_count": 0,
+    "status": "SUCCESS"
   },
   "case_3": {
-    "input": "feed[tank]->P-101[pump]->T-201[reactor]",
-    "error": "'SfilesModel' object has no attribute 'state'",
-    "status": "FAILED"
+    "input": "feed[tank]->P-101[pump_centrifugal]->HE-201[heater]",
+    "equipment_count": 0,
+    "instrumentation_count": 0,
+    "connection_count": 0,
+    "unit_count": 0,
+    "stream_count": 0,
+    "status": "SUCCESS"
   },
   "case_4": {
-    "input": "pump[pump_centrifugal]->heater[heater]->mixer[mixer]",
-    "error": "'SfilesModel' object has no attribute 'state'",
-    "status": "FAILED"
+    "input": "mixer[mixer]->reactor[vessel]->separator[separator]",
+    "equipment_count": 0,
+    "instrumentation_count": 0,
+    "connection_count": 0,
+    "unit_count": 0,
+    "stream_count": 0,
+    "status": "SUCCESS"
   }
 }

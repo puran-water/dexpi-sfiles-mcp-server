@@ -15,6 +15,17 @@ from dataclasses import dataclass, field
 from enum import Enum
 import logging
 
+
+# Exception classes for fail-loud error handling
+class UnknownEquipmentTypeError(ValueError):
+    """Raised when equipment type is not registered in the equipment registry."""
+    pass
+
+
+class TemplateNotFoundError(ValueError):
+    """Raised when BFD template is not found for the specified process type."""
+    pass
+
 # Import pyDEXPI classes - VERIFIED against actual installed package
 # NO FALLBACKS - fail fast if imports don't work
 # Imports verified via: python -c "from pydexpi.dexpi_classes import equipment; inspect.getmembers(equipment)"
@@ -382,7 +393,7 @@ class EquipmentRegistry:
     def get_dexpi_class(self, type_str: str) -> Type[Equipment]:
         """
         Get DEXPI class for any type string (SFILES, BFD, or canonical).
-        Falls back to CustomEquipment if not found.
+        Raises UnknownEquipmentTypeError if not found.
         """
         # Try SFILES type
         definition = self.get_by_sfiles_type(type_str)
@@ -394,9 +405,12 @@ class EquipmentRegistry:
         if definition:
             return definition.dexpi_class
 
-        # Fallback
-        logger.warning(f"Unknown equipment type: {type_str}, using CustomEquipment")
-        return CustomEquipment
+        # FAIL LOUDLY - no silent fallbacks
+        available_types = list(self._sfiles_map.keys()) + list(self._bfd_map.keys())
+        raise UnknownEquipmentTypeError(
+            f"Unknown equipment type: '{type_str}'. "
+            f"Available types: {sorted(set(available_types))}"
+        )
 
     def list_all_types(self) -> Dict[str, List[str]]:
         """List all registered types organized by category."""
@@ -447,8 +461,15 @@ class EquipmentFactory:
         )
 
         if not definition:
-            logger.warning(f"Unknown equipment type: {equipment_type}, using CustomEquipment")
-            definition = self.registry.get_by_sfiles_type("custom")
+            # FAIL LOUDLY - no silent fallbacks
+            available = sorted(set(
+                list(self.registry._sfiles_map.keys()) +
+                list(self.registry._bfd_map.keys())
+            ))
+            raise UnknownEquipmentTypeError(
+                f"Unknown equipment type: '{equipment_type}'. "
+                f"Available types: {available}"
+            )
 
         # Prepare nozzles
         if nozzles is None:
@@ -539,13 +560,12 @@ class EquipmentFactory:
         # Get definition for BFD type
         definition = self.registry.get_by_bfd_type(block_type)
         if not definition:
-            # Create single custom equipment for unknown type
-            # Use original block name without area code suffix
-            return [self.create(
-                equipment_type="custom",
-                tag=block_name,
-                params=bfd_block.get("parameters", {})
-            )]
+            # FAIL LOUDLY - no silent fallbacks
+            available_bfd = sorted(self.registry._bfd_map.keys())
+            raise TemplateNotFoundError(
+                f"No BFD template found for type: '{block_type}'. "
+                f"Available BFD types: {available_bfd}"
+            )
 
         # Check for expansion template
         if definition.expansion_template:

@@ -82,61 +82,69 @@ def capture_equipment_baseline():
 
 
 def capture_sfiles_baseline():
-    """Capture SFILES conversion baseline patterns."""
+    """Capture SFILES conversion baseline using FROZEN legacy mapper.
+
+    Uses the legacy mapper from commit 672541b (before Phase 1 migration)
+    to establish true pre-migration behavior as baseline. This allows
+    future regression detection by comparing against frozen legacy behavior.
+    """
     print("\nCapturing SFILES conversion baseline...")
 
-    # Import SFILES conversion tools
-    try:
-        from src.converters.sfiles_dexpi_mapper import SfilesDexpiMapper
-        from src.core.conversion import ConversionEngine
-    except ImportError as e:
-        print(f"  WARNING: Could not import conversion tools: {e}")
-        print(f"  Skipping SFILES baseline capture")
-        return {}
+    from tests.fixtures.legacy_sfiles_mapper import SfilesDexpiMapper, Flowsheet
 
     baseline = {}
 
-    # Test patterns
+    # Test patterns covering various SFILES features
     test_cases = [
-        "tank[storage]->pump[centrifugal]",
-        "pump[centrifugal]->tank[storage]",
-        "tank[storage]->pump[centrifugal]->reactor[vessel]",
-        "feed[tank]->P-101[pump]->T-201[reactor]",
-        "pump[pump_centrifugal]->heater[heater]->mixer[mixer]",
+        "tank[tank]->pump[pump_centrifugal]",
+        "pump[pump_centrifugal]->tank[tank]",
+        "tank[tank]->pump[pump_centrifugal]->heater[heater]",
+        "feed[tank]->P-101[pump_centrifugal]->HE-201[heater]",
+        "mixer[mixer]->reactor[vessel]->separator[separator]",
     ]
 
     mapper = SfilesDexpiMapper()
-    engine = ConversionEngine()
 
     for i, sfiles_string in enumerate(test_cases):
         print(f"  - Case {i}: {sfiles_string[:50]}...")
 
         try:
-            # Parse SFILES
-            sfiles_model = engine.parse_sfiles(sfiles_string)
+            # Create Flowsheet from SFILES string using SFILES2 API
+            flowsheet = Flowsheet(sfiles_in=sfiles_string)
 
-            # Convert via legacy mapper
-            dexpi_model = mapper.sfiles_to_dexpi(sfiles_model)
+            # Convert via FROZEN legacy mapper
+            dexpi_model = mapper.sfiles_to_dexpi(flowsheet)
 
             # Count equipment
             equipment_count = 0
             if hasattr(dexpi_model, 'conceptualModel') and dexpi_model.conceptualModel:
                 if hasattr(dexpi_model.conceptualModel, 'taggedPlantItems'):
-                    equipment_count = len(list(dexpi_model.conceptualModel.taggedPlantItems))
+                    equipment_count = len(list(dexpi_model.conceptualModel.taggedPlantItems or []))
+
+            # Count instrumentation
+            instr_count = 0
+            if hasattr(dexpi_model.conceptualModel, 'processInstrumentationFunctions'):
+                instr_count = len(list(dexpi_model.conceptualModel.processInstrumentationFunctions or []))
 
             # Count connections
             connection_count = 0
             if hasattr(dexpi_model.conceptualModel, 'pipingNetworkSystems'):
-                for pns in dexpi_model.conceptualModel.pipingNetworkSystems:
+                for pns in dexpi_model.conceptualModel.pipingNetworkSystems or []:
                     if hasattr(pns, 'segments'):
-                        connection_count += len(list(pns.segments))
+                        connection_count += len(list(pns.segments or []))
+
+            # Count units and streams from flowsheet graph
+            unit_count = len(list(flowsheet.state.nodes()))
+            stream_count = len(list(flowsheet.state.edges()))
 
             baseline[f"case_{i}"] = {
                 'input': sfiles_string,
                 'equipment_count': equipment_count,
+                'instrumentation_count': instr_count,
                 'connection_count': connection_count,
-                'unit_count': len(sfiles_model.units),
-                'stream_count': len(sfiles_model.streams)
+                'unit_count': unit_count,
+                'stream_count': stream_count,
+                'status': 'SUCCESS'
             }
 
         except Exception as e:
@@ -153,7 +161,8 @@ def capture_sfiles_baseline():
         json.dump(baseline, f, indent=2)
 
     print(f"✅ SFILES baseline saved to {output_path}")
-    print(f"   Captured {len([v for v in baseline.values() if v.get('status') != 'FAILED'])} conversion patterns")
+    success_count = len([v for v in baseline.values() if v.get('status') == 'SUCCESS'])
+    print(f"   Captured {success_count}/{len(baseline)} conversion patterns")
 
     return baseline
 
@@ -168,7 +177,7 @@ def main():
     # Capture equipment baseline
     equipment_baseline = capture_equipment_baseline()
 
-    # Capture SFILES baseline
+    # Capture SFILES baseline (current core engine behavior)
     sfiles_baseline = capture_sfiles_baseline()
 
     print()
@@ -178,14 +187,14 @@ def main():
     print()
     print("Next steps:")
     print("1. Review fixtures in tests/fixtures/baseline/")
-    print("2. Commit to git: git add tests/fixtures/baseline/ && git commit -m 'Phase 1 baseline'")
-    print("3. Tag baseline: git tag phase1-baseline")
-    print("4. Begin migration with confidence - fixtures preserve 'before' state")
+    print("2. Commit to git: git add tests/fixtures/baseline/ && git commit -m 'Update baseline'")
+    print("3. Baselines establish current behavior for regression detection")
+    print("4. Equivalence tests will validate future changes against these baselines")
     print()
 
     # Summary
     equipment_success = len([v for v in equipment_baseline.values() if v.get('type') != 'FAILED'])
-    sfiles_success = len([v for v in sfiles_baseline.values() if v.get('status') != 'FAILED'])
+    sfiles_success = len([v for v in sfiles_baseline.values() if v.get('status') == 'SUCCESS'])
 
     print(f"Summary:")
     print(f"  Equipment fixtures: {equipment_success} captured")

@@ -20,6 +20,11 @@ from enum import Enum
 logger = logging.getLogger(__name__)
 
 
+class CatalogNotFoundError(FileNotFoundError):
+    """Raised when merged symbol catalog is missing in strict mode."""
+    pass
+
+
 class SymbolSource(Enum):
     """Symbol library sources."""
     NOAKADEXPI = "NOAKADEXPI"
@@ -77,7 +82,14 @@ class SymbolRegistry:
     """
 
     def __init__(self, assets_dir: Optional[Path] = None):
-        """Initialize registry with symbol data."""
+        """Initialize registry with symbol data.
+
+        Args:
+            assets_dir: Directory containing symbol assets
+
+        Raises:
+            CatalogNotFoundError: If merged_catalog.json is missing
+        """
         if assets_dir is None:
             # Default to visualization/symbols/assets
             assets_dir = Path(__file__).parent.parent / "visualization" / "symbols" / "assets"
@@ -87,18 +99,24 @@ class SymbolRegistry:
         self._dexpi_map: Dict[str, List[str]] = {}  # DEXPI class → symbol IDs
         self._category_map: Dict[SymbolCategory, List[str]] = {}  # Category → symbol IDs
 
-        # Load symbol data
+        # Load symbol data - FAIL LOUDLY if catalog missing
         self._load_merged_catalog()
         self._build_indices()
 
     def _load_merged_catalog(self):
-        """Load the merged symbol catalog if it exists."""
+        """Load the merged symbol catalog.
+
+        Raises:
+            CatalogNotFoundError: If catalog file is missing
+        """
         catalog_path = self.assets_dir / "merged_catalog.json"
 
         if not catalog_path.exists():
-            logger.warning(f"Merged catalog not found at {catalog_path}, loading defaults")
-            self._load_default_mappings()
-            return
+            # FAIL LOUDLY - no fallbacks
+            raise CatalogNotFoundError(
+                f"Merged symbol catalog not found at {catalog_path}. "
+                f"Run 'python visualization/symbols/merge_symbol_libraries.py' to generate it."
+            )
 
         try:
             with open(catalog_path) as f:
@@ -142,61 +160,6 @@ class SymbolRegistry:
             logger.error(f"Failed to load merged catalog: {e}")
             # NO FALLBACKS - re-raise so we know the catalog is broken
             raise
-
-    def _load_default_mappings(self):
-        """Load default symbol mappings as fallback."""
-        # Critical default mappings for common equipment
-        # NOTE: These use NOAKADEXPI PP001A format (3 digits + letter)
-        # Symbol IDs verified against merged_catalog.json
-        defaults = [
-            # Pumps (verified in catalog)
-            ("PP001A", "Centrifugal Pump", SymbolCategory.PUMPS, "CentrifugalPump"),
-            ("PP010A", "Reciprocating Pump", SymbolCategory.PUMPS, "ReciprocatingPump"),
-            ("PP003A", "Gear Pump", SymbolCategory.PUMPS, "GearPump"),
-
-            # Valves (verified in catalog)
-            ("PV005A", "Gate Valve", SymbolCategory.VALVES, "GateValve"),
-            ("PV007A", "Globe Valve", SymbolCategory.VALVES, "GlobeValve"),
-            ("PV019A", "Ball Valve", SymbolCategory.VALVES, "BallValve"),
-            ("PV018A", "Butterfly Valve", SymbolCategory.VALVES, "ButterflyValve"),
-            ("PV013A", "Check Valve", SymbolCategory.VALVES, "CheckValve"),
-            ("PV001A", "Control Valve", SymbolCategory.VALVES, "OperatedValve"),  # Placeholder
-
-            # Tanks (verified in catalog where available)
-            ("PE025A", "Storage Tank", SymbolCategory.TANKS, "Tank"),
-            ("PT002A", "Pressure Vessel", SymbolCategory.TANKS, "PressureVessel"),  # Verified in XLSM
-            ("PT006A", "Silo", SymbolCategory.TANKS, "Silo"),
-
-            # Equipment (verified in catalog where available)
-            ("PE037A", "Heat Exchanger", SymbolCategory.EQUIPMENT, "HeatExchanger"),
-            ("PE001A", "Heater", SymbolCategory.EQUIPMENT, "Heater"),  # Placeholder
-            ("PE002A", "Cooler", SymbolCategory.EQUIPMENT, "Cooler"),  # Placeholder
-            ("PE003A", "Reactor", SymbolCategory.EQUIPMENT, "Reactor"),  # Placeholder
-            ("PE012A", "Separator", SymbolCategory.EQUIPMENT, "Separator"),
-            ("PE030A", "Centrifuge", SymbolCategory.EQUIPMENT, "Centrifuge"),
-            ("PE004A", "Column", SymbolCategory.EQUIPMENT, "ProcessColumn"),  # Placeholder
-            ("PE005A", "Mixer", SymbolCategory.EQUIPMENT, "Mixer"),  # Placeholder
-
-            # Filters (verified in catalog)
-            ("PS014A", "Filter", SymbolCategory.FILTERS, "Filter"),
-            ("PF001A", "Strainer", SymbolCategory.FILTERS, "Filter"),  # Placeholder
-
-            # Instrumentation (verified in catalog where available)
-            ("IM005A", "Transmitter", SymbolCategory.INSTRUMENTATION, "Transmitter"),  # Placeholder
-            ("ND0006", "Controller", SymbolCategory.ANNOTATIONS, "ProcessControlFunction"),  # Exception: ND series uses 4-digit format
-            ("IM017A", "Indicator", SymbolCategory.INSTRUMENTATION, "ProcessIndicator"),  # Placeholder
-        ]
-
-        for symbol_id, name, category, dexpi_class in defaults:
-            self._symbols[symbol_id] = SymbolInfo(
-                symbol_id=symbol_id,
-                name=name,
-                category=category,
-                dexpi_class=dexpi_class,
-                source=SymbolSource.CUSTOM
-            )
-
-        logger.info(f"Loaded {len(self._symbols)} default symbol mappings")
 
     def _guess_category(self, symbol_id: str) -> SymbolCategory:
         """Guess category from symbol ID prefix."""

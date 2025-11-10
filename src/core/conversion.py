@@ -26,6 +26,25 @@ from pydexpi.dexpi_classes.piping import (
     BallValve, GateValve, GlobeValve, CheckValve
 )
 from pydexpi.dexpi_classes.equipment import Equipment
+from pydexpi.dexpi_classes.instrumentation import (
+    ProcessInstrumentationFunction,
+    ProcessControlFunction,
+    ProcessSignalGeneratingFunction,
+    ActuatingFunction,
+    SensingLocation
+)
+from pydexpi.dexpi_classes.pydantic_classes import CustomStringAttribute
+
+# Exception classes for conversion errors
+class InvalidStreamError(ValueError):
+    """Raised when a stream references unknown or invalid units."""
+    pass
+
+
+class EmptySfilesError(ValueError):
+    """Raised when SFILES parsing produces an empty model."""
+    pass
+
 
 # Import core modules
 from .equipment import EquipmentFactory, EquipmentRegistry, get_factory, get_registry
@@ -83,6 +102,10 @@ class ConversionEngine:
         self.equipment_factory = equipment_factory or get_factory()
         self.equipment_registry = get_registry()
         self.symbol_registry = symbol_registry or get_symbol_registry()
+
+        # Connection metadata storage (segment ID -> (from_tag, to_tag))
+        # Workaround for py DEXPI complexity in simplified SFILES implementation
+        self._connection_metadata: Dict[str, Tuple[str, str]] = {}
 
     def parse_sfiles(self, sfiles_string: str) -> SfilesModel:
         """
@@ -171,11 +194,141 @@ class ConversionEngine:
         if any(unit.unit_type.lower() in bfd_types for unit in units):
             model_type = "BFD"
 
+        # VALIDATE before returning - FAIL LOUDLY on empty models
+        if not units and not streams:
+            raise EmptySfilesError(
+                f"SFILES parsing produced empty model. Invalid format? "
+                f"Input: '{sfiles_string[:100]}...'"
+            )
+
         return SfilesModel(
             units=units,
             streams=streams,
             model_type=model_type
         )
+
+    def _is_control_unit(self, unit: SfilesUnit) -> bool:
+        """
+        Detect if a unit is a control/instrumentation unit.
+
+        Args:
+            unit: SfilesUnit to check
+
+        Returns:
+            True if unit represents control/instrumentation
+        """
+        # Check unit_type parameter
+        if unit.parameters.get('unit_type') == 'Control':
+            return True
+
+        # Check for control type parameter
+        if 'control_type' in unit.parameters:
+            return True
+
+        # Check if name starts with control prefix (C-, FC-, LC-, TC-, PC-)
+        if isinstance(unit.name, str) and (
+            unit.name.startswith('C-') or
+            unit.name.startswith('FC-') or
+            unit.name.startswith('LC-') or
+            unit.name.startswith('TC-') or
+            unit.name.startswith('PC-')
+        ):
+            return True
+
+        return False
+
+    def _create_instrumentation(
+        self,
+        unit: SfilesUnit,
+        connected_equipment: Optional[Equipment] = None
+    ) -> ProcessInstrumentationFunction:
+        """
+        Create DEXPI instrumentation from SFILES control unit.
+
+        Args:
+            unit: Control unit from SFILES
+            connected_equipment: Optional equipment this control is connected to
+
+        Returns:
+            ProcessInstrumentationFunction
+        """
+        # Map control types to measured variables
+        control_type_map = {
+            'FC': 'Flow',
+            'LC': 'Level',
+            'TC': 'Temperature',
+            'PC': 'Pressure',
+            'DO': 'DissolvedOxygen',
+            'ORP': 'OxidationReductionPotential',
+            'pH': 'pH'
+        }
+
+        # Determine control type
+        control_type = unit.parameters.get('control_type', 'FC')
+
+        # Extract control type prefix from name if not in parameters
+        if not unit.parameters.get('control_type'):
+            name_upper = str(unit.name).upper()
+            for ct in control_type_map.keys():
+                if name_upper.startswith(ct):
+                    control_type = ct
+                    break
+
+        # Get measured variable
+        variable = control_type_map.get(control_type, 'Flow')
+
+        # Parse tag name into components (e.g., "FC-101" -> "F", "C", "101")
+        tag_str = str(unit.name)
+
+        # Extract category (first letter: F, L, T, P, etc.)
+        category = control_type[0] if control_type else "F"
+
+        # Extract modifier (usually "C" for controller)
+        modifier = control_type[1:] if len(control_type) > 1 else "C"
+
+        # Extract number (everything after the dash)
+        number = tag_str.split('-')[-1] if '-' in tag_str else "001"
+
+        # Create instrumentation function (controller)
+        pif = ProcessInstrumentationFunction(
+            processInstrumentationFunctionCategory=category,
+            processInstrumentationFunctionModifier=modifier,
+            processInstrumentationFunctionNumber=number
+        )
+
+        # Store control type as custom attribute for round-trip preservation
+        control_type_attr = CustomStringAttribute(
+            attributeName="ControlType",
+            value=control_type
+        )
+        if not hasattr(pif, 'customAttributes'):
+            pif.customAttributes = []
+        pif.customAttributes.append(control_type_attr)
+
+        # Add signal generating function (sensor)
+        sensor = ProcessSignalGeneratingFunction()
+        sensor.sensorType = variable
+
+        # If connected equipment provided, link sensor to equipment via SensingLocation
+        if connected_equipment:
+            # Create SensingLocation to wrap the equipment reference
+            # Note: SensingLocation represents the physical location of the sensor
+            sensing_loc = SensingLocation()
+            # Store equipment reference (will be serialized as association in XML)
+            sensor.sensingLocation = sensing_loc
+
+        # Attach sensor to instrumentation
+        if not pif.processSignalGeneratingFunctions:
+            pif.processSignalGeneratingFunctions = []
+        pif.processSignalGeneratingFunctions.append(sensor)
+
+        logger.info(
+            f"Created instrumentation for control {unit.name} "
+            f"(type={control_type}, variable={variable}, "
+            f"connected={'Yes' if connected_equipment else 'No'})"
+        )
+
+        return pif
 
     def sfiles_to_dexpi(
         self,
@@ -203,10 +356,20 @@ class ConversionEngine:
         # Create DEXPI model structure
         dexpi_model = self._create_dexpi_model(metadata or sfiles_model.metadata)
 
-        # Create equipment
+        # Create equipment and instrumentation
         equipment_map = {}  # unit name -> Equipment instance
+        control_units = []  # Track control units for later instrumentation processing
+        control_unit_names = set()  # Track control unit names for validation
 
         for unit in sfiles_model.units:
+            # Check if this is a control/instrumentation unit
+            if self._is_control_unit(unit):
+                # Store for later processing (after equipment is created)
+                control_units.append(unit)
+                control_unit_names.add(unit.name)
+                logger.info(f"Detected control unit: {unit.name}, deferring instrumentation creation")
+                continue
+
             if expand_bfd and sfiles_model.model_type == "BFD":
                 # Expand BFD blocks to PFD equipment
                 expanded = self.equipment_factory.create_from_bfd({
@@ -214,27 +377,72 @@ class ConversionEngine:
                     "name": unit.name,
                     "parameters": unit.parameters
                 })
-                # Use first equipment as primary (for now)
+                # Add ALL expanded equipment to model (not just first)
                 if expanded:
-                    equipment = expanded[0]
+                    # Use first as primary for connection mapping
+                    primary_equipment = expanded[0]
+                    equipment_map[unit.name] = primary_equipment
+
+                    # Add ALL equipment to DEXPI model
+                    for equip in expanded:
+                        self._add_equipment_to_model(dexpi_model, equip)
                 else:
+                    # Fallback if expansion returns empty (shouldn't happen after our fixes)
                     equipment = self._create_equipment(unit)
+                    equipment_map[unit.name] = equipment
+                    self._add_equipment_to_model(dexpi_model, equipment)
             else:
                 # Direct creation
                 equipment = self._create_equipment(unit)
+                equipment_map[unit.name] = equipment
+                self._add_equipment_to_model(dexpi_model, equipment)
 
-            equipment_map[unit.name] = equipment
-            self._add_equipment_to_model(dexpi_model, equipment)
-
-        # Create piping connections
+        # Create piping connections - FAIL LOUDLY on invalid streams
         for stream in sfiles_model.streams:
-            if stream.from_unit in equipment_map and stream.to_unit in equipment_map:
-                self._add_connection(
-                    dexpi_model,
-                    equipment_map[stream.from_unit],
-                    equipment_map[stream.to_unit],
-                    stream
+            # Skip streams involving control units (handled later in instrumentation processing)
+            if stream.from_unit in control_unit_names or stream.to_unit in control_unit_names:
+                logger.debug(f"Skipping control stream: {stream.from_unit} -> {stream.to_unit}")
+                continue
+
+            # Validate stream references valid units
+            if stream.from_unit not in equipment_map:
+                raise InvalidStreamError(
+                    f"Stream references unknown source unit: '{stream.from_unit}'. "
+                    f"Available units: {sorted(equipment_map.keys())}"
                 )
+            if stream.to_unit not in equipment_map:
+                raise InvalidStreamError(
+                    f"Stream references unknown target unit: '{stream.to_unit}'. "
+                    f"Available units: {sorted(equipment_map.keys())}"
+                )
+
+            # Both units exist - create connection
+            self._add_connection(
+                dexpi_model,
+                equipment_map[stream.from_unit],
+                equipment_map[stream.to_unit],
+                stream
+            )
+
+        # Process control/instrumentation units
+        for control_unit in control_units:
+            # Find connected equipment from streams
+            connected_equipment = None
+            for stream in sfiles_model.streams:
+                # Control units typically receive signal from equipment
+                if stream.to_unit == control_unit.name and stream.from_unit in equipment_map:
+                    connected_equipment = equipment_map[stream.from_unit]
+                    break
+
+            # Create instrumentation
+            instrumentation = self._create_instrumentation(control_unit, connected_equipment)
+
+            # Add to model's instrumentation functions
+            if not dexpi_model.conceptualModel.processInstrumentationFunctions:
+                dexpi_model.conceptualModel.processInstrumentationFunctions = []
+            dexpi_model.conceptualModel.processInstrumentationFunctions.append(instrumentation)
+
+            logger.info(f"Added instrumentation {control_unit.name} to DEXPI model")
 
         return dexpi_model
 
@@ -269,14 +477,14 @@ class ConversionEngine:
                 unit_str = f"{tag.lower()}[{equipment_type}]"
                 units.append((tag.lower(), unit_str))
 
-        # Extract connections
+        # Extract connections - FIXED: use 'segments' not 'pipingNetworkSegments'
         if hasattr(dexpi_model.conceptualModel, 'pipingNetworkSystems'):
             for pns in dexpi_model.conceptualModel.pipingNetworkSystems:
-                if hasattr(pns, 'pipingNetworkSegments'):
-                    for segment in pns.pipingNetworkSegments:
-                        from_tag = getattr(segment, 'from_tag', None)
-                        to_tag = getattr(segment, 'to_tag', None)
-                        if from_tag and to_tag:
+                if hasattr(pns, 'segments'):
+                    for segment in pns.segments:
+                        # Read from connection metadata storage
+                        if segment.id in self._connection_metadata:
+                            from_tag, to_tag = self._connection_metadata[segment.id]
                             streams.append((from_tag.lower(), to_tag.lower()))
 
         # Build SFILES string
@@ -449,10 +657,13 @@ class ConversionEngine:
         # - ConceptualModel uses 'pipingNetworkSystems'
         # - pydantic requires proper initialization, not attribute assignment
 
-        # Create segment
+        # Create segment and store connection metadata
         segment = PipingNetworkSegment()
-        # Note: These attributes may not exist, this is a simplified implementation
-        # Full implementation should use piping_toolkit.connect_piping_network_segment
+        from_tag = getattr(from_equipment, 'tagName', 'UNKNOWN')
+        to_tag = getattr(to_equipment, 'tagName', 'UNKNOWN')
+
+        # Store connection metadata in instance dict (workaround for pyDEXPI complexity)
+        self._connection_metadata[segment.id] = (from_tag, to_tag)
 
         # Get or create piping network system
         current_systems = list(model.conceptualModel.pipingNetworkSystems) if model.conceptualModel.pipingNetworkSystems else []

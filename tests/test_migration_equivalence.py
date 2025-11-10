@@ -33,7 +33,10 @@ def equipment_baseline():
 
 @pytest.fixture
 def sfiles_baseline():
-    """Load frozen SFILES conversion baseline from JSON."""
+    """Load SFILES conversion baseline from JSON.
+
+    Baseline captures current core engine behavior to detect future regressions.
+    """
     baseline_path = BASELINE_DIR / "sfiles_conversions.json"
     if not baseline_path.exists():
         pytest.skip(f"Baseline not found: {baseline_path}")
@@ -109,39 +112,104 @@ class TestEquipmentCreationEquivalence:
 
 
 class TestSFILESConversionEquivalence:
-    """Compare new engine against baseline SFILES conversions."""
+    """Compare new engine against baseline SFILES conversions.
 
-    def test_simple_tank_pump_conversion(self):
-        """Test simple tank->pump SFILES conversion."""
+    Note: Legacy baseline captured from commit 672541b shows 0 equipment
+    for all cases (legacy mapper was broken). Phase 1 migration FIXED this -
+    core engine now correctly creates equipment. Tests verify improvement.
+    """
+
+    def test_improves_baseline_case_0(self, sfiles_baseline):
+        """Test case 0 improves baseline: tank->pump.
+
+        Legacy: 0 equipment (broken)
+        Core engine: 2 equipment (fixed!)
+        """
+        baseline = sfiles_baseline["case_0"]
+        assert baseline['status'] == 'SUCCESS', f"Baseline case failed: {baseline.get('error')}"
+
         engine = get_engine()
-
-        sfiles_string = "tank[tank]->pump[pump_centrifugal]"
-        sfiles_model = engine.parse_sfiles(sfiles_string)
-
-        # Should parse 2 units and 1 stream
-        assert len(sfiles_model.units) == 2
-        assert len(sfiles_model.streams) == 1
-
-        # Convert to DEXPI
+        sfiles_model = engine.parse_sfiles(baseline['input'])
         dexpi_model = engine.sfiles_to_dexpi(sfiles_model)
 
-        # Should have equipment
-        equipment_count = len(list(dexpi_model.conceptualModel.taggedPlantItems))
-        assert equipment_count == 2, f"Expected 2 equipment, got {equipment_count}"
+        equipment_count = len(list(dexpi_model.conceptualModel.taggedPlantItems or []))
+        # Core engine FIXES legacy bug - should have 2 equipment, baseline has 0
+        assert equipment_count > baseline['equipment_count'], \
+            f"Core engine should improve on broken legacy baseline (got {equipment_count}, baseline {baseline['equipment_count']})"
+        assert equipment_count == 2, "Should create tank and pump"
 
-    def test_three_unit_conversion(self):
-        """Test three-unit SFILES conversion."""
+    def test_improves_baseline_case_1(self, sfiles_baseline):
+        """Test case 1 improves baseline: pump->tank.
+
+        Legacy: 0 equipment (broken)
+        Core engine: 2 equipment (fixed!)
+        """
+        baseline = sfiles_baseline["case_1"]
+        assert baseline['status'] == 'SUCCESS'
+
         engine = get_engine()
-
-        # Use PFD-only equipment (avoid BFD keywords like 'reactor')
-        sfiles_string = "tank[tank]->pump[pump_centrifugal]->heater[heater]"
-        sfiles_model = engine.parse_sfiles(sfiles_string)
-
-        assert len(sfiles_model.units) == 3
-        assert len(sfiles_model.streams) == 2
-
+        sfiles_model = engine.parse_sfiles(baseline['input'])
         dexpi_model = engine.sfiles_to_dexpi(sfiles_model)
-        equipment_count = len(list(dexpi_model.conceptualModel.taggedPlantItems))
+
+        equipment_count = len(list(dexpi_model.conceptualModel.taggedPlantItems or []))
+        assert equipment_count > baseline['equipment_count']
+        assert equipment_count == 2
+
+    def test_improves_baseline_case_2(self, sfiles_baseline):
+        """Test case 2 improves baseline: tank->pump->heater.
+
+        Legacy: 0 equipment, 0 connections (broken)
+        Core engine: 3 equipment, connections (fixed!)
+        """
+        baseline = sfiles_baseline["case_2"]
+        assert baseline['status'] == 'SUCCESS'
+
+        engine = get_engine()
+        sfiles_model = engine.parse_sfiles(baseline['input'])
+        dexpi_model = engine.sfiles_to_dexpi(sfiles_model)
+
+        equipment_count = len(list(dexpi_model.conceptualModel.taggedPlantItems or []))
+        connection_count = sum(
+            len(list(pns.segments or []))
+            for pns in (dexpi_model.conceptualModel.pipingNetworkSystems or [])
+        )
+
+        assert equipment_count > baseline['equipment_count']
+        assert connection_count >= baseline['connection_count']
+        assert equipment_count == 3
+
+    def test_improves_baseline_case_3(self, sfiles_baseline):
+        """Test case 3 improves baseline: feed->P-101->HE-201.
+
+        Legacy: 0 equipment (broken)
+        Core engine: 3 equipment with proper tags (fixed!)
+        """
+        baseline = sfiles_baseline["case_3"]
+        assert baseline['status'] == 'SUCCESS'
+
+        engine = get_engine()
+        sfiles_model = engine.parse_sfiles(baseline['input'])
+        dexpi_model = engine.sfiles_to_dexpi(sfiles_model)
+
+        equipment_count = len(list(dexpi_model.conceptualModel.taggedPlantItems or []))
+        assert equipment_count > baseline['equipment_count']
+        assert equipment_count == 3
+
+    def test_improves_baseline_case_4(self, sfiles_baseline):
+        """Test case 4 improves baseline: mixer->reactor->separator.
+
+        Legacy: 0 equipment (broken)
+        Core engine: 3 equipment (fixed!)
+        """
+        baseline = sfiles_baseline["case_4"]
+        assert baseline['status'] == 'SUCCESS'
+
+        engine = get_engine()
+        sfiles_model = engine.parse_sfiles(baseline['input'])
+        dexpi_model = engine.sfiles_to_dexpi(sfiles_model)
+
+        equipment_count = len(list(dexpi_model.conceptualModel.taggedPlantItems or []))
+        assert equipment_count > baseline['equipment_count']
         assert equipment_count == 3
 
 

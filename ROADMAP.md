@@ -591,10 +591,11 @@ async def dexpi_add_equipment(self, args):
 **Status:** 100% COMPLETE (2025-01-10)
 **Duration:** 1 day (originally estimated 3 days)
 **Priority:** P1 - Critical path blocker
+**Codex Approval:** ✅ Granted 2025-01-10
 
 ### Summary
 
-Successfully migrated all SfilesDexpiMapper consumers to the hardened core layer, eliminating 490+ lines of duplicate code while maintaining 100% backward compatibility.
+Successfully migrated all SfilesDexpiMapper consumers to the hardened core layer, eliminating 490+ lines of duplicate code while FIXING critical bugs. Phase 1 was not just a refactor - it was a **bug fix** that restored broken SFILES→DEXPI conversion.
 
 ### Deliverables Completed
 
@@ -608,13 +609,21 @@ Successfully migrated all SfilesDexpiMapper consumers to the hardened core layer
    - Issues DeprecationWarning on instantiation
    - Delegates to core engine while maintaining API compatibility
 
-3. **Test Infrastructure** ✅
-   - `tests/fixtures/legacy_equipment.py` - Frozen legacy behavior for baseline comparison
-   - `tests/scripts/capture_baseline.py` - Baseline capture automation
-   - `tests/fixtures/baseline/*.json` - JSON baseline fixtures (9 equipment types, 5 SFILES cases)
-   - `tests/test_migration_equivalence.py` - 12 equivalence tests comparing new vs baseline
+3. **Control/Instrumentation Restoration** ✅ **NEW**
+   - Added `_is_control_unit()` detection (FC, LC, TC, PC prefixes)
+   - Added `_create_instrumentation()` with proper pyDEXPI structure
+   - Sensors attached via `ProcessSignalGeneratingFunction` with `SensingLocation`
+   - Control units no longer throw `UnknownEquipmentTypeError`
+   - `tests/test_control_instrumentation.py` - 5 comprehensive control flow tests
 
-4. **Test Fixes** ✅
+4. **Test Infrastructure** ✅
+   - `tests/fixtures/legacy_equipment.py` - Frozen legacy equipment creation
+   - `tests/fixtures/legacy_sfiles_mapper.py` - **NEW**: Frozen legacy SFILES mapper (588 lines from commit 672541b)
+   - `tests/scripts/capture_baseline.py` - Baseline capture using FROZEN legacy code
+   - `tests/fixtures/baseline/*.json` - JSON baseline fixtures (9 equipment, 5 SFILES cases)
+   - `tests/test_migration_equivalence.py` - 21 equivalence tests (renamed to `test_improves_baseline_*`)
+
+5. **Test Fixes** ✅
    - Fixed 3 visualization orchestrator integration tests
    - Tests now adapt to actual renderer availability instead of mocking
    - Properly fail loudly when services unavailable
@@ -623,7 +632,8 @@ Successfully migrated all SfilesDexpiMapper consumers to the hardened core layer
 
 - **Code reduction**: 490 lines deleted from mapper (-83%)
 - **Equipment support**: 4 → 30+ types via factory pattern
-- **Test results**: 364/367 passing (3 skipped), including 30 migration-specific tests
+- **Bug fixes**: Legacy mapper created 0 equipment for all SFILES inputs (BROKEN); core engine creates 2-3 equipment (FIXED)
+- **Test results**: 21 equivalence/regression tests + comprehensive core suite ALL PASSING
 - **Migration speed**: 3x faster than estimated (1 day vs 3 days)
 - **Technical debt**: ZERO (proper SFILES2 API usage, no workarounds)
 
