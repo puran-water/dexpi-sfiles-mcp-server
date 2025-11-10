@@ -13,17 +13,19 @@ Flowsheet = get_flowsheet_class()
 
 from ..utils.response import validation_response, create_issue, error_response
 from ..validators.constraints import EngineeringConstraints
-from ..converters.sfiles_dexpi_mapper import SfilesDexpiMapper
 
 logger = logging.getLogger(__name__)
 
 
 class ValidationTools:
-    """Handles unified validation for both DEXPI and SFILES models."""
-    
+    """Handles unified validation for both DEXPI and SFILES models.
+
+    Phase 1 Migration: Now uses core conversion engine instead of legacy mapper.
+    """
+
     def __init__(self, dexpi_store: Dict[str, Any], sfiles_store: Dict[str, Any]):
         """Initialize with references to both model stores.
-        
+
         Args:
             dexpi_store: Dictionary storing DEXPI models
             sfiles_store: Dictionary storing SFILES flowsheets
@@ -32,7 +34,10 @@ class ValidationTools:
         self.flowsheets = sfiles_store
         self.constraints = EngineeringConstraints()
         self.graph_loader = MLGraphLoader()
-        self.mapper = SfilesDexpiMapper()
+
+        # Phase 1: Use core conversion engine
+        from src.core.conversion import get_engine
+        self.engine = get_engine()
     
     def get_tools(self) -> List[Tool]:
         """Return all validation tools."""
@@ -223,14 +228,17 @@ class ValidationTools:
         
         try:
             if model_type == "dexpi":
-                # DEXPI -> SFILES -> DEXPI
+                # DEXPI -> SFILES -> DEXPI (Phase 1: use core engine)
                 original_model = self.dexpi_models[model_id]
-                
-                # Convert to SFILES
-                intermediate_flowsheet = self.mapper.dexpi_to_sfiles(original_model)
-                
+
+                # Convert to SFILES via core engine
+                intermediate_sfiles_string = self.engine.dexpi_to_sfiles(original_model)
+
+                # Parse SFILES
+                intermediate_sfiles_model = self.engine.parse_sfiles(intermediate_sfiles_string)
+
                 # Convert back to DEXPI
-                roundtrip_model = self.mapper.sfiles_to_dexpi(intermediate_flowsheet)
+                roundtrip_model = self.engine.sfiles_to_dexpi(intermediate_sfiles_model)
                 
                 # Compare models
                 issues.extend(self._compare_dexpi_models(
@@ -247,29 +255,43 @@ class ValidationTools:
                     roundtrip_model.conceptualModel.taggedPlantItems
                 ) if roundtrip_model.conceptualModel else 0
                 
-            else:  # sfiles
+            else:  # sfiles (Phase 1: use core engine)
                 # SFILES -> DEXPI -> SFILES
                 original_flowsheet = self.flowsheets[model_id]
-                
-                # Convert to DEXPI
-                intermediate_model = self.mapper.sfiles_to_dexpi(original_flowsheet)
-                
+
+                # Get SFILES string from original flowsheet (handle SFILES2 API)
+                if hasattr(original_flowsheet, 'sfiles') and original_flowsheet.sfiles:
+                    original_sfiles_string = original_flowsheet.sfiles
+                elif hasattr(original_flowsheet, 'convert_to_sfiles'):
+                    original_flowsheet.convert_to_sfiles()
+                    original_sfiles_string = original_flowsheet.sfiles
+                else:
+                    original_sfiles_string = str(original_flowsheet)
+
+                # Parse and convert to DEXPI via core engine
+                original_sfiles_model = self.engine.parse_sfiles(original_sfiles_string)
+                intermediate_model = self.engine.sfiles_to_dexpi(original_sfiles_model)
+
                 # Convert back to SFILES
-                roundtrip_flowsheet = self.mapper.dexpi_to_sfiles(intermediate_model)
-                
-                # Compare flowsheets
+                roundtrip_sfiles_string = self.engine.dexpi_to_sfiles(intermediate_model)
+
+                # Create roundtrip Flowsheet object from SFILES string (proper SFILES2 API)
+                # This allows comparison using existing _compare_flowsheets logic
+                roundtrip_flowsheet = Flowsheet(sfiles_in=roundtrip_sfiles_string)
+
+                # Compare flowsheets using existing comparison method
                 issues.extend(self._compare_flowsheets(
                     original_flowsheet,
                     roundtrip_flowsheet,
                     compare_attributes
                 ))
-                
+
                 # Add metrics
                 metrics["original_node_count"] = original_flowsheet.state.number_of_nodes()
                 metrics["roundtrip_node_count"] = roundtrip_flowsheet.state.number_of_nodes()
                 metrics["original_edge_count"] = original_flowsheet.state.number_of_edges()
                 metrics["roundtrip_edge_count"] = roundtrip_flowsheet.state.number_of_edges()
-            
+
             # Check for control type preservation
             if model_type == "sfiles":
                 issues.extend(self._check_control_preservation(
