@@ -1,0 +1,157 @@
+# Gravity Thickener Template
+process_unit_id: "GT"
+area_number: 510
+name: "Gravity Thickener"
+description: "Gravity thickening tank for sludge concentration"
+
+# Parameters for variations
+parameters:
+  sludge_type:
+    type: enum
+    values: [primary, was, combined]
+    default: combined
+    affects: [equipment]
+
+  picket_fence:
+    type: boolean
+    default: true
+    affects: [equipment]
+
+  cover_type:
+    type: enum
+    values: [none, fixed, floating]
+    default: none
+    affects: [equipment]
+
+# Equipment specifications
+per_train_equipment:
+  - id: "Thickener"
+    $ref: equipment_library.gravity_thickener_tank
+    tag_prefix: "TK"
+    count: 1
+    default_params:
+      diameter: 15  # m
+      depth: 4  # m
+      material: "Concrete"
+
+  - id: "Rake"
+    dexpi_class: "CustomEquipment"
+    tag_prefix: "RK"
+    count: 1
+    mount_to: "Thickener"
+    default_params:
+      type: "Center Drive Rake"
+      speed: 0.02  # rpm
+      power: 2  # kW
+
+  - id: "PicketFence"
+    dexpi_class: "CustomEquipment"
+    tag_prefix: "PF"
+    count: 1
+    mount_to: "Rake"
+    condition: "${picket_fence|true}"
+    default_params:
+      type: "Vertical Pickets"
+
+  - id: "Cover"
+    dexpi_class: "CustomEquipment"
+    tag_prefix: "CV"
+    count: 1
+    mount_to: "Thickener"
+    condition: "${cover_type|none} != 'none'"
+    default_params:
+      type: "${cover_type|none}"
+      material: "Aluminum"
+
+shared_equipment:
+  - id: "FeedPump"
+    $ref: equipment_library.sludge_feed_pump
+    tag_prefix: "P"
+    count: 2  # 1 duty + 1 standby
+    default_params:
+      flow_rate: 100  # m3/h
+      head: 10  # m
+
+  - id: "ThickenedSludgePump"
+    $ref: equipment_library.progressive_cavity_pump
+    tag_prefix: "P"
+    count: 2  # 1 duty + 1 standby
+    default_params:
+      flow_rate: 30  # m3/h
+      head: 50  # m
+
+  - id: "SupernatantPump"
+    dexpi_class: "CentrifugalPump"
+    tag_prefix: "P"
+    count: 1
+    default_params:
+      flow_rate: 70  # m3/h
+
+  - id: "Drive"
+    dexpi_class: "Motor"
+    tag_prefix: "M"
+    count: 1
+    mount_to: "Rake"
+    default_params:
+      power: 2  # kW
+      speed: 1750  # rpm
+
+  - id: "Gearbox"
+    dexpi_class: "GearBox"
+    tag_prefix: "GB"
+    count: 1
+    default_params:
+      ratio: 87500  # 1750:0.02
+
+  - id: "SludgeDensityMeter"
+    dexpi_class: "ProcessSignalGeneratingSystem"
+    tag_prefix: "DT"
+    count: 1
+    mount_to: "ThickenedSludgePump"
+    default_params:
+      type: "Microwave Density"
+
+  - id: "LevelTransmitter"
+    dexpi_class: "ProcessSignalGeneratingSystem"
+    tag_prefix: "LIT"
+    count: 1
+    mount_to: "Thickener"
+
+# Components
+components:
+  - odor_control  # If cover_type != 'none'
+
+# Connection DSL
+connections: |
+  # Feed flow
+  BFD.feed -> FeedPump-*.suction
+  FeedPump-*.discharge -> Thickener-*.inlet
+
+  # Thickened sludge
+  Thickener-*.underflow -> ThickenedSludgePump-1.suction
+  Thickener-*.underflow -> ThickenedSludgePump-2.suction
+  ThickenedSludgePump-1.discharge -> BFD.thickened_sludge
+  ThickenedSludgePump-2.discharge -> BFD.thickened_sludge
+
+  # Supernatant
+  Thickener-*.overflow -> SupernatantPump.suction
+  SupernatantPump.discharge -> PlantInfluent
+
+  # Mechanical drive
+  Drive.shaft -> Gearbox.input
+  Gearbox.output -> Rake.drive
+
+# Port mappings to BFD
+port_mappings:
+  BFD.feed: FeedPump.suction
+  BFD.thickened_sludge: ThickenedSludgePump.discharge
+  BFD.supernatant: SupernatantPump.discharge
+
+# Typical operating parameters
+operating_parameters:
+  solids_loading: 20-40  # kg/m2/day (primary)
+  solids_loading_was: 10-25  # kg/m2/day (WAS)
+  feed_concentration: 1-2  # % solids
+  thickened_concentration: 4-6  # % solids (primary)
+  thickened_concentration_was: 2-3  # % solids (WAS)
+  hrt: 24  # hours

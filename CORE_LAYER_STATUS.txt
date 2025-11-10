@@ -1,0 +1,197 @@
+================================================================================
+ENGINEERING MCP SERVER - CORE LAYER SEPARATION OF CONCERNS AUDIT
+Final Assessment: 2025-11-09
+================================================================================
+
+CORE LAYER ARCHITECTURE RATING: ★★★★★ (5/5)
+===========================================
+✅ Equipment Module (equipment.py):
+   - EquipmentRegistry with 30+ types
+   - EquipmentFactory with unified create()
+   - Clean singleton pattern
+   - No circular dependencies
+   - Comprehensive error handling
+
+✅ Symbol Module (symbols.py):
+   - SymbolRegistry with source tracking
+   - Default mappings for 20+ types
+   - File path resolution
+   - Multiple format support
+   - Statistics and export
+
+✅ Conversion Module (conversion.py):
+   - Bidirectional SFILES ↔ DEXPI
+   - Round-trip validation
+   - Comprehensive parsing
+   - BFD expansion integration
+   - Uses equipment factory
+
+✅ API Layer (__init__.py):
+   - Clean public interface
+   - Singleton access pattern
+   - All exports documented
+
+
+SYSTEM INTEGRATION STATUS: ★☆☆☆☆ (1/5)
+==========================================
+⚠️ ADOPTION CRISIS: Only 1 of 14+ relevant files uses core layer
+
+Files Using Core:
+  ✅ src/tools/dexpi_tools_v2.py
+
+Files NOT Using Core (should be):
+  ❌ src/tools/dexpi_tools.py (71K lines)
+  ❌ src/tools/sfiles_tools.py (49K lines)
+  ❌ src/tools/pfd_expansion_engine.py (19K lines)
+  ❌ src/visualization/orchestrator/model_service.py (500 lines)
+  ❌ src/converters/sfiles_dexpi_mapper.py (150+ lines)
+  ❌ src/visualization/symbols/mapper.py (283 lines)
+  ❌ src/visualization/symbols/catalog.py (463 lines)
+
+Total Unused/Underutilized: 140,000+ lines of duplicate code
+
+
+DUPLICATION INVENTORY
+=====================
+
+Equipment Type Mappings:
+  🔴 HIGH RISK: 7 duplicate locations
+  - core/equipment.py: 30 types (canonical)
+  - converters/sfiles_dexpi_mapper.py: 9 types
+  - tools/pfd_expansion_engine.py: 21 types
+  → Total: 277 duplicate mappings across 7 files
+
+Symbol Mappings:
+  🔴 HIGH RISK: 3 duplicate locations + FORMAT CONFLICT
+  - core/symbols.py: 20 types (PP0101 format)
+  - visualization/symbols/mapper.py: 160 types (PP001A format)
+  - visualization/symbols/catalog.py: 30 types (P-01-01 format)
+  → BLOCKER: Three different symbol ID formats!
+
+Conversion Logic:
+  🟡 MEDIUM RISK: 3 duplicate implementations
+  - core/conversion.py: Full SFILES↔DEXPI (canonical)
+  - model_service.py: Partial SFILES→DEXPI
+  - sfiles_dexpi_mapper.py: Basic SFILES→DEXPI
+
+Equipment Factory:
+  🟡 MEDIUM RISK: 4 parallel implementations
+  - core/equipment.py: Unified factory (canonical)
+  - model_service.py: 4-type inline mapper
+  - sfiles_dexpi_mapper.py: 9-type inline mapper
+  - pfd_expansion_engine.py: 21-type class method
+
+
+CRITICAL BLOCKERS
+=================
+
+🔴 BLOCKER #1: Symbol ID Format Conflict
+   Problem: Three symbol ID formats in codebase
+   - Short format: PP0101 (core/symbols.py)
+   - Long format: PP001A (mapper.py - NOAKADEXPI standard)
+   - Dash format: P-01-01 (catalog.py)
+   Impact: Cannot consolidate symbol mappings until resolved
+   Fix: Standardize format and provide converters
+
+🟡 BLOCKER #2: Incomplete Equipment Type Coverage
+   Problem: Different tools register different subsets of equipment
+   - Core has 30+ types registered
+   - model_service.py only handles 4 types
+   - pfd_expansion_engine.py only handles 21 types
+   Impact: Unknown types fall back to CustomEquipment inconsistently
+   Fix: Migrate all tools to use core registry
+
+🟡 BLOCKER #3: No Migration Path
+   Problem: No documentation on how to adopt core layer
+   Impact: Tools developers don't know to use core
+   Fix: Create migration guide and examples
+
+
+MAINTENANCE BURDEN
+==================
+
+Bug Propagation Risk: HIGH
+- Fix in core → must replicate to 3-4 other locations
+- Risk of divergence between implementations
+- Example: New equipment type "reactor"
+  → Must add to: core + 3 other places = 4 changes
+
+Code Quality Issues:
+- Inconsistent error handling (warn vs silent fail)
+- Inconsistent type acceptance (SFILES vs BFD vs DEXPI)
+- Inconsistent metadata attachment
+- No shared validation logic
+
+Testing Impact:
+- Can't test symbol consolidation (format conflict)
+- Can't test factory pattern consistency (parallel implementations)
+- Can't test round-trip conversion (uses different engines)
+
+
+ACTION ITEMS & PRIORITY
+=======================
+
+IMMEDIATE (This Week):
+  1. ✅ Document format conflict findings
+  2. 🔴 RESOLVE symbol ID format (this is the blocker)
+  3. 🔴 Audit NOAKADEXPI library for canonical format
+  4. ⚠️ Create symbol format converter utility
+
+SHORT-TERM (Week 2-3):
+  5. Migrate dexpi_tools.py to use core layer
+  6. Migrate sfiles_tools.py to use core layer
+  7. Migrate model_service.py to use core layer
+  8. Consolidate symbol mappings (after format resolved)
+
+MEDIUM-TERM (Week 4-6):
+  9. Migrate pfd_expansion_engine.py to use core
+  10. Update sfiles_dexpi_mapper.py (or deprecate)
+  11. Create migration guide + examples
+  12. Add deprecation warnings to old implementations
+
+LONG-TERM (Week 7-8):
+  13. Delete duplicate mapping dictionaries
+  14. Archive unused converter implementations
+  15. Add integration tests
+  16. Publish "Single Source of Truth" policy
+
+
+EXPECTED OUTCOME
+================
+
+After full adoption:
+✅ Single source of truth for 30+ equipment types
+✅ Single symbol registry with consistent format
+✅ Single conversion engine for SFILES↔DEXPI
+✅ 80% reduction in duplicate code (~110K lines deleted)
+✅ Elimination of parallel-implementation bugs
+✅ Simplified maintenance: 1 place to update per feature
+✅ Easier onboarding for new developers
+
+Timeline: 6-8 weeks for full adoption + cleanup
+
+
+RECOMMENDATIONS FOR DEVELOPERS
+===============================
+
+When adding new equipment:
+  ❌ DON'T: Add to model_service.py type_map
+  ❌ DON'T: Add to pfd_expansion_engine.py class_map
+  ❌ DON'T: Add to mapper.py SYMBOL_MAPPINGS
+  
+  ✅ DO: Add to core/equipment.py EquipmentRegistry
+  ✅ DO: Add symbol mapping to core/symbols.py
+  ✅ DO: Use get_equipment_factory() to create instances
+  ✅ DO: Use get_symbol_registry() for symbol lookup
+
+When converting SFILES to DEXPI:
+  ❌ DON'T: Use SfilesDexpiMapper or model_service.enrich_sfiles_to_dexpi()
+  ✅ DO: Use get_conversion_engine().sfiles_to_dexpi()
+
+When looking up equipment types:
+  ❌ DON'T: Hardcode type mappings in your module
+  ✅ DO: Use get_equipment_registry().get_by_sfiles_type()
+
+================================================================================
+File: SEPARATION_OF_CONCERNS_ANALYSIS.md contains full detailed analysis (608 lines)
+================================================================================

@@ -163,16 +163,42 @@ class DexpiIntrospector:
         }
     
     def get_equipment_with_nozzles(self) -> List[str]:
-        """Get equipment types that support nozzles."""
+        """Get equipment types that support nozzles.
+
+        Raises:
+            RuntimeError: If any equipment class fails to instantiate or introspect
+        """
+        from pydantic import ValidationError
+
         nozzle_equipment = []
+
         for name, cls in self._equipment_classes.items():
             try:
                 instance = cls()
+            except ValidationError as e:
+                raise RuntimeError(
+                    f"Equipment class '{name}' requires constructor arguments and cannot be introspected for nozzle support. "
+                    f"The introspector needs to be updated to inspect class schemas directly rather than requiring instantiation. "
+                    f"Validation error: {e}"
+                ) from e
+            except (AttributeError, TypeError) as e:
+                raise RuntimeError(
+                    f"Failed to instantiate equipment class '{name}' for nozzle introspection. "
+                    f"This indicates a problem with the class definition. "
+                    f"Error: {e}"
+                ) from e
+
+            try:
                 comp_attrs = bmt.get_composition_attributes(instance)
                 if "nozzles" in comp_attrs:
                     nozzle_equipment.append(name)
-            except:
-                pass
+            except (AttributeError, KeyError) as e:
+                raise RuntimeError(
+                    f"Failed to get composition attributes from equipment class '{name}'. "
+                    f"This indicates a problem with base_model_utils or the class structure. "
+                    f"Error: {e}"
+                ) from e
+
         return sorted(nozzle_equipment)
     
     def get_valves(self) -> List[str]:
@@ -299,25 +325,44 @@ class DexpiIntrospector:
         
         # Special handling for equipment with nozzles
         if category == "equipment":
+            from pydantic import ValidationError
+
             try:
                 instance = cls()
+            except ValidationError as e:
+                raise RuntimeError(
+                    f"Cannot generate schema for equipment class '{class_name}' - requires constructor arguments. "
+                    f"Schema generation needs to be updated to inspect class fields directly. "
+                    f"Validation error: {e}"
+                ) from e
+            except (AttributeError, TypeError) as e:
+                raise RuntimeError(
+                    f"Failed to instantiate equipment class '{class_name}' for schema generation. "
+                    f"Error: {e}"
+                ) from e
+
+            try:
                 comp_attrs = bmt.get_composition_attributes(instance)
-                if "nozzles" in comp_attrs:
-                    properties["nozzles"] = {
-                        "type": "array",
-                        "description": "Nozzle configurations",
-                        "items": {
-                            "type": "object",
-                            "properties": {
-                                "subTagName": {"type": "string"},
-                                "nominalPressure": {"type": "string"},
-                                "nominalDiameter": {"type": "string"}
-                            }
-                        },
-                        "x-attribute-category": "composition"
-                    }
-            except:
-                pass
+            except (AttributeError, KeyError) as e:
+                raise RuntimeError(
+                    f"Failed to get composition attributes for '{class_name}'. "
+                    f"Error: {e}"
+                ) from e
+
+            if "nozzles" in comp_attrs:
+                properties["nozzles"] = {
+                    "type": "array",
+                    "description": "Nozzle configurations",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "subTagName": {"type": "string"},
+                            "nominalPressure": {"type": "string"},
+                            "nominalDiameter": {"type": "string"}
+                        }
+                    },
+                    "x-attribute-category": "composition"
+                }
         
         return {
             "type": "object",

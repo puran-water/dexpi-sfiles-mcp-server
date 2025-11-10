@@ -152,12 +152,22 @@ Created: {metadata['created']}
         try:
             from pydexpi.loaders.ml_graph_loader import MLGraphLoader
             loader = MLGraphLoader(plant_model=model)
-            # Ensure graph is parsed
+            # Ensure graph is parsed using the correct API
             try:
                 loader.parse_dexpi_to_graph()
-            except Exception:
-                # Some MLGraphLoader versions support direct conversion
-                _ = loader.dexpi_to_graph(model)
+            except AttributeError as e:
+                raise AttributeError(
+                    "MLGraphLoader does not have parse_dexpi_to_graph() method. "
+                    "The pyDEXPI API may have changed. "
+                    "Update project_persistence.py to use the correct method. "
+                    f"Error: {e}"
+                ) from e
+            except Exception as e:
+                raise RuntimeError(
+                    f"Failed to parse DEXPI model to graph for visualization. "
+                    f"Model may be malformed or MLGraphLoader encountered an error. "
+                    f"Error: {e}"
+                ) from e
             
             # Enhance node data with specifications for hover
             for node_id in loader.plant_graph.nodes():

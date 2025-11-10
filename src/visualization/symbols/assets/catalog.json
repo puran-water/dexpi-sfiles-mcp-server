@@ -1,0 +1,1489 @@
+{
+  "symbols": [
+    {
+      "id": "PP001A",
+      "name": "Centrifugal Pump",
+      "dexpi_class": "CentrifugalPump",
+      "category": "Pump",
+      "svg_path": "NOAKADEXPI/Pumps/PP001A.svg",
+      "bounding_box": {
+        "x": -0.03125,
+        "y": -0.03125,
+        "width": 16.125,
+        "height": 18.125
+      },
+      "ports": [
+        {
+          "id": "inlet",
+          "position": {
+            "x": 0,
+            "y": 9.0625
+          },
+          "direction": "W",
+          "type": "inlet",
+          "flow_direction": null
+        },
+        {
+          "id": "outlet",
+          "position": {
+            "x": 16.125,
+            "y": 9.0625
+          },
+          "direction": "E",
+          "type": "outlet",
+          "flow_direction": null
+        }
+      ],
+      "anchor_point": {
+        "x": 8.0625,
+        "y": 9.0625
+      },
+      "default_size": {
+        "width": 16.125,
+        "height": 18.125
+      },
+      "scalable": true,
+      "rotatable": true,
+      "variants": [],
+      "tags": [],
+      "file_hash": "ceaadcbd804325cb70340c3bdcf3124f"
+    },
+    {
+      "id": "PP002A",
+      "name": "Centrifugal Pump (Vertical)",
+      "dexpi_class": "DiaphragmPump",
+      "category": "Pump",
+      "svg_path": "NOAKADEXPI/Pumps/PP002A.svg",
+      "bounding_box": {
+        "x": -0.03125,
+        "y": -0.03125,
+        "width": 16.125,
+        "height": 18.125
+      },
+      "ports": [
+        {
+          "id": "inlet",
+          "position": {
+            "x": 0,
+            "y": 9.0625
+          },
+          "direction": "W",
+          "type": "inlet",
+          "flow_direction": null
+        },
+        {
+          "id": "outlet",
+          "position": {
+            "x": 16.125,
+            "y": 9.0625
+          },
+          "direction": "E",
+          "type": "outlet",
+          "flow_direction": null
+        }
+      ],
+      "anchor_point": {
+        "x": 8.0625,
+        "y": 9.0625
+      },
+      "default_size": {
+        "width": 16.125,
+        "height": 18.125
+      },
+      "scalable": true,
+      "rotatable": true,
+      "variants": [
+        "vertical"
+      ],
+      "tags": [],
+      "file_hash": "a29f4b39bd637033b4a235d4126bd108"
+    },
+    {
+      "id": "PP003A",
+      "name": "Rotary Pump",
+      "dexpi_class": "GearPump",
+      "category": "Pump",
+      "svg_path": "NOAKADEXPI/Pumps/PP003A.svg",
+      "bounding_box": {
+        "x": -0.03125,
+        "y": -0.03125,
+        "width": 16.125,
+        "height": 18.125
+      },
+      "ports": [
+        {
+          "id": "inlet",
+          "position": {
+            "x": 0,
+            "y": 9.0625
+          },
+          "direction": "W",
+          "type": "inlet",
+          "flow_direction": null
+        },
+        {
+          "id": "outlet",
+          "position": {
+            "x": 16.125,
+            "y": 9.0625
+          },
+          "direction": "E",
+          "type": "outlet",
+          "flow_direction": null
+        }
+      ],
+      "anchor_point": {
+        "x": 8.0625,
+        "y": 9.0625
+      },
+      "default_size": {
+        "width": 16.125,
+        "height": 18.125
+      },
+      "scalable": true,
+      "rotatable": true,
+      "variants": [],
+      "tags": [],
+      "file_hash": "a5e9b104ddd3623fb24a367537734f33"
+    },
+    {
+      "id": "PP004A",
+      "name": "Reciprocating Pump",
+      "dexpi_class": "HandPump",
+      "category": "Pump",
+      "svg_path": "NOAKADEXPI/Pumps/PP004A.svg",
+      "bounding_box": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 229.341,
+        "height": 271.541
+      },
+      "ports": [
+        {
+          "id": "inlet",
+          "position": {
+            "x": 0,
+            "y": 135.7705
+          },
+          "direction": "W",
+          "type": "inlet",
+          "flow_direction": null
+        },
+        {
+          "id": "outlet",
+          "position": {
+            "x": 229.341,
+            "y": 135.7705
+          },
+          "direction": "E",
+          "type": "outlet",
+          "flow_direction": null
+        }
+      ],
+      "anchor_point": {
+        "x": 114.6705,
+        "y": 135.7705
+      },
+      "default_size": {
+        "width": 229.341,
+        "height": 271.541
+      },
+      "scalable": true,
+      "rotatable": true,
+      "variants": [],
+      "tags": [],
+      "file_hash": "9e3ac5d4108f1576bca650a6ed7437fd"
+    },
+    {
+      "id": "PP005A",
+      "name": "Diaphragm Pump",
+      "dexpi_class": "SlidingVanePump",
+      "category": "Pump",
+      "svg_path": "NOAKADEXPI/Pumps/PP005A.svg",
+      "bounding_box": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 229.022,
+        "height": 257.193
+      },
+      "ports": [
+        {
+          "id": "inlet",
+          "position": {
+            "x": 0,
+            "y": 128.5965
+          },
+          "direction": "W",
+          "type": "inlet",
+          "flow_direction": null
+        },
+        {
+          "id": "outlet",
+          "position": {
+            "x": 229.022,
+            "y": 128.5965
+          },
+          "direction": "E",
+          "type": "outlet",
+          "flow_direction": null
+        }
+      ],
+      "anchor_point": {
+        "x": 114.511,
+        "y": 128.5965
+      },
+      "default_size": {
+        "width": 229.022,
+        "height": 257.193
+      },
+      "scalable": true,
+      "rotatable": true,
+      "variants": [
+        "diaphragm"
+      ],
+      "tags": [],
+      "file_hash": "32956ce76937f2034bad0f82d0a860e4"
+    },
+    {
+      "id": "PP006A",
+      "name": "Screw Pump",
+      "dexpi_class": "LiquidRingPump",
+      "category": "Pump",
+      "svg_path": "NOAKADEXPI/Pumps/PP006A.svg",
+      "bounding_box": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 229.022,
+        "height": 257.193
+      },
+      "ports": [
+        {
+          "id": "inlet",
+          "position": {
+            "x": 0,
+            "y": 128.5965
+          },
+          "direction": "W",
+          "type": "inlet",
+          "flow_direction": null
+        },
+        {
+          "id": "outlet",
+          "position": {
+            "x": 229.022,
+            "y": 128.5965
+          },
+          "direction": "E",
+          "type": "outlet",
+          "flow_direction": null
+        }
+      ],
+      "anchor_point": {
+        "x": 114.511,
+        "y": 128.5965
+      },
+      "default_size": {
+        "width": 229.022,
+        "height": 257.193
+      },
+      "scalable": true,
+      "rotatable": true,
+      "variants": [
+        "screw"
+      ],
+      "tags": [],
+      "file_hash": "f3ab4a06524ce7a665cdc16904177762"
+    },
+    {
+      "id": "PP007A",
+      "name": "Gear Pump",
+      "dexpi_class": "Blower",
+      "category": "Equipment",
+      "svg_path": "NOAKADEXPI/Pumps/PP007A.svg",
+      "bounding_box": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 255.555,
+        "height": 257.368
+      },
+      "ports": [
+        {
+          "id": "inlet",
+          "position": {
+            "x": 0,
+            "y": 128.684
+          },
+          "direction": "W",
+          "type": "inlet",
+          "flow_direction": null
+        },
+        {
+          "id": "outlet",
+          "position": {
+            "x": 255.555,
+            "y": 128.684
+          },
+          "direction": "E",
+          "type": "outlet",
+          "flow_direction": null
+        }
+      ],
+      "anchor_point": {
+        "x": 127.7775,
+        "y": 128.684
+      },
+      "default_size": {
+        "width": 255.555,
+        "height": 257.368
+      },
+      "scalable": true,
+      "rotatable": true,
+      "variants": [
+        "gear"
+      ],
+      "tags": [],
+      "file_hash": "eb2c51bc90f96d8f68cd63ba706b5554"
+    },
+    {
+      "id": "PP008A",
+      "name": "Submersible Pump",
+      "dexpi_class": "ProportioningPump",
+      "category": "Pump",
+      "svg_path": "NOAKADEXPI/Pumps/PP008A.svg",
+      "bounding_box": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 299.888,
+        "height": 200.675
+      },
+      "ports": [
+        {
+          "id": "inlet",
+          "position": {
+            "x": 0,
+            "y": 100.3375
+          },
+          "direction": "W",
+          "type": "inlet",
+          "flow_direction": null
+        },
+        {
+          "id": "outlet",
+          "position": {
+            "x": 299.888,
+            "y": 100.3375
+          },
+          "direction": "E",
+          "type": "outlet",
+          "flow_direction": null
+        }
+      ],
+      "anchor_point": {
+        "x": 149.944,
+        "y": 100.3375
+      },
+      "default_size": {
+        "width": 299.888,
+        "height": 200.675
+      },
+      "scalable": true,
+      "rotatable": true,
+      "variants": [
+        "submersible"
+      ],
+      "tags": [],
+      "file_hash": "5f3f613f7c9ca1b9e640f8ca6d634c5e"
+    },
+    {
+      "id": "PP009A",
+      "name": "Turbine Pump",
+      "dexpi_class": "TriplexPump",
+      "category": "Pump",
+      "svg_path": "NOAKADEXPI/Pumps/PP009A.svg",
+      "bounding_box": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 257.368,
+        "height": 159.647
+      },
+      "ports": [
+        {
+          "id": "inlet",
+          "position": {
+            "x": 0,
+            "y": 79.8235
+          },
+          "direction": "W",
+          "type": "inlet",
+          "flow_direction": null
+        },
+        {
+          "id": "outlet",
+          "position": {
+            "x": 257.368,
+            "y": 79.8235
+          },
+          "direction": "E",
+          "type": "outlet",
+          "flow_direction": null
+        }
+      ],
+      "anchor_point": {
+        "x": 128.684,
+        "y": 79.8235
+      },
+      "default_size": {
+        "width": 257.368,
+        "height": 159.647
+      },
+      "scalable": true,
+      "rotatable": true,
+      "variants": [
+        "turbine"
+      ],
+      "tags": [],
+      "file_hash": "cee64305c125a3a57851b09a8628f49d"
+    },
+    {
+      "id": "PP010A",
+      "name": "Progressive Cavity Pump",
+      "dexpi_class": "ReciprocatingPump",
+      "category": "Pump",
+      "svg_path": "NOAKADEXPI/Pumps/PP010A.svg",
+      "bounding_box": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 198.885,
+        "height": 170.794
+      },
+      "ports": [
+        {
+          "id": "inlet",
+          "position": {
+            "x": 0,
+            "y": 85.397
+          },
+          "direction": "W",
+          "type": "inlet",
+          "flow_direction": null
+        },
+        {
+          "id": "outlet",
+          "position": {
+            "x": 198.885,
+            "y": 85.397
+          },
+          "direction": "E",
+          "type": "outlet",
+          "flow_direction": null
+        }
+      ],
+      "anchor_point": {
+        "x": 99.4425,
+        "y": 85.397
+      },
+      "default_size": {
+        "width": 198.885,
+        "height": 170.794
+      },
+      "scalable": true,
+      "rotatable": true,
+      "variants": [
+        "progressive_cavity"
+      ],
+      "tags": [],
+      "file_hash": "8da33c982de9e71cd900822764a9428b"
+    },
+    {
+      "id": "PV001A",
+      "name": "Gate Valve",
+      "dexpi_class": "Flange",
+      "category": "In-line component",
+      "svg_path": "NOAKADEXPI/Valves/PV001A.svg",
+      "bounding_box": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 30.5965,
+        "height": 58.9429
+      },
+      "ports": [],
+      "anchor_point": {
+        "x": 15.29825,
+        "y": 29.47145
+      },
+      "default_size": {
+        "width": 30.5965,
+        "height": 58.9429
+      },
+      "scalable": true,
+      "rotatable": true,
+      "variants": [],
+      "tags": [],
+      "file_hash": "e17fc13162d7a35d69405f0f3ef33437"
+    },
+    {
+      "id": "PV002A",
+      "name": "Ball Valve",
+      "dexpi_class": "BlindFlange",
+      "category": "In-line component",
+      "svg_path": "NOAKADEXPI/Valves/PV002A.svg",
+      "bounding_box": {
+        "x": -0.03125,
+        "y": -0.03125,
+        "width": 0.125,
+        "height": 4.125
+      },
+      "ports": [],
+      "anchor_point": {
+        "x": 0.0625,
+        "y": 2.0625
+      },
+      "default_size": {
+        "width": 0.125,
+        "height": 4.125
+      },
+      "scalable": true,
+      "rotatable": true,
+      "variants": [],
+      "tags": [],
+      "file_hash": "3a4031c65f877d8bb8c8df4a819d9def"
+    },
+    {
+      "id": "PV003A",
+      "name": "Butterfly Valve",
+      "dexpi_class": "ThreeWayValve",
+      "category": "Valve",
+      "svg_path": "NOAKADEXPI/Valves/PV003A.svg",
+      "bounding_box": {
+        "x": -0.03125,
+        "y": -0.03125,
+        "width": 8.0625,
+        "height": 6.0625
+      },
+      "ports": [],
+      "anchor_point": {
+        "x": 4.03125,
+        "y": 3.03125
+      },
+      "default_size": {
+        "width": 8.0625,
+        "height": 6.0625
+      },
+      "scalable": true,
+      "rotatable": true,
+      "variants": [],
+      "tags": [],
+      "file_hash": "6aa5b67f2e8b8155a3d7e45d1ba00be4"
+    },
+    {
+      "id": "PV004A",
+      "name": "Check Valve",
+      "dexpi_class": "FourWayValve",
+      "category": "Valve",
+      "svg_path": "NOAKADEXPI/Valves/PV004A.svg",
+      "bounding_box": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 117.16,
+        "height": 116.356
+      },
+      "ports": [],
+      "anchor_point": {
+        "x": 58.58,
+        "y": 58.178
+      },
+      "default_size": {
+        "width": 117.16,
+        "height": 116.356
+      },
+      "scalable": true,
+      "rotatable": true,
+      "variants": [],
+      "tags": [],
+      "file_hash": "9967051107c1bc966afecc762cf948d0"
+    },
+    {
+      "id": "PV005A",
+      "name": "Globe Valve",
+      "dexpi_class": "GateValve",
+      "category": "Valve",
+      "svg_path": "NOAKADEXPI/Valves/PV005A.svg",
+      "bounding_box": {
+        "x": -0.03125,
+        "y": -0.03125,
+        "width": 8.0625,
+        "height": 4.0625
+      },
+      "ports": [],
+      "anchor_point": {
+        "x": 4.03125,
+        "y": 2.03125
+      },
+      "default_size": {
+        "width": 8.0625,
+        "height": 4.0625
+      },
+      "scalable": true,
+      "rotatable": true,
+      "variants": [],
+      "tags": [],
+      "file_hash": "b3a4b1bff546890ad6a78c5b873d06b4"
+    },
+    {
+      "id": "PV007A",
+      "name": "Plug Valve",
+      "dexpi_class": "GlobeValve",
+      "category": "Valve",
+      "svg_path": "NOAKADEXPI/Valves/PV007A.svg",
+      "bounding_box": {
+        "x": -0.03125,
+        "y": -0.03125,
+        "width": 8.0625,
+        "height": 4.0625
+      },
+      "ports": [],
+      "anchor_point": {
+        "x": 4.03125,
+        "y": 2.03125
+      },
+      "default_size": {
+        "width": 8.0625,
+        "height": 4.0625
+      },
+      "scalable": true,
+      "rotatable": true,
+      "variants": [],
+      "tags": [],
+      "file_hash": "75ad8fd1d4d280cf46eedc8b509d780d"
+    },
+    {
+      "id": "PV008A",
+      "name": "Needle Valve",
+      "dexpi_class": "FloatValve",
+      "category": "Valve",
+      "svg_path": "NOAKADEXPI/Valves/PV008A.svg",
+      "bounding_box": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 117.16,
+        "height": 91.2588
+      },
+      "ports": [],
+      "anchor_point": {
+        "x": 58.58,
+        "y": 45.6294
+      },
+      "default_size": {
+        "width": 117.16,
+        "height": 91.2588
+      },
+      "scalable": true,
+      "rotatable": true,
+      "variants": [],
+      "tags": [],
+      "file_hash": "8f2ab92d56adb36504641d70ba987f07"
+    },
+    {
+      "id": "PV009A",
+      "name": "Diaphragm Valve",
+      "dexpi_class": "MinFlowCheckValve",
+      "category": "Valve",
+      "svg_path": "NOAKADEXPI/Valves/PV009A.svg",
+      "bounding_box": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 115.636,
+        "height": 74.1533
+      },
+      "ports": [],
+      "anchor_point": {
+        "x": 57.818,
+        "y": 37.07665
+      },
+      "default_size": {
+        "width": 115.636,
+        "height": 74.1533
+      },
+      "scalable": true,
+      "rotatable": true,
+      "variants": [
+        "diaphragm"
+      ],
+      "tags": [],
+      "file_hash": "a52162f20ebc328f49d4c2c211e17e4e"
+    },
+    {
+      "id": "PV010A",
+      "name": "Safety Valve",
+      "dexpi_class": "ChokeValve",
+      "category": "Valve",
+      "svg_path": "NOAKADEXPI/Valves/PV010A.svg",
+      "bounding_box": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 87.899,
+        "height": 88.0674
+      },
+      "ports": [],
+      "anchor_point": {
+        "x": 43.9495,
+        "y": 44.0337
+      },
+      "default_size": {
+        "width": 87.899,
+        "height": 88.0674
+      },
+      "scalable": true,
+      "rotatable": true,
+      "variants": [],
+      "tags": [],
+      "file_hash": "d3b70c9eccc4bcf4353d373387459c07"
+    },
+    {
+      "id": "PV011A",
+      "name": "Control Valve",
+      "dexpi_class": "OperatedValve",
+      "category": "Valve",
+      "svg_path": "NOAKADEXPI/Valves/PV011A.svg",
+      "bounding_box": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 415.913,
+        "height": 370.318
+      },
+      "ports": [],
+      "anchor_point": {
+        "x": 207.9565,
+        "y": 185.159
+      },
+      "default_size": {
+        "width": 415.913,
+        "height": 370.318
+      },
+      "scalable": true,
+      "rotatable": true,
+      "variants": [],
+      "tags": [],
+      "file_hash": "5dca9a21eac96b0888689bc3236cd85d"
+    },
+    {
+      "id": "PT001A",
+      "name": "Atmospheric Tank",
+      "dexpi_class": "Tank",
+      "category": "Vessel",
+      "svg_path": "NOAKADEXPI/Tanks/PT001A.svg",
+      "bounding_box": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 713.438,
+        "height": 243.989
+      },
+      "ports": [
+        {
+          "id": "inlet",
+          "position": {
+            "x": 356.719,
+            "y": 0
+          },
+          "direction": "N",
+          "type": "inlet",
+          "flow_direction": null
+        },
+        {
+          "id": "outlet",
+          "position": {
+            "x": 356.719,
+            "y": 243.989
+          },
+          "direction": "S",
+          "type": "outlet",
+          "flow_direction": null
+        },
+        {
+          "id": "vent",
+          "position": {
+            "x": 356.719,
+            "y": 0
+          },
+          "direction": "N",
+          "type": "auxiliary",
+          "flow_direction": null
+        }
+      ],
+      "anchor_point": {
+        "x": 356.719,
+        "y": 121.9945
+      },
+      "default_size": {
+        "width": 713.438,
+        "height": 243.989
+      },
+      "scalable": true,
+      "rotatable": true,
+      "variants": [],
+      "tags": [],
+      "file_hash": "fa5be25c1c714028550cda498f992f1f"
+    },
+    {
+      "id": "PT002A",
+      "name": "Pressure Tank",
+      "dexpi_class": "PressureVessel",
+      "category": "Vessel",
+      "svg_path": "NOAKADEXPI/Tanks/PT002A.svg",
+      "bounding_box": {
+        "x": -0.0624858,
+        "y": -0.0624858,
+        "width": 32.2427,
+        "height": 96.1031
+      },
+      "ports": [
+        {
+          "id": "inlet",
+          "position": {
+            "x": 16.12135,
+            "y": 0
+          },
+          "direction": "N",
+          "type": "inlet",
+          "flow_direction": null
+        },
+        {
+          "id": "outlet",
+          "position": {
+            "x": 16.12135,
+            "y": 96.1031
+          },
+          "direction": "S",
+          "type": "outlet",
+          "flow_direction": null
+        },
+        {
+          "id": "vent",
+          "position": {
+            "x": 16.12135,
+            "y": 0
+          },
+          "direction": "N",
+          "type": "auxiliary",
+          "flow_direction": null
+        }
+      ],
+      "anchor_point": {
+        "x": 16.12135,
+        "y": 48.05155
+      },
+      "default_size": {
+        "width": 32.2427,
+        "height": 96.1031
+      },
+      "scalable": true,
+      "rotatable": true,
+      "variants": [],
+      "tags": [],
+      "file_hash": "57289898d67d9f59775dafe3320d6b34"
+    },
+    {
+      "id": "PT003A",
+      "name": "Cone Bottom Tank",
+      "dexpi_class": "Tower",
+      "category": "Vessel",
+      "svg_path": "NOAKADEXPI/Tanks/PT003A.svg",
+      "bounding_box": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 243.573,
+        "height": 714.899
+      },
+      "ports": [
+        {
+          "id": "inlet",
+          "position": {
+            "x": 121.7865,
+            "y": 0
+          },
+          "direction": "N",
+          "type": "inlet",
+          "flow_direction": null
+        },
+        {
+          "id": "outlet",
+          "position": {
+            "x": 121.7865,
+            "y": 714.899
+          },
+          "direction": "S",
+          "type": "outlet",
+          "flow_direction": null
+        },
+        {
+          "id": "vent",
+          "position": {
+            "x": 121.7865,
+            "y": 0
+          },
+          "direction": "N",
+          "type": "auxiliary",
+          "flow_direction": null
+        }
+      ],
+      "anchor_point": {
+        "x": 121.7865,
+        "y": 357.4495
+      },
+      "default_size": {
+        "width": 243.573,
+        "height": 714.899
+      },
+      "scalable": true,
+      "rotatable": true,
+      "variants": [
+        "cone_bottom"
+      ],
+      "tags": [],
+      "file_hash": "ae46fa7cc5b2614e2ef57496e2c4423f"
+    },
+    {
+      "id": "PT004A",
+      "name": "Horizontal Tank",
+      "dexpi_class": "QuickOpenLidTank",
+      "category": "Vessel",
+      "svg_path": "NOAKADEXPI/Tanks/PT004A.svg",
+      "bounding_box": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 186.588,
+        "height": 568.907
+      },
+      "ports": [
+        {
+          "id": "inlet",
+          "position": {
+            "x": 93.294,
+            "y": 0
+          },
+          "direction": "N",
+          "type": "inlet",
+          "flow_direction": null
+        },
+        {
+          "id": "outlet",
+          "position": {
+            "x": 93.294,
+            "y": 568.907
+          },
+          "direction": "S",
+          "type": "outlet",
+          "flow_direction": null
+        },
+        {
+          "id": "vent",
+          "position": {
+            "x": 93.294,
+            "y": 0
+          },
+          "direction": "N",
+          "type": "auxiliary",
+          "flow_direction": null
+        }
+      ],
+      "anchor_point": {
+        "x": 93.294,
+        "y": 284.4535
+      },
+      "default_size": {
+        "width": 186.588,
+        "height": 568.907
+      },
+      "scalable": true,
+      "rotatable": true,
+      "variants": [
+        "horizontal"
+      ],
+      "tags": [],
+      "file_hash": "e346e7419ac0f392cab2a2aa8db60043"
+    },
+    {
+      "id": "PT005A",
+      "name": "Silo",
+      "dexpi_class": "DomeRoofTank",
+      "category": "Vessel",
+      "svg_path": "NOAKADEXPI/Tanks/PT005A.svg",
+      "bounding_box": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 229.022,
+        "height": 342.409
+      },
+      "ports": [
+        {
+          "id": "inlet",
+          "position": {
+            "x": 114.511,
+            "y": 0
+          },
+          "direction": "N",
+          "type": "inlet",
+          "flow_direction": null
+        },
+        {
+          "id": "outlet",
+          "position": {
+            "x": 114.511,
+            "y": 342.409
+          },
+          "direction": "S",
+          "type": "outlet",
+          "flow_direction": null
+        },
+        {
+          "id": "vent",
+          "position": {
+            "x": 114.511,
+            "y": 0
+          },
+          "direction": "N",
+          "type": "auxiliary",
+          "flow_direction": null
+        }
+      ],
+      "anchor_point": {
+        "x": 114.511,
+        "y": 171.2045
+      },
+      "default_size": {
+        "width": 229.022,
+        "height": 342.409
+      },
+      "scalable": true,
+      "rotatable": true,
+      "variants": [],
+      "tags": [],
+      "file_hash": "1ea7778e7e6a6e92361ec7a1d2e21465"
+    },
+    {
+      "id": "PE001A",
+      "name": "Top Entry Mixer",
+      "dexpi_class": "ConcentricReducer",
+      "category": "In-line component",
+      "svg_path": "NOAKADEXPI/Equipment/PE001A.svg",
+      "bounding_box": {
+        "x": -0.03125,
+        "y": -0.03125,
+        "width": 4.125,
+        "height": 4.125
+      },
+      "ports": [],
+      "anchor_point": {
+        "x": 2.0625,
+        "y": 2.0625
+      },
+      "default_size": {
+        "width": 4.125,
+        "height": 4.125
+      },
+      "scalable": true,
+      "rotatable": true,
+      "variants": [
+        "top_entry"
+      ],
+      "tags": [],
+      "file_hash": "70712ce2934bf43439d8a4e8cf86deed"
+    },
+    {
+      "id": "PE002A",
+      "name": "Side Entry Mixer",
+      "dexpi_class": "EccentricReducer",
+      "category": "In-line component",
+      "svg_path": "NOAKADEXPI/Equipment/PE002A.svg",
+      "bounding_box": {
+        "x": -0.03125,
+        "y": -0.03125,
+        "width": 4.0625,
+        "height": 3.0625
+      },
+      "ports": [],
+      "anchor_point": {
+        "x": 2.03125,
+        "y": 1.53125
+      },
+      "default_size": {
+        "width": 4.0625,
+        "height": 3.0625
+      },
+      "scalable": true,
+      "rotatable": true,
+      "variants": [
+        "side_entry"
+      ],
+      "tags": [],
+      "file_hash": "5941de0ff55d2ee61b4b334b7317d264"
+    },
+    {
+      "id": "PE003A",
+      "name": "Static Mixer",
+      "dexpi_class": "InlineMixer",
+      "category": "In-line component",
+      "svg_path": "NOAKADEXPI/Equipment/PE003A.svg",
+      "bounding_box": {
+        "x": -0.03125,
+        "y": -0.03125,
+        "width": 12.0625,
+        "height": 6.0625
+      },
+      "ports": [],
+      "anchor_point": {
+        "x": 6.03125,
+        "y": 3.03125
+      },
+      "default_size": {
+        "width": 12.0625,
+        "height": 6.0625
+      },
+      "scalable": true,
+      "rotatable": true,
+      "variants": [],
+      "tags": [],
+      "file_hash": "94f6a2596561db3a5f2df534e0d814dc"
+    },
+    {
+      "id": "PE010A",
+      "name": "Centrifugal Blower",
+      "dexpi_class": "PlateHeatExchanger",
+      "category": "Equipment",
+      "svg_path": "NOAKADEXPI/Equipment/PE010A.svg",
+      "bounding_box": {
+        "x": -0.0626225,
+        "y": -0.0626225,
+        "width": 32.188,
+        "height": 32.0627
+      },
+      "ports": [],
+      "anchor_point": {
+        "x": 16.094,
+        "y": 16.03135
+      },
+      "default_size": {
+        "width": 32.188,
+        "height": 32.0627
+      },
+      "scalable": true,
+      "rotatable": true,
+      "variants": [],
+      "tags": [],
+      "file_hash": "a1e47989652d6e66acad028940cbf9b5"
+    },
+    {
+      "id": "PE011A",
+      "name": "Rotary Blower",
+      "dexpi_class": "FinHeatExchanger",
+      "category": "Equipment",
+      "svg_path": "NOAKADEXPI/Equipment/PE011A.svg",
+      "bounding_box": {
+        "x": -0.03125,
+        "y": -0.03125,
+        "width": 32.125,
+        "height": 16.0625
+      },
+      "ports": [],
+      "anchor_point": {
+        "x": 16.0625,
+        "y": 8.03125
+      },
+      "default_size": {
+        "width": 32.125,
+        "height": 16.0625
+      },
+      "scalable": true,
+      "rotatable": true,
+      "variants": [],
+      "tags": [],
+      "file_hash": "6165523d2c84576197fdfc707bd92bfc"
+    },
+    {
+      "id": "PE020A",
+      "name": "Shell and Tube Heat Exchanger",
+      "dexpi_class": "Drive",
+      "category": "ConnectedEquipment",
+      "svg_path": "NOAKADEXPI/Equipment/PE020A.svg",
+      "bounding_box": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 257.211,
+        "height": 115.562
+      },
+      "ports": [],
+      "anchor_point": {
+        "x": 128.6055,
+        "y": 57.781
+      },
+      "default_size": {
+        "width": 257.211,
+        "height": 115.562
+      },
+      "scalable": true,
+      "rotatable": true,
+      "variants": [],
+      "tags": [],
+      "file_hash": "c13cdfd6b193314c8ccaa03d852664a1"
+    },
+    {
+      "id": "PE021A",
+      "name": "Plate Heat Exchanger",
+      "dexpi_class": "Turbine",
+      "category": "ConnectedEquipment",
+      "svg_path": "NOAKADEXPI/Equipment/PE021A.svg",
+      "bounding_box": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 271.541,
+        "height": 200.675
+      },
+      "ports": [],
+      "anchor_point": {
+        "x": 135.7705,
+        "y": 100.3375
+      },
+      "default_size": {
+        "width": 271.541,
+        "height": 200.675
+      },
+      "scalable": true,
+      "rotatable": true,
+      "variants": [],
+      "tags": [],
+      "file_hash": "0fa4b8952c3def8b8565a173b8dcd007"
+    },
+    {
+      "id": "PE022A",
+      "name": "Air Cooler",
+      "dexpi_class": "Crusher",
+      "category": "Equipment",
+      "svg_path": "NOAKADEXPI/Equipment/PE022A.svg",
+      "bounding_box": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 342.407,
+        "height": 115.636
+      },
+      "ports": [],
+      "anchor_point": {
+        "x": 171.2035,
+        "y": 57.818
+      },
+      "default_size": {
+        "width": 342.407,
+        "height": 115.636
+      },
+      "scalable": true,
+      "rotatable": true,
+      "variants": [
+        "air_cooled"
+      ],
+      "tags": [],
+      "file_hash": "dbf646a670494254c28f8c444c8fc3ac"
+    },
+    {
+      "id": "PF001A",
+      "name": "Cartridge Filter",
+      "dexpi_class": "FlowTurbine",
+      "category": "In-Line Instrument",
+      "svg_path": "NOAKADEXPI/Filters/PF001A.svg",
+      "bounding_box": {
+        "x": -0.031746,
+        "y": -0.031746,
+        "width": 8.06349,
+        "height": 8.06349
+      },
+      "ports": [],
+      "anchor_point": {
+        "x": 4.031745,
+        "y": 4.031745
+      },
+      "default_size": {
+        "width": 8.06349,
+        "height": 8.06349
+      },
+      "scalable": true,
+      "rotatable": true,
+      "variants": [
+        "cartridge"
+      ],
+      "tags": [],
+      "file_hash": "d290c826b94197656279fc33769c6120"
+    },
+    {
+      "id": "PF002A",
+      "name": "Bag Filter",
+      "dexpi_class": "FlowVortex",
+      "category": "In-Line Instrument",
+      "svg_path": "NOAKADEXPI/Filters/PF002A.svg",
+      "bounding_box": {
+        "x": -0.031746,
+        "y": -0.031746,
+        "width": 8.06349,
+        "height": 8.06349
+      },
+      "ports": [],
+      "anchor_point": {
+        "x": 4.031745,
+        "y": 4.031745
+      },
+      "default_size": {
+        "width": 8.06349,
+        "height": 8.06349
+      },
+      "scalable": true,
+      "rotatable": true,
+      "variants": [
+        "bag"
+      ],
+      "tags": [],
+      "file_hash": "c02e2c8059d4b595e813cfd93a327d71"
+    },
+    {
+      "id": "PF003A",
+      "name": "Sand Filter",
+      "dexpi_class": "FlowCoriolis",
+      "category": "In-Line Instrument",
+      "svg_path": "NOAKADEXPI/Filters/PF003A.svg",
+      "bounding_box": {
+        "x": -0.031746,
+        "y": -0.031746,
+        "width": 8.06349,
+        "height": 8.06349
+      },
+      "ports": [],
+      "anchor_point": {
+        "x": 4.031745,
+        "y": 4.031745
+      },
+      "default_size": {
+        "width": 8.06349,
+        "height": 8.06349
+      },
+      "scalable": true,
+      "rotatable": true,
+      "variants": [
+        "sand"
+      ],
+      "tags": [],
+      "file_hash": "01ec7ac7185995c2359171bfb253341d"
+    },
+    {
+      "id": "PF004A",
+      "name": "Plate Filter",
+      "dexpi_class": "FlowRotameter",
+      "category": "In-Line Instrument",
+      "svg_path": "NOAKADEXPI/Filters/PF004A.svg",
+      "bounding_box": {
+        "x": -0.031746,
+        "y": -0.031746,
+        "width": 8.06349,
+        "height": 8.06349
+      },
+      "ports": [],
+      "anchor_point": {
+        "x": 4.031745,
+        "y": 4.031745
+      },
+      "default_size": {
+        "width": 8.06349,
+        "height": 8.06349
+      },
+      "scalable": true,
+      "rotatable": true,
+      "variants": [
+        "plate"
+      ],
+      "tags": [],
+      "file_hash": "d2e7ef2b5511b876c5fd72b16222e8e6"
+    },
+    {
+      "id": "PF005A",
+      "name": "Strainer",
+      "dexpi_class": "FlowMagnetic",
+      "category": "In-Line Instrument",
+      "svg_path": "NOAKADEXPI/Filters/PF005A.svg",
+      "bounding_box": {
+        "x": -0.031746,
+        "y": -0.031746,
+        "width": 8.06349,
+        "height": 8.06349
+      },
+      "ports": [],
+      "anchor_point": {
+        "x": 4.031745,
+        "y": 4.031745
+      },
+      "default_size": {
+        "width": 8.06349,
+        "height": 8.06349
+      },
+      "scalable": true,
+      "rotatable": true,
+      "variants": [
+        "strainer"
+      ],
+      "tags": [],
+      "file_hash": "0bcc39cd0419b60859e9d2693577145b"
+    },
+    {
+      "id": "PS001A",
+      "name": "Circular Clarifier",
+      "dexpi_class": "SpectacleBlind",
+      "category": "In-line component",
+      "svg_path": "NOAKADEXPI/Separators/PS001A.svg",
+      "bounding_box": {
+        "x": -0.03125,
+        "y": -0.03125,
+        "width": 4.125,
+        "height": 14.125
+      },
+      "ports": [],
+      "anchor_point": {
+        "x": 2.0625,
+        "y": 7.0625
+      },
+      "default_size": {
+        "width": 4.125,
+        "height": 14.125
+      },
+      "scalable": true,
+      "rotatable": true,
+      "variants": [
+        "circular"
+      ],
+      "tags": [],
+      "file_hash": "ab7d880a5ef1e0443a6293096936841e"
+    },
+    {
+      "id": "PS003A",
+      "name": "Centrifuge",
+      "dexpi_class": "Spade",
+      "category": "In-line component",
+      "svg_path": "NOAKADEXPI/Separators/PS003A.svg",
+      "bounding_box": {
+        "x": -0.03125,
+        "y": -0.03125,
+        "width": 4.125,
+        "height": 11.125
+      },
+      "ports": [],
+      "anchor_point": {
+        "x": 2.0625,
+        "y": 5.5625
+      },
+      "default_size": {
+        "width": 4.125,
+        "height": 11.125
+      },
+      "scalable": true,
+      "rotatable": true,
+      "variants": [],
+      "tags": [],
+      "file_hash": "0237f9d8272048fc2f75edc444726f5f"
+    }
+  ],
+  "version": "1.0",
+  "count": 40
+}

@@ -1,0 +1,175 @@
+# Grit Removal Template
+process_unit_id: "GR"
+area_number: 101
+name: "Grit Removal"
+description: "Grit removal system for inorganic solids separation"
+
+# Parameters for variations
+parameters:
+  grit_type:
+    type: enum
+    values: [aerated, vortex, horizontal_flow]
+    default: aerated
+    affects: [equipment, connections]
+
+  grit_washing:
+    type: boolean
+    default: true
+    affects: [equipment]
+
+  flow_measurement:
+    type: boolean
+    default: true
+    affects: [instrumentation]
+
+# Equipment specifications
+per_train_equipment:
+  - id: "GritChamber"
+    dexpi_class: "Tank"
+    tag_prefix: "TK"
+    count: 1
+    condition: "${grit_type|aerated} == 'aerated'"
+    default_params:
+      length: 10  # m
+      width: 3  # m
+      depth: 3.5  # m
+      material: "Concrete"
+
+  - id: "VortexChamber"
+    dexpi_class: "CustomEquipment"
+    tag_prefix: "VT"
+    count: 1
+    condition: "grit_type == 'vortex'"
+    default_params:
+      diameter: 4  # m
+      depth: 3  # m
+      type: "Pista Grit"
+
+  - id: "HorizontalChamber"
+    dexpi_class: "Tank"
+    tag_prefix: "TK"
+    count: 1
+    condition: "grit_type == 'horizontal_flow'"
+    default_params:
+      length: 15  # m
+      width: 1.5  # m
+      depth: 1  # m
+
+  - id: "GritCollector"
+    dexpi_class: "CustomEquipment"
+    tag_prefix: "GC"
+    count: 1
+    mount_to: "${grit_type|aerated} == 'aerated' ? 'GritChamber' : ${grit_type|aerated} == 'vortex' ? 'VortexChamber' : 'HorizontalChamber'"
+    default_params:
+      type: "${grit_type|aerated} == 'aerated' ? 'Chain and Bucket' : 'Grit Pump'"
+
+shared_equipment:
+  - id: "AerationBlower"
+    dexpi_class: "CentrifugalBlower"
+    tag_prefix: "BL"
+    count: 2  # 1 duty + 1 standby
+    condition: "${grit_type|aerated} == 'aerated'"
+    default_params:
+      flow_rate: 50  # m3/h
+      pressure: 0.5  # bar
+
+  - id: "GritPump"
+    dexpi_class: "CentrifugalPump"
+    tag_prefix: "P"
+    count: 2  # 1 duty + 1 standby
+    default_params:
+      flow_rate: 10  # m3/h
+      head: 10  # m
+      type: "Grit Pump"
+
+  - id: "GritClassifier"
+    dexpi_class: "CustomEquipment"
+    tag_prefix: "CL"
+    count: 1
+    condition: "${grit_washing|true}"
+    default_params:
+      type: "Screw Classifier"
+      capacity: 2  # m3/h
+      power: 2  # kW
+
+  - id: "GritWasher"
+    dexpi_class: "CustomEquipment"
+    tag_prefix: "WS"
+    count: 1
+    condition: "${grit_washing|true}"
+    default_params:
+      type: "Grit Washer"
+      capacity: 2  # m3/h
+
+  - id: "CollectorDrive"
+    dexpi_class: "Motor"
+    tag_prefix: "M"
+    count: 1
+    mount_to: "GritCollector"
+    default_params:
+      power: 1.5  # kW
+
+  - id: "FlowMeter"
+    $ref: equipment_library.magnetic_flow_meter
+    tag_prefix: "FIT"
+    count: 1
+    condition: "${flow_measurement|true}"
+
+  - id: "AirFlowMeter"
+    dexpi_class: "ProcessSignalGeneratingSystem"
+    tag_prefix: "FIT"
+    count: 1
+    condition: "${grit_type|aerated} == 'aerated'"
+    mount_to: "AerationBlower"
+    default_params:
+      type: "Thermal Mass"
+
+  - id: "GritLevelSensor"
+    dexpi_class: "ProcessSignalGeneratingSystem"
+    tag_prefix: "LIT"
+    count: 1
+    default_params:
+      type: "Ultrasonic"
+
+# Components
+components:
+  - aeration_system  # Only for aerated type
+
+# Connection DSL
+connections: |
+  # Main flow
+  BFD.inlet -> GritChamber-*.inlet
+  BFD.inlet -> VortexChamber-*.inlet
+  BFD.inlet -> HorizontalChamber-*.inlet
+
+  GritChamber-*.outlet -> BFD.outlet
+  VortexChamber-*.outlet -> BFD.outlet
+  HorizontalChamber-*.outlet -> BFD.outlet
+
+  # Grit handling
+  GritCollector-*.discharge -> GritPump-1.suction
+  GritCollector-*.discharge -> GritPump-2.suction
+  GritPump-1.discharge -> GritClassifier.inlet
+  GritPump-2.discharge -> GritClassifier.inlet
+
+  # Grit washing
+  GritClassifier.underflow -> GritWasher.inlet
+  GritWasher.outlet -> GritDumpster
+  GritClassifier.overflow -> BFD.outlet
+
+  # Aeration (for aerated type)
+  AerationBlower-*.discharge -> GritChamber-*.air_inlet
+
+# Port mappings to BFD
+port_mappings:
+  BFD.inlet: GritChamber.inlet
+  BFD.outlet: GritChamber.outlet
+  BFD.grit: GritWasher.outlet
+
+# Typical operating parameters
+operating_parameters:
+  detention_time: 2-5  # minutes
+  air_supply: 3-5  # m3/min/m (aerated)
+  grit_removal: 0.1-0.2  # m3/1000m3
+  grit_size: 0.2-0.3  # mm minimum
+  velocity_horizontal: 0.3  # m/s

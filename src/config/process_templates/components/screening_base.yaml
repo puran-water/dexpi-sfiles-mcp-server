@@ -1,0 +1,21 @@
+# Base component for screening processes
+id: screening_base
+description: "Base screening configuration with screen and screenings handling"
+
+equipment:
+  - id: "Screen"
+    $ref: equipment_library.bar_screen  # Can be overridden for fine_screen
+    tag_prefix: "S"
+
+  - id: "ScreeningsConveyor"
+    $ref: equipment_library.screw_conveyor
+    tag_prefix: "CV"
+
+connections: |
+  Screen.screenings -> ScreeningsConveyor.inlet
+  ScreeningsConveyor.outlet -> ScreeningsContainer
+
+# Port mappings to BFD
+port_mappings:
+  BFD.inlet: Screen.inlet
+  BFD.outlet: Screen.outlet

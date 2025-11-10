@@ -1,0 +1,151 @@
+# Secondary Clarifier Template
+process_unit_id: "SC"
+area_number: 240
+name: "Secondary Clarifier"
+description: "Final clarifier for biomass separation after biological treatment"
+
+# Parameters for variations
+parameters:
+  clarifier_type:
+    type: enum
+    values: [circular, rectangular]
+    default: circular
+    affects: [equipment]
+
+  ras_configuration:
+    type: enum
+    values: [suction_header, individual_pumps]
+    default: suction_header
+    affects: [equipment, connections]
+
+  density_current_baffle:
+    type: boolean
+    default: true
+    affects: [equipment]
+
+# Equipment specifications
+per_train_equipment:
+  - id: "Clarifier"
+    $ref: equipment_library.secondary_clarifier_tank
+    tag_prefix: "SC"
+    count: 1
+    default_params:
+      diameter: 35  # m (for circular)
+      depth: 4.5  # m
+      material: "Concrete"
+
+  - id: "Scraper"
+    dexpi_class: "CustomEquipment"
+    tag_prefix: "SC"
+    count: 1
+    mount_to: "Clarifier"
+    default_params:
+      type: "Suction Scraper"
+      power: 3  # kW
+
+  - id: "DensityBaffle"
+    dexpi_class: "CustomEquipment"
+    tag_prefix: "BF"
+    count: 1
+    mount_to: "Clarifier"
+    condition: "${density_current_baffle|true}"
+    default_params:
+      type: "Stamford Baffle"
+      depth: 2  # m
+
+  - id: "WeirBox"
+    dexpi_class: "CustomEquipment"
+    tag_prefix: "WB"
+    count: 1
+    mount_to: "Clarifier"
+    default_params:
+      type: "V-Notch Weir"
+
+shared_equipment:
+  - id: "RASPump"
+    $ref: equipment_library.ras_pump
+    tag_prefix: "P"
+    count: 3  # 2 duty + 1 standby
+    condition: "${ras_configuration|suction_header} == 'suction_header'"
+    default_params:
+      flow_rate: 100  # % of influent
+      head: 5  # m
+
+  - id: "WASPump"
+    $ref: equipment_library.was_pump
+    tag_prefix: "P"
+    count: 1
+    default_params:
+      flow_rate: 2  # % of influent
+      head: 15  # m
+
+  - id: "ScumPump"
+    dexpi_class: "CentrifugalPump"
+    tag_prefix: "P"
+    count: 1
+    default_params:
+      flow_rate: 0.2  # % of influent
+
+  - id: "RASFlowMeter"
+    $ref: equipment_library.magnetic_flow_meter
+    tag_prefix: "FIT"
+    count: 1
+    mount_to: "RASPump"
+
+  - id: "WASFlowMeter"
+    $ref: equipment_library.magnetic_flow_meter
+    tag_prefix: "FIT"
+    count: 1
+    mount_to: "WASPump"
+
+  - id: "BlanketLevel"
+    dexpi_class: "ProcessSignalGeneratingSystem"
+    tag_prefix: "LIT"
+    count: 1
+    mount_to: "Clarifier"
+    default_params:
+      type: "Ultrasonic"
+
+# Components
+components:
+  - mechanical_drive  # Adds motor and gearbox for scraper
+
+# Connection DSL
+connections: |
+  # Main flow
+  BFD.inlet -> Clarifier-*.inlet
+  Clarifier-*.effluent -> WeirBox-*.inlet
+  WeirBox-*.outlet -> BFD.outlet
+
+  # RAS flow (suction header configuration)
+  Clarifier-*.underflow -> RASPump-1.suction
+  Clarifier-*.underflow -> RASPump-2.suction
+  Clarifier-*.underflow -> RASPump-3.suction
+  RASPump-1.discharge -> AerationTank.ras_return
+  RASPump-2.discharge -> AerationTank.ras_return
+  RASPump-3.discharge -> AerationTank.ras_return
+
+  # WAS flow
+  RASPump-1.discharge -> WASPump.suction
+  WASPump.discharge -> SludgeThickening
+
+  # Scum removal
+  Clarifier-*.scum -> ScumPump.suction
+  ScumPump.discharge -> ScumProcessing
+
+# Port mappings to BFD
+port_mappings:
+  BFD.inlet: Clarifier.inlet
+  BFD.outlet: WeirBox.outlet
+  BFD.ras: RASPump.discharge
+  BFD.was: WASPump.discharge
+  BFD.scum: ScumPump.discharge
+
+# Typical operating parameters
+operating_parameters:
+  svi: 80-150  # mL/g
+  surface_loading: 16-28  # m3/m2/day
+  solids_loading: 100-150  # kg/m2/day
+  mlss: 3000-4000  # mg/L in aeration tank
+  ras_ratio: 0.5-1.5  # Q_ras/Q_influent
+  blanket_depth: 1-2  # m

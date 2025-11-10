@@ -1,0 +1,160 @@
+# Screening Template - Covers both coarse and fine screening
+process_unit_id: "BS"
+area_number: 101
+name: "Screening"
+description: "Mechanical screening for solids removal"
+
+# Parameters for variations
+parameters:
+  screen_type:
+    type: enum
+    values: [coarse, fine, micro]
+    default: coarse
+    affects: [equipment]
+
+  cleaning_mechanism:
+    type: enum
+    values: [manual, mechanical_rake, continuous_belt]
+    default: mechanical_rake
+    affects: [equipment]
+
+  screen_configuration:
+    type: enum
+    values: [bar_screen, perforated_plate, wedgewire]
+    default: bar_screen
+    affects: [equipment]
+
+  screenings_handling:
+    type: enum
+    values: [manual_removal, washer_compactor, conveyor]
+    default: washer_compactor
+    affects: [equipment]
+
+# Equipment specifications
+per_train_equipment:
+  - id: "Screen"
+    dexpi_class: "CustomEquipment"
+    tag_prefix: "SC"
+    count: 1
+    default_params:
+      opening_size: "${screen_type|coarse} == 'coarse' ? 25 : ${screen_type|coarse} == 'fine' ? 6 : 1"  # mm
+      inclination: 75  # degrees
+      material: "Stainless Steel 316"
+
+  - id: "InfluentChannel"
+    dexpi_class: "CustomEquipment"
+    tag_prefix: "CH"
+    count: 1
+    default_params:
+      width: 1.5  # m
+      depth: 2  # m
+      material: "Concrete"
+
+  - id: "RakeArm"
+    dexpi_class: "CustomEquipment"
+    tag_prefix: "RK"
+    count: 1
+    mount_to: "Screen"
+    condition: "${cleaning_mechanism|mechanical_rake} == 'mechanical_rake'"
+    default_params:
+      type: "Front Clean Rake"
+      speed: 3  # cycles/min
+
+  - id: "BeltScreen"
+    dexpi_class: "CustomEquipment"
+    tag_prefix: "BS"
+    count: 1
+    condition: "cleaning_mechanism == 'continuous_belt'"
+    default_params:
+      type: "Continuous Belt Screen"
+      belt_speed: 0.1  # m/s
+
+shared_equipment:
+  - id: "RakeDrive"
+    dexpi_class: "Motor"
+    tag_prefix: "M"
+    count: 1
+    condition: "${cleaning_mechanism|mechanical_rake} != 'manual'"
+    default_params:
+      power: 2  # kW
+      speed: 1750  # rpm
+
+  - id: "RakeGearbox"
+    dexpi_class: "GearBox"
+    tag_prefix: "GB"
+    count: 1
+    condition: "${cleaning_mechanism|mechanical_rake} == 'mechanical_rake'"
+    default_params:
+      ratio: 583  # 1750:3
+
+  - id: "WasherCompactor"
+    dexpi_class: "CustomEquipment"
+    tag_prefix: "WC"
+    count: 1
+    condition: "${screenings_handling|washer_compactor} == 'washer_compactor'"
+    default_params:
+      type: "Screenings Washer Compactor"
+      capacity: 2  # m3/h
+      power: 5  # kW
+
+  - id: "ScreeningsConveyor"
+    dexpi_class: "CustomEquipment"
+    tag_prefix: "CV"
+    count: 1
+    condition: "screenings_handling == 'conveyor'"
+    default_params:
+      type: "Screw Conveyor"
+      length: 10  # m
+      power: 3  # kW
+
+  - id: "LevelTransmitter"
+    dexpi_class: "ProcessSignalGeneratingSystem"
+    tag_prefix: "LIT"
+    count: 2  # Upstream and downstream
+    mount_to: "InfluentChannel"
+    default_params:
+      type: "Ultrasonic"
+
+  - id: "DifferentialPressure"
+    dexpi_class: "ProcessSignalGeneratingSystem"
+    tag_prefix: "PDT"
+    count: 1
+    condition: "${cleaning_mechanism|mechanical_rake} != 'manual'"
+    default_params:
+      type: "Differential Pressure"
+
+# Components
+components:
+  - mechanical_drive  # Motor and controls for rake
+
+# Connection DSL
+connections: |
+  # Main flow
+  BFD.inlet -> InfluentChannel-*.inlet
+  InfluentChannel-*.outlet -> BFD.outlet
+
+  # Screenings handling
+  Screen-*.screenings -> WasherCompactor.inlet
+  WasherCompactor.outlet -> ScreeningsDumpster
+
+  # Alternative: conveyor
+  Screen-*.screenings -> ScreeningsConveyor.inlet
+  ScreeningsConveyor.outlet -> ScreeningsDumpster
+
+  # Drive connections
+  RakeDrive.shaft -> RakeGearbox.input
+  RakeGearbox.output -> RakeArm.drive
+
+# Port mappings to BFD
+port_mappings:
+  BFD.inlet: InfluentChannel.inlet
+  BFD.outlet: InfluentChannel.outlet
+  BFD.screenings: WasherCompactor.outlet
+
+# Typical operating parameters
+operating_parameters:
+  velocity_approach: 0.6-1.2  # m/s
+  headloss_clean: 50-150  # mm
+  headloss_clogged: 500-800  # mm
+  screenings_volume: 5-15  # L/1000m3 (coarse)
+  screenings_volume_fine: 15-35  # L/1000m3 (fine)

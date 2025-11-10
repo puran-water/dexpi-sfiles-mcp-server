@@ -1,0 +1,177 @@
+# Template Registry - Maps process_unit_id to template files
+# Ensures complete coverage of all 92 process units from hierarchy
+
+templates:
+  # Preliminary Treatment (Area 101)
+  BS: library/101/screening.yaml    # Coarse Screening (COMPLETE)
+  FS: library/101/screening.yaml    # Fine Screening (COMPLETE - same template, different params)
+  GR: library/101/grit_removal.yaml # Grit Removal (COMPLETE)
+  OG: library/101/oil_grease.yaml
+  HW: TODO.yaml                      # Vendor Packaged Headworks System
+  MCR: TODO.yaml                     # Grinding/Maceration
+
+  # Equalization (Area 110)
+  110_TK: TODO.yaml                  # Equalization tanks (3 variants)
+
+  # Cooling (Area 120)
+  CT: TODO.yaml                      # Direct Cooling Tower
+  HX: TODO.yaml                      # Indirect Cooling Heat Exchanger
+
+  # Primary Treatment (Area 130)
+  130_TK: library/130/primary_clarifier.yaml  # Gravity clarifier (COMPLETE)
+  130_LPS: TODO.yaml                 # Parallel Plate / Lamella
+  130_DAF: TODO.yaml  # DAF Primary (TODO)
+
+  # Reactor-Clarifier (Area 140)
+  140_TK: TODO.yaml                  # Lime-Soda Softening and Other
+
+  # Pre-Treatment (Area 150)
+  150_HO: TODO.yaml                  # H2O2-UV
+  150_OU: TODO.yaml                  # O3-UV
+  150_NU: TODO.yaml                  # NaOCl-UV
+  150_OT: TODO.yaml                  # Other
+
+  # Secondary Treatment - Anaerobic (Area 201)
+  201_TK: TODO.yaml                  # UASB, Fixed Film, AnMBR, Low-Rate, CSTR
+
+  # Secondary Treatment - Aerobic (Areas 210-280)
+  210_TK: TODO.yaml                            # Anaerobic Tank (TODO)
+  220_TK: TODO.yaml                            # Anoxic Tank (TODO)
+  230_TK: library/230/aeration_tank.yaml       # Aeration Tank (COMPLETE)
+  240_TK: library/240/secondary_clarifier.yaml # Gravity Clarifier (COMPLETE)
+  240_LPS: TODO.yaml                            # Parallel Plate / Lamella
+  240_DAF: TODO.yaml                            # DAF
+  250_TK: TODO.yaml                             # Submerged MBR
+  250_XMBR: TODO.yaml                           # Crossflow MBR
+  260_TK: TODO.yaml                             # Trickling Filter
+  270_TK: TODO.yaml                             # Rotating Biological Contactor
+  280_TK: library/280/sbr.yaml                  # SBR
+
+  # Tertiary Reactor-Clarifier (Area 301)
+  301_TK: TODO.yaml                  # Lime-Soda Softening and Other
+
+  # Tertiary Filtration (Area 310)
+  DMF: library/310/dual_media_filter.yaml    # Dual Media Filter (COMPLETE)
+  310_TK: TODO.yaml                          # Gravity Sand Filter (TODO)
+  DSC: TODO.yaml                              # Disc Filter (TODO)
+
+  # Ultrafiltration (Area 320)
+  SUF: TODO.yaml                     # Submerged UF
+  XUF: TODO.yaml                     # External UF (In-Out and Out-In)
+
+  # Ion Exchange (Area 330)
+  330_V: TODO.yaml                   # SAC, WAC variants
+
+  # Degassing (Area 340)
+  340_V: TODO.yaml                   # Degassing
+
+  # Reverse Osmosis (Area 350)
+  RO: TODO.yaml                      # All RO variants
+
+  # Electrochemical (Area 360)
+  EDI: TODO.yaml                     # Electrodialysis
+  EDR: TODO.yaml                     # Electrodialysis Reversal
+
+  # Advanced Oxidation (Area 370)
+  370_FE: TODO.yaml                  # Fenton's
+  370_HO: TODO.yaml                  # H2O2-UV
+  370_OU: TODO.yaml                  # O3-UV
+  370_NU: TODO.yaml                  # NaOCl-UV
+
+  # Disinfection (Area 401)
+  401_TK_chlorine: TODO.yaml                        # Chlorine Contact (TODO)
+  401_TK_chloramine: TODO.yaml                      # Chloramine Contact (TODO)
+  401_UV: library/420/uv_disinfection.yaml          # UV Disinfection (COMPLETE - note: using area 420)
+  OG_401: TODO.yaml                                 # Ozone
+
+  # Evaporation (Area 501)
+  MEE: TODO.yaml
+  MVR: TODO.yaml
+  EP: TODO.yaml                      # Evaporation Ponds
+
+  # Crystallization (Area 510)
+  FCC: TODO.yaml
+  SSC: TODO.yaml
+
+  # Purge (Area 520)
+  ATFD: TODO.yaml
+  DP: TODO.yaml                      # Drying Pond
+
+  # Thickening (Area 601)
+  601_TK: library/510/gravity_thickener.yaml  # Gravity Thickener (COMPLETE - note: using area 510)
+  601_DAF: TODO.yaml                          # DAF Thickener (TODO)
+
+  # Dewatering (Area 610)
+  FP: TODO.yaml                      # Filter Press
+  BFP: library/610/belt_filter_press.yaml
+  VP: TODO.yaml                      # Volute Press
+  DC: library/610/centrifuge.yaml
+
+  # Drying (Area 620)
+  RD: TODO.yaml                      # Rotary Dryer
+
+  # Anaerobic Digestion (Area 640)
+  640_TK: TODO.yaml                  # With nutrient recovery variants
+
+  # Aerobic Digestion (Area 650)
+  650_TK: TODO.yaml
+
+  # Biogas Treatment (Areas 701-750)
+  701_CS: TODO.yaml                  # Condensate Separator
+  701_RH: TODO.yaml                  # Refrigerated Dryer
+  701_DS: TODO.yaml                  # Desiccant Dryer
+  710_BF: TODO.yaml                  # Biological Filter
+  710_AS: TODO.yaml                  # Activated Carbon
+  720_SL: TODO.yaml                  # Siloxane Removal
+  730_PSA: TODO.yaml                 # PSA
+  730_MS: TODO.yaml                  # Membrane Separation
+  730_WS: TODO.yaml                  # Water Scrubber
+  730_CS: TODO.yaml                  # Chemical Scrubber
+  740_C: TODO.yaml                   # Gas Compression
+  750_PSA: TODO.yaml                 # PSA Liquefaction
+  750_CB: TODO.yaml                  # Cryogenic/Biological
+
+# Sprint 3 Tier 1 Templates (20 priority units)
+tier1_templates:
+  - screening.yaml
+  - grit_removal.yaml
+  - oil_grease.yaml
+  - primary_clarifier.yaml
+  - daf_primary.yaml
+  - anaerobic_tank.yaml
+  - anoxic_tank.yaml
+  - aeration_tank.yaml
+  - secondary_clarifier.yaml
+  - sbr.yaml
+  - dual_media_filter.yaml
+  - gravity_sand_filter.yaml
+  - disc_filter.yaml
+  - chlorine_contact.yaml
+  - uv_disinfection.yaml
+  - gravity_thickener.yaml
+  - belt_filter_press.yaml
+  - centrifuge.yaml
+
+# Coverage tracking
+coverage:
+  total_units: 92
+  templates_complete: 8   # Current actual (Screening, Grit, Primary/Secondary Clarifier, Aeration, UV, Thickener, DMF)
+  templates_todo: 84      # Future sprints
+
+# Validation rules
+validation:
+  require_template: true  # Every unit must have template or TODO
+  allow_todo_stub: true   # Can use TODO.yaml during development
+
+# Statistics
+statistics:
+  by_area:
+    preliminary: 11
+    primary: 5
+    secondary: 16
+    tertiary: 23
+    disinfection: 4
+    brine: 7
+    solids: 9
+    biogas: 13
+    other: 4

@@ -114,8 +114,12 @@ class UnifiedGraphConverter:
         finally:
             try:
                 os.unlink(tmp_path)
-            except Exception:
-                pass
+            except Exception as cleanup_error:
+                logger.warning(
+                    "Failed to remove temporary GraphML file %s: %s",
+                    tmp_path,
+                    cleanup_error
+                )
     
     def graphml_to_networkx(self, graphml_string: str) -> nx.Graph:
         """Parse GraphML string to NetworkX graph.

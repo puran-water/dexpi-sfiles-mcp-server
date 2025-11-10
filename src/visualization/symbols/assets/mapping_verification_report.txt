@@ -1,0 +1,276 @@
+============================================================
+SYMBOL MAPPING VERIFICATION REPORT
+============================================================
+
+SUMMARY
+----------------------------------------
+Total Symbols: 40
+Verified OK: 4
+Mismatched: 36
+Missing Mapping: 0
+
+ISSUES FOUND
+----------------------------------------
+
+Symbol: PP002A
+  Type: mismatch
+  Message: DEXPI class mismatch for PP002A
+  Expected: DiaphragmPump
+  Actual: CentrifugalPump
+
+Symbol: PP003A
+  Type: mismatch
+  Message: DEXPI class mismatch for PP003A
+  Expected: GearPump
+  Actual: RotaryPump
+
+Symbol: PP004A
+  Type: mismatch
+  Message: DEXPI class mismatch for PP004A
+  Expected: HandPump
+  Actual: ReciprocatingPump
+
+Symbol: PP005A
+  Type: mismatch
+  Message: DEXPI class mismatch for PP005A
+  Expected: SlidingVanePump
+  Actual: ReciprocatingPump
+
+Symbol: PP006A
+  Type: mismatch
+  Message: DEXPI class mismatch for PP006A
+  Expected: LiquidRingPump
+  Actual: RotaryPump
+
+Symbol: PP007A
+  Type: mismatch
+  Message: DEXPI class mismatch for PP007A
+  Expected: Blower
+  Actual: RotaryPump
+
+Symbol: PP008A
+  Type: mismatch
+  Message: DEXPI class mismatch for PP008A
+  Expected: ProportioningPump
+  Actual: CentrifugalPump
+
+Symbol: PP009A
+  Type: mismatch
+  Message: DEXPI class mismatch for PP009A
+  Expected: TriplexPump
+  Actual: CentrifugalPump
+
+Symbol: PP010A
+  Type: mismatch
+  Message: DEXPI class mismatch for PP010A
+  Expected: ReciprocatingPump
+  Actual: RotaryPump
+
+Symbol: PV001A
+  Type: mismatch
+  Message: DEXPI class mismatch for PV001A
+  Expected: Flange
+  Actual: GateValve
+
+Symbol: PV002A
+  Type: mismatch
+  Message: DEXPI class mismatch for PV002A
+  Expected: BlindFlange
+  Actual: BallValve
+
+Symbol: PV003A
+  Type: mismatch
+  Message: DEXPI class mismatch for PV003A
+  Expected: ThreeWayValve
+  Actual: ButterflyValve
+
+Symbol: PV004A
+  Type: mismatch
+  Message: DEXPI class mismatch for PV004A
+  Expected: FourWayValve
+  Actual: CheckValve
+
+Symbol: PV005A
+  Type: mismatch
+  Message: DEXPI class mismatch for PV005A
+  Expected: GateValve
+  Actual: GlobeValve
+
+Symbol: PV007A
+  Type: mismatch
+  Message: DEXPI class mismatch for PV007A
+  Expected: GlobeValve
+  Actual: PlugValve
+
+Symbol: PV008A
+  Type: mismatch
+  Message: DEXPI class mismatch for PV008A
+  Expected: FloatValve
+  Actual: NeedleValve
+
+Symbol: PV009A
+  Type: mismatch
+  Message: DEXPI class mismatch for PV009A
+  Expected: MinFlowCheckValve
+  Actual: CustomOperatedValve
+
+Symbol: PV010A
+  Type: mismatch
+  Message: DEXPI class mismatch for PV010A
+  Expected: ChokeValve
+  Actual: SafetyValveOrFitting
+
+Symbol: PT003A
+  Type: mismatch
+  Message: DEXPI class mismatch for PT003A
+  Expected: Tower
+  Actual: Tank
+
+Symbol: PT004A
+  Type: mismatch
+  Message: DEXPI class mismatch for PT004A
+  Expected: QuickOpenLidTank
+  Actual: Tank
+
+Symbol: PT005A
+  Type: mismatch
+  Message: DEXPI class mismatch for PT005A
+  Expected: DomeRoofTank
+  Actual: Silo
+
+Symbol: PE001A
+  Type: mismatch
+  Message: DEXPI class mismatch for PE001A
+  Expected: ConcentricReducer
+  Actual: Agitator
+
+Symbol: PE002A
+  Type: mismatch
+  Message: DEXPI class mismatch for PE002A
+  Expected: EccentricReducer
+  Actual: Agitator
+
+Symbol: PE003A
+  Type: mismatch
+  Message: DEXPI class mismatch for PE003A
+  Expected: InlineMixer
+  Actual: StaticMixer
+
+Symbol: PE010A
+  Type: mismatch
+  Message: DEXPI class mismatch for PE010A
+  Expected: PlateHeatExchanger
+  Actual: CentrifugalBlower
+
+Symbol: PE011A
+  Type: mismatch
+  Message: DEXPI class mismatch for PE011A
+  Expected: FinHeatExchanger
+  Actual: RotaryBlower
+
+Symbol: PE020A
+  Type: mismatch
+  Message: DEXPI class mismatch for PE020A
+  Expected: Drive
+  Actual: TubularHeatExchanger
+
+Symbol: PE021A
+  Type: mismatch
+  Message: DEXPI class mismatch for PE021A
+  Expected: Turbine
+  Actual: PlateHeatExchanger
+
+Symbol: PE022A
+  Type: mismatch
+  Message: DEXPI class mismatch for PE022A
+  Expected: Crusher
+  Actual: HeatExchanger
+
+Symbol: PF001A
+  Type: mismatch
+  Message: DEXPI class mismatch for PF001A
+  Expected: FlowTurbine
+  Actual: LiquidFilter
+
+Symbol: PF002A
+  Type: mismatch
+  Message: DEXPI class mismatch for PF002A
+  Expected: FlowVortex
+  Actual: LiquidFilter
+
+Symbol: PF003A
+  Type: mismatch
+  Message: DEXPI class mismatch for PF003A
+  Expected: FlowCoriolis
+  Actual: LiquidFilter
+
+Symbol: PF004A
+  Type: mismatch
+  Message: DEXPI class mismatch for PF004A
+  Expected: FlowRotameter
+  Actual: Filter
+
+Symbol: PF005A
+  Type: mismatch
+  Message: DEXPI class mismatch for PF005A
+  Expected: FlowMagnetic
+  Actual: Filter
+
+Symbol: PS001A
+  Type: mismatch
+  Message: DEXPI class mismatch for PS001A
+  Expected: SpectacleBlind
+  Actual: Separator
+
+Symbol: PS003A
+  Type: mismatch
+  Message: DEXPI class mismatch for PS003A
+  Expected: Spade
+  Actual: Centrifuge
+
+SYMBOL INVENTORY BY CATEGORY
+----------------------------------------
+
+Equipment: 8 symbols
+  - PE001A
+  - PE002A
+  - PE003A
+  - PE010A
+  - PE011A
+  ... and 3 more
+
+Filters: 5 symbols
+  - PF001A
+  - PF002A
+  - PF003A
+  - PF004A
+  - PF005A
+
+Pumps: 10 symbols
+  - PP001A
+  - PP002A
+  - PP003A
+  - PP004A
+  - PP005A
+  ... and 5 more
+
+Separators: 2 symbols
+  - PS001A
+  - PS003A
+
+Tanks: 5 symbols
+  - PT001A
+  - PT002A
+  - PT003A
+  - PT004A
+  - PT005A
+
+Valves: 10 symbols
+  - PV001A
+  - PV002A
+  - PV003A
+  - PV004A
+  - PV005A
+  ... and 5 more
+
+============================================================

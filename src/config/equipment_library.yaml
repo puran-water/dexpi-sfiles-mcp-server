@@ -1,0 +1,434 @@
+# Equipment Library - Shared equipment definitions for all process templates
+# References pyDEXPI classes with default parameters and port configurations
+
+equipment:
+  # Tanks and Vessels
+  standard_aeration_basin:
+    dexpi_class: "Tank"
+    description: "Aeration basin for biological treatment"
+    default_params:
+      nominal_diameter: "DN200"
+      material: "Concrete"
+      volume: 1000  # m3
+    ports:
+      - {name: "inlet", direction: "W", type: "Standard", nominal_diameter: "DN200"}
+      - {name: "outlet", direction: "E", type: "Standard", nominal_diameter: "DN200"}
+      - {name: "air_inlet", direction: "S", type: "Utility", nominal_diameter: "DN150"}
+      - {name: "ras_return", direction: "N", type: "Standard", nominal_diameter: "DN150"}
+
+  anoxic_tank:
+    dexpi_class: "Tank"
+    description: "Anoxic zone for denitrification"
+    default_params:
+      nominal_diameter: "DN200"
+      material: "Concrete"
+    ports:
+      - {name: "inlet", direction: "W", type: "Standard"}
+      - {name: "outlet", direction: "E", type: "Standard"}
+      - {name: "recycle_inlet", direction: "N", type: "Standard"}
+
+  anaerobic_tank:
+    dexpi_class: "Tank"
+    description: "Anaerobic zone for phosphorus release"
+    default_params:
+      nominal_diameter: "DN200"
+      material: "Concrete"
+    ports:
+      - {name: "inlet", direction: "W", type: "Standard"}
+      - {name: "outlet", direction: "E", type: "Standard"}
+
+  circular_clarifier:
+    dexpi_class: "ProcessColumn"  # Clarifiers are specialized columns in DEXPI
+    description: "Circular settling tank"
+    default_params:
+      nominal_diameter: "DN300"
+      material: "Concrete"
+      shape: "Circular"
+    ports:
+      - {name: "inlet", direction: "W", type: "Standard"}
+      - {name: "overflow", direction: "E", type: "Standard"}
+      - {name: "underflow", direction: "S", type: "Standard"}
+      - {name: "scum", direction: "N", type: "Standard", nominal_diameter: "DN100"}
+
+  rectangular_clarifier:
+    dexpi_class: "Tank"
+    description: "Rectangular settling tank"
+    default_params:
+      material: "Concrete"
+      shape: "Rectangular"
+    ports:
+      - {name: "inlet", direction: "W", type: "Standard"}
+      - {name: "overflow", direction: "E", type: "Standard"}
+      - {name: "underflow", direction: "S", type: "Standard"}
+
+  sbr_reactor:
+    dexpi_class: "Tank"
+    description: "Sequencing batch reactor"
+    default_params:
+      nominal_diameter: "DN250"
+      material: "Concrete"
+    ports:
+      - {name: "inlet", direction: "W", type: "Standard"}
+      - {name: "decant", direction: "E", type: "Standard"}
+      - {name: "waste", direction: "S", type: "Standard"}
+      - {name: "air_inlet", direction: "S", type: "Utility"}
+
+  # Pumps
+  centrifugal_pump:
+    dexpi_class: "CentrifugalPump"
+    description: "Standard centrifugal pump"
+    default_params:
+      nominal_diameter: "DN100"
+      material: "Cast Iron"
+    ports:
+      - {name: "suction", direction: "W", type: "Standard"}
+      - {name: "discharge", direction: "E", type: "Standard"}
+
+  ras_pump:
+    dexpi_class: "CentrifugalPump"
+    description: "Return activated sludge pump"
+    default_params:
+      nominal_diameter: "DN150"
+      material: "Cast Iron"
+      pump_type: "Centrifugal"
+    ports:
+      - {name: "suction", direction: "W", type: "Standard"}
+      - {name: "discharge", direction: "E", type: "Standard"}
+
+  was_pump:
+    dexpi_class: "CentrifugalPump"
+    description: "Waste activated sludge pump"
+    default_params:
+      nominal_diameter: "DN100"
+      material: "Cast Iron"
+    ports:
+      - {name: "suction", direction: "W", type: "Standard"}
+      - {name: "discharge", direction: "E", type: "Standard"}
+
+  sludge_pump:
+    dexpi_class: "CentrifugalPump"
+    description: "Primary sludge pump"
+    default_params:
+      nominal_diameter: "DN150"
+      material: "Cast Iron"
+      pump_type: "Progressive Cavity"
+    ports:
+      - {name: "suction", direction: "W", type: "Standard"}
+      - {name: "discharge", direction: "E", type: "Standard"}
+
+  # Blowers and Compressors
+  centrifugal_blower:
+    dexpi_class: "CentrifugalBlower"
+    description: "Aeration blower"
+    default_params:
+      nominal_diameter: "DN150"
+      material: "Cast Iron"
+    ports:
+      - {name: "suction", direction: "W", type: "Standard"}
+      - {name: "discharge", direction: "E", type: "Standard"}
+
+  # Mixers and Agitators
+  submersible_mixer:
+    dexpi_class: "Mixer"
+    description: "Submersible mixer for anoxic/anaerobic zones"
+    default_params:
+      mixer_type: "Propeller"
+      mounting: "Submersible"
+    ports: []  # No pipe connections
+
+  surface_aerator:
+    dexpi_class: "Mixer"
+    description: "Surface mechanical aerator"
+    default_params:
+      mixer_type: "Surface"
+      mounting: "Floating"
+    ports: []
+
+  # Instrumentation
+  dissolved_oxygen_sensor:
+    dexpi_class: "ProcessSignalGeneratingSystem"
+    description: "DO sensor with transmitter"
+    default_params:
+      instrument_type: "Analyzer"
+      measurement: "Dissolved Oxygen"
+      tag_prefix: "AIT"
+    ports: []  # Mounted in-situ
+
+  flow_meter:
+    dexpi_class: "ProcessSignalGeneratingSystem"
+    description: "Flow measurement"
+    default_params:
+      instrument_type: "Flow"
+      tag_prefix: "FIT"
+    ports: []  # Inline installation
+
+  level_sensor:
+    dexpi_class: "ProcessSignalGeneratingSystem"
+    description: "Level measurement"
+    default_params:
+      instrument_type: "Level"
+      tag_prefix: "LIT"
+    ports: []
+
+  pressure_sensor:
+    dexpi_class: "ProcessSignalGeneratingSystem"
+    description: "Pressure measurement"
+    default_params:
+      instrument_type: "Pressure"
+      tag_prefix: "PIT"
+    ports: []
+
+  temperature_sensor:
+    dexpi_class: "ProcessSignalGeneratingSystem"
+    description: "Temperature measurement"
+    default_params:
+      instrument_type: "Temperature"
+      tag_prefix: "TIT"
+    ports: []
+
+  # Screens and Separators
+  bar_screen:
+    dexpi_class: "Filter"
+    description: "Bar screen for preliminary treatment"
+    default_params:
+      filter_type: "Bar Screen"
+      mesh_size: 25  # mm
+    ports:
+      - {name: "inlet", direction: "W", type: "Standard"}
+      - {name: "outlet", direction: "E", type: "Standard"}
+      - {name: "screenings", direction: "N", type: "Solids"}
+
+  fine_screen:
+    dexpi_class: "Filter"
+    description: "Fine screen for preliminary treatment"
+    default_params:
+      filter_type: "Fine Screen"
+      mesh_size: 6  # mm
+    ports:
+      - {name: "inlet", direction: "W", type: "Standard"}
+      - {name: "outlet", direction: "E", type: "Standard"}
+      - {name: "screenings", direction: "N", type: "Solids"}
+
+  grit_chamber:
+    dexpi_class: "Tank"
+    description: "Grit removal chamber"
+    default_params:
+      tank_type: "Grit Chamber"
+    ports:
+      - {name: "inlet", direction: "W", type: "Standard"}
+      - {name: "outlet", direction: "E", type: "Standard"}
+      - {name: "grit_outlet", direction: "S", type: "Solids"}
+      - {name: "air_inlet", direction: "S", type: "Utility"}  # For aerated type
+
+  # Filters
+  dual_media_filter:
+    dexpi_class: "Filter"
+    description: "Dual media gravity filter"
+    default_params:
+      filter_type: "Gravity"
+      media: "Anthracite/Sand"
+    ports:
+      - {name: "inlet", direction: "W", type: "Standard"}
+      - {name: "filtrate", direction: "E", type: "Standard"}
+      - {name: "backwash_inlet", direction: "S", type: "Standard"}
+      - {name: "backwash_outlet", direction: "N", type: "Standard"}
+
+  disc_filter:
+    dexpi_class: "Filter"
+    description: "Disc filter for tertiary treatment"
+    default_params:
+      filter_type: "Disc"
+    ports:
+      - {name: "inlet", direction: "W", type: "Standard"}
+      - {name: "filtrate", direction: "E", type: "Standard"}
+      - {name: "backwash", direction: "S", type: "Standard"}
+
+  # Disinfection
+  uv_channel:
+    dexpi_class: "Tank"
+    description: "UV disinfection channel"
+    default_params:
+      tank_type: "Open Channel"
+      material: "Concrete"
+    ports:
+      - {name: "inlet", direction: "W", type: "Standard"}
+      - {name: "outlet", direction: "E", type: "Standard"}
+
+  uv_lamp_bank:
+    dexpi_class: "CustomEquipment"
+    description: "UV lamp bank module"
+    default_params:
+      equipment_type: "UV System"
+    ports: []  # Mounted in channel
+
+  chlorine_contact_tank:
+    dexpi_class: "Tank"
+    description: "Chlorine contact basin"
+    default_params:
+      tank_type: "Contact Basin"
+      material: "Concrete"
+    ports:
+      - {name: "inlet", direction: "W", type: "Standard"}
+      - {name: "outlet", direction: "E", type: "Standard"}
+      - {name: "chlorine_inlet", direction: "S", type: "Chemical"}
+
+  # Solids Handling
+  gravity_thickener:
+    dexpi_class: "Tank"
+    description: "Gravity thickener for sludge"
+    default_params:
+      tank_type: "Thickener"
+      material: "Concrete"
+    ports:
+      - {name: "feed", direction: "W", type: "Standard"}
+      - {name: "overflow", direction: "E", type: "Standard"}
+      - {name: "underflow", direction: "S", type: "Standard"}
+
+  belt_filter_press:
+    dexpi_class: "Filter"
+    description: "Belt filter press for dewatering"
+    default_params:
+      filter_type: "Belt Press"
+    ports:
+      - {name: "feed", direction: "W", type: "Standard"}
+      - {name: "filtrate", direction: "E", type: "Standard"}
+      - {name: "cake_discharge", direction: "S", type: "Solids"}
+      - {name: "polymer_inlet", direction: "N", type: "Chemical"}
+
+  centrifuge_dewatering:
+    dexpi_class: "Centrifuge"
+    description: "Centrifuge for sludge dewatering"
+    default_params:
+      centrifuge_type: "Decanter"
+    ports:
+      - {name: "feed", direction: "W", type: "Standard"}
+      - {name: "centrate", direction: "E", type: "Standard"}
+      - {name: "cake_discharge", direction: "S", type: "Solids"}
+      - {name: "polymer_inlet", direction: "N", type: "Chemical"}
+
+  # Chemical Systems
+  polymer_system:
+    dexpi_class: "CustomEquipment"
+    description: "Polymer preparation and dosing system"
+    default_params:
+      equipment_type: "Chemical System"
+    ports:
+      - {name: "water_inlet", direction: "W", type: "Standard"}
+      - {name: "polymer_outlet", direction: "E", type: "Chemical"}
+
+  # Conveyors
+  screw_conveyor:
+    dexpi_class: "CustomEquipment"
+    description: "Screw conveyor for solids"
+    default_params:
+      equipment_type: "Conveyor"
+      conveyor_type: "Screw"
+    ports:
+      - {name: "inlet", direction: "W", type: "Solids"}
+      - {name: "outlet", direction: "E", type: "Solids"}
+
+  belt_conveyor:
+    dexpi_class: "CustomEquipment"
+    description: "Belt conveyor for dewatered cake"
+    default_params:
+      equipment_type: "Conveyor"
+      conveyor_type: "Belt"
+    ports:
+      - {name: "inlet", direction: "W", type: "Solids"}
+      - {name: "outlet", direction: "E", type: "Solids"}
+
+  # Valves
+  butterfly_valve:
+    dexpi_class: "ButterflyValve"
+    description: "Butterfly valve"
+    default_params:
+      nominal_diameter: "DN100"
+    ports:
+      - {name: "inlet", direction: "W", type: "Standard"}
+      - {name: "outlet", direction: "E", type: "Standard"}
+
+  gate_valve:
+    dexpi_class: "GateValve"
+    description: "Gate valve"
+    default_params:
+      nominal_diameter: "DN100"
+    ports:
+      - {name: "inlet", direction: "W", type: "Standard"}
+      - {name: "outlet", direction: "E", type: "Standard"}
+
+  check_valve:
+    dexpi_class: "CheckValve"
+    description: "Check valve"
+    default_params:
+      nominal_diameter: "DN100"
+    ports:
+      - {name: "inlet", direction: "W", type: "Standard"}
+      - {name: "outlet", direction: "E", type: "Standard"}
+
+  control_valve:
+    dexpi_class: "OperatedValve"
+    description: "Control valve with actuator"
+    default_params:
+      nominal_diameter: "DN100"
+      actuator_type: "Pneumatic"
+    ports:
+      - {name: "inlet", direction: "W", type: "Standard"}
+      - {name: "outlet", direction: "E", type: "Standard"}
+
+# Equipment categories for easier reference
+categories:
+  tanks:
+    - standard_aeration_basin
+    - anoxic_tank
+    - anaerobic_tank
+    - circular_clarifier
+    - rectangular_clarifier
+    - sbr_reactor
+    - grit_chamber
+    - chlorine_contact_tank
+    - gravity_thickener
+
+  pumps:
+    - centrifugal_pump
+    - ras_pump
+    - was_pump
+    - sludge_pump
+
+  blowers:
+    - centrifugal_blower
+
+  mixers:
+    - submersible_mixer
+    - surface_aerator
+
+  instrumentation:
+    - dissolved_oxygen_sensor
+    - flow_meter
+    - level_sensor
+    - pressure_sensor
+    - temperature_sensor
+
+  screens_filters:
+    - bar_screen
+    - fine_screen
+    - dual_media_filter
+    - disc_filter
+    - belt_filter_press
+
+  disinfection:
+    - uv_channel
+    - uv_lamp_bank
+    - chlorine_contact_tank
+
+  solids_handling:
+    - gravity_thickener
+    - belt_filter_press
+    - centrifuge_dewatering
+    - screw_conveyor
+    - belt_conveyor
+
+  valves:
+    - butterfly_valve
+    - gate_valve
+    - check_valve
+    - control_valve

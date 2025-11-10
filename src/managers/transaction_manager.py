@@ -790,8 +790,11 @@ class TransactionManager:
                 operation = self.registry.get(operation_name)
                 if operation.metadata and operation.metadata.diff_metadata:
                     diff_metadata = operation.metadata.diff_metadata
-            except Exception:
-                pass  # Fall back to heuristic
+            except Exception as exc:
+                raise RuntimeError(
+                    f"Failed to retrieve diff metadata for operation '{operation_name}'. "
+                    "Operation registry lookups must succeed to maintain diff integrity."
+                ) from exc
 
         # If we have DiffMetadata, use it
         if diff_metadata:

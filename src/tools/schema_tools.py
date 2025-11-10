@@ -8,7 +8,7 @@ from mcp import Tool
 from ..utils.response import success_response, error_response
 from .dexpi_introspector import DexpiIntrospector
 
-# Safe import for SFILES2 - will raise helpful error if not installed
+# Import SFILES2 module for schema introspection - REQUIRED
 try:
     from ..adapters.sfiles_adapter import get_flowsheet_class_cached
     import sys
@@ -18,10 +18,14 @@ try:
     # This is safe because get_flowsheet_class_cached() validated the import
     sfiles_module = sys.modules.get(Flowsheet.__module__)
     if sfiles_module is None:
-        # Fallback: if not in sys.modules, the adapter failed silently
-        raise ImportError("SFILES2 module not properly loaded")
-except ImportError:
-    sfiles_module = None
+        raise ImportError("SFILES2 module not properly loaded in sys.modules")
+except ImportError as e:
+    raise ImportError(
+        "Failed to import SFILES2 module for schema introspection. "
+        "SFILES2 is required for schema_tools to function. "
+        "Ensure sfiles2 is installed with: pip install sfiles2 "
+        f"Original error: {e}"
+    ) from e
 
 logger = logging.getLogger(__name__)
 

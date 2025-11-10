@@ -382,15 +382,19 @@ class SfilesTools:
                         f"Use allow_custom=true to add custom process types."
                     )
                 
-                # Generate semantic ID (for SFILES readability)
+                # Generate semantic ID (for SFILES readability - internal)
                 base_name = process_info['canonical_name']
-                semantic_id = generate_semantic_id(flowsheet, base_name)
-                
+                semantic_id = generate_semantic_id(flowsheet, base_name, include_sequence=True)
+
                 # Generate equipment tag (for display)
                 area = process_info['area_number']
                 code = process_info['process_unit_id']
                 seq = sequence_number or get_next_sequence_number(flowsheet, area, code)
-                equipment_tag = f"{area}-{code}-{seq:02d}"
+
+                # Sprint 3: User-facing tag hides sequence for BFD
+                from ..utils.process_resolver import generate_user_facing_tag
+                user_tag = generate_user_facing_tag(area, base_name, seq, include_sequence=False)
+                equipment_tag = f"{area}-{code}-{seq:02d}"  # Keep internal tag for metadata
                 
                 # Persist port_specs metadata (Codex Review #7)
                 port_specs_data = None
@@ -399,11 +403,12 @@ class SfilesTools:
                     port_specs_data = [ps.model_dump() if hasattr(ps, 'model_dump') else ps
                                       for ps in args.get("port_specs", [])]
 
-                # Add node with semantic ID, store tag as metadata
+                # Add node with semantic ID, store tags as metadata
                 flowsheet.state.add_node(semantic_id,
                     unit_type=process_info['canonical_name'],
                     name=unit_name or process_info['canonical_name'],
-                    equipment_tag=equipment_tag,
+                    equipment_tag=equipment_tag,  # Internal tag with sequence
+                    user_tag=user_tag,  # User-facing tag (no sequence for BFD)
                     area_number=area,
                     process_unit_id=code,
                     sequence_number=seq,
@@ -1050,8 +1055,12 @@ class SfilesTools:
         """Convert DEXPI P&ID model to SFILES flowsheet."""
         try:
             from ..converters.sfiles_dexpi_mapper import SfilesDexpiMapper
-        except ImportError:
-            from converters.sfiles_dexpi_mapper import SfilesDexpiMapper
+        except ImportError as exc:
+            raise ImportError(
+                "Failed to import SfilesDexpiMapper from src.converters.sfiles_dexpi_mapper. "
+                "Install engineering-mcp-server as a package (pip install -e .) "
+                "so relative imports resolve."
+            ) from exc
         
         model_id = args["model_id"]
         flowsheet_id = args.get("flowsheet_id", None)

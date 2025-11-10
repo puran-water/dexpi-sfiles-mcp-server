@@ -1,0 +1,31 @@
+# Component for aeration system
+id: aeration_system
+description: "Blowers and air distribution for aeration"
+
+parameters:
+  - blower_count: "Number of duty blowers"
+  - standby_blowers: "Number of standby blowers"
+
+equipment:
+  - id: "Blower"
+    $ref: equipment_library.centrifugal_blower
+    tag_prefix: "B"
+    count: "${blower_count|2}"
+    shared: true
+
+  - id: "StandbyBlower"
+    $ref: equipment_library.centrifugal_blower
+    tag_prefix: "B"
+    count: "${standby_blowers|1}"
+    shared: true
+
+  - id: "AirHeader"
+    dexpi_class: "CustomEquipment"
+    description: "Air distribution header"
+    tag_prefix: "HDR"
+    shared: true
+
+connections: |
+  Blower-*.discharge -> AirHeader.inlet
+  StandbyBlower-*.discharge -> AirHeader.inlet
+  AirHeader.outlet -> ${basin_ref}-*.air_inlet

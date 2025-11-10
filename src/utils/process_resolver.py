@@ -152,24 +152,32 @@ def resolve_process_type(query: str, allow_custom: bool = False) -> Optional[Dic
     
     return None
 
-def generate_semantic_id(flowsheet, base_name: str) -> str:
+def generate_semantic_id(flowsheet, base_name: str, include_sequence: bool = True) -> str:
     """
     Generate a semantic ID for BFD units compatible with SFILES2 parsing.
 
     SFILES2 requires node IDs to match "name-number" pattern (single hyphen).
     E.g., "Aeration Tank" -> "AerationTank-01" (not "Aeration-Tank-01")
 
+    Sprint 3 change: Internal IDs still have sequences for SFILES2 compatibility,
+    but user-facing tags may omit them.
+
     Args:
         flowsheet: Flowsheet object to check for existing IDs
         base_name: Human-readable process name (e.g., "Aeration Tank")
+        include_sequence: Whether to include sequence number (default True for SFILES2)
 
     Returns:
-        SFILES2-compatible node ID (e.g., "AerationTank-01")
+        SFILES2-compatible node ID (e.g., "AerationTank-01" or "AerationTank")
     """
     # Convert to CamelCase to avoid internal hyphens
     # "Aeration Tank" -> "AerationTank"
     words = re.findall(r'[a-zA-Z0-9]+', base_name)
     normalized = ''.join(word.capitalize() for word in words)
+
+    if not include_sequence:
+        # For user-facing tags, return without sequence
+        return normalized
 
     # Find existing units with similar base name
     existing_count = 0
@@ -186,19 +194,44 @@ def generate_semantic_id(flowsheet, base_name: str) -> str:
     sequence = existing_count + 1
     return f"{normalized}-{sequence:02d}"
 
+def generate_user_facing_tag(area_number: int, process_name: str,
+                            sequence: Optional[int] = None,
+                            include_sequence: bool = False) -> str:
+    """
+    Generate user-facing equipment tag.
+
+    Sprint 3: For BFD, hide sequences from users (e.g., "230-AerationTank").
+    For PFD equipment, include sequences (e.g., "230-T-01", "230-P-01").
+
+    Args:
+        area_number: Process area number
+        process_name: Process unit name or equipment type
+        sequence: Optional sequence number
+        include_sequence: Whether to show sequence (False for BFD, True for PFD)
+
+    Returns:
+        User-facing tag (e.g., "230-AerationTank" or "230-T-01")
+    """
+    if include_sequence and sequence is not None:
+        # PFD equipment: area-type-sequence
+        return f"{area_number}-{process_name}-{sequence:02d}"
+    else:
+        # BFD block: area-process (no sequence shown)
+        return f"{area_number}-{process_name}"
+
 def get_next_sequence_number(flowsheet, area_number: int, process_unit_id: str) -> int:
     """
     Find next available sequence number for given area/unit type.
     E.g., if 101-BS-01 exists, return 2 for next unit.
     """
     existing_sequences = []
-    
+
     for node_id, node_data in flowsheet.state.nodes(data=True):
-        if (node_data.get('area_number') == area_number and 
+        if (node_data.get('area_number') == area_number and
             node_data.get('process_unit_id') == process_unit_id):
             seq = node_data.get('sequence_number', 0)
             existing_sequences.append(seq)
-    
+
     return max(existing_sequences, default=0) + 1
 
 def extract_valid_bfd_units(hierarchy: Dict[str, Any]) -> List[str]:

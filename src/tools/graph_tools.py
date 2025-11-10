@@ -540,27 +540,31 @@ class GraphTools:
         """Detect feed-forward patterns."""
         if not nx.is_directed_acyclic_graph(graph):
             return {"is_feed_forward": False, "reason": "Graph contains cycles"}
-        
+
         # Find topological levels
         try:
             topo_order = list(nx.topological_sort(graph))
-            levels = {}
-            for node in topo_order:
-                pred_levels = [levels[p] for p in graph.predecessors(node) if p in levels]
-                levels[node] = max(pred_levels) + 1 if pred_levels else 0
-            
-            # Group by level
-            level_groups = defaultdict(list)
-            for node, level in levels.items():
-                level_groups[level].append(node)
-            
-            return {
-                "is_feed_forward": True,
-                "number_of_levels": len(level_groups),
-                "nodes_per_level": {k: len(v) for k, v in level_groups.items()}
-            }
-        except:
-            return {"is_feed_forward": False}
+        except nx.NetworkXError as e:
+            raise ValueError(
+                f"Failed to compute topological sort for feed-forward detection. "
+                f"Graph may be invalid. Original error: {e}"
+            ) from e
+
+        levels = {}
+        for node in topo_order:
+            pred_levels = [levels[p] for p in graph.predecessors(node) if p in levels]
+            levels[node] = max(pred_levels) + 1 if pred_levels else 0
+
+        # Group by level
+        level_groups = defaultdict(list)
+        for node, level in levels.items():
+            level_groups[level].append(node)
+
+        return {
+            "is_feed_forward": True,
+            "number_of_levels": len(level_groups),
+            "nodes_per_level": {k: len(v) for k, v in level_groups.items()}
+        }
     
     def _detect_cascade(self, graph: nx.DiGraph) -> List[List]:
         """Detect cascade patterns (sequential processing)."""

@@ -1,0 +1,16 @@
+# Component for recycle loop configuration
+id: recycle_loop
+description: "Standard recycle loop with pump"
+
+parameters:
+  - vessel_ref: "Main vessel reference"
+  - pump_ref: "Recycle pump reference"
+  - return_port: "Return port name on vessel (default: recycle_inlet)"
+
+equipment:
+  # Equipment defined by parent template
+  # This component only adds connections
+
+connections: |
+  ${vessel_ref}.outlet -> ${pump_ref}.suction
+  ${pump_ref}.discharge -> ${vessel_ref}.${return_port|recycle_inlet}

@@ -393,13 +393,25 @@ class DexpiTools:
             try:
                 from pydexpi.dexpi_classes import equipment as eq_module
                 equipment_class = getattr(eq_module, equipment_type, None)
-                if equipment_class:
-                    equipment = equipment_class(tagName=tag_name, **specs)
-                else:
-                    # Fallback to Tank
-                    equipment = Tank(tagName=tag_name, **specs)
-            except:
-                equipment = Tank(tagName=tag_name, **specs)
+                if equipment_class is None:
+                    raise ValueError(
+                        f"Invalid equipment type '{equipment_type}'. "
+                        f"Class not found in pydexpi.dexpi_classes.equipment. "
+                        f"Use schema_query(operation='list_classes', schema_type='dexpi', category='equipment') "
+                        f"to see available equipment types."
+                    )
+                equipment = equipment_class(tagName=tag_name, **specs)
+            except ImportError as e:
+                raise ImportError(
+                    f"Failed to import pydexpi equipment module. "
+                    f"Ensure pydexpi is installed correctly. Original error: {e}"
+                ) from e
+            except AttributeError as e:
+                raise AttributeError(
+                    f"Failed to instantiate equipment type '{equipment_type}'. "
+                    f"Check that the class constructor accepts tagName and specifications. "
+                    f"Original error: {e}"
+                ) from e
         
         # Always create nozzles for equipment (critical for GraphML export)
         if not nozzle_configs:
@@ -725,10 +737,11 @@ class DexpiTools:
         
         # Helper to check if a nozzle is already used in a piping connection
         def _nozzle_is_connected(noz) -> bool:
-            try:
-                return hasattr(noz, 'pipingConnection') and noz.pipingConnection is not None
-            except Exception:
+            if noz is None:
                 return False
+            if hasattr(noz, 'pipingConnection'):
+                return noz.pipingConnection is not None
+            return False
 
         # Helper to find an available nozzle or create a new one
         def _get_or_create_nozzle(equipment, tag_prefix: str, prefer_end: str = "last"):
@@ -1529,8 +1542,12 @@ class DexpiTools:
         """Convert SFILES flowsheet to DEXPI P&ID model."""
         try:
             from ..converters.sfiles_dexpi_mapper import SfilesDexpiMapper
-        except ImportError:
-            from converters.sfiles_dexpi_mapper import SfilesDexpiMapper
+        except ImportError as exc:
+            raise ImportError(
+                "Failed to import SfilesDexpiMapper from src.converters.sfiles_dexpi_mapper. "
+                "Install engineering-mcp-server in editable mode (pip install -e .) "
+                "so package-relative imports resolve correctly."
+            ) from exc
 
         # Use safe import adapter for SFILES2
         from ..adapters.sfiles_adapter import get_flowsheet_class

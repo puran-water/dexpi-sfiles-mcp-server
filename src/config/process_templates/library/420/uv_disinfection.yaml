@@ -1,0 +1,144 @@
+# UV Disinfection Template
+process_unit_id: "UV"
+area_number: 420
+name: "UV Disinfection"
+description: "Ultraviolet disinfection system for pathogen inactivation"
+
+# Parameters for variations
+parameters:
+  lamp_type:
+    type: enum
+    values: [low_pressure, medium_pressure, led]
+    default: low_pressure
+    affects: [equipment]
+
+  channel_configuration:
+    type: enum
+    values: [open_channel, closed_vessel]
+    default: open_channel
+    affects: [equipment, connections]
+
+  cleaning_system:
+    type: enum
+    values: [manual, mechanical, chemical]
+    default: mechanical
+    affects: [equipment]
+
+# Equipment specifications
+per_train_equipment:
+  - id: "UVChannel"
+    dexpi_class: "CustomEquipment"
+    tag_prefix: "CH"
+    count: 1
+    condition: "${channel_configuration|open_channel} == 'open_channel'"
+    default_params:
+      type: "Open Channel"
+      material: "Concrete"
+      width: 2  # m
+      depth: 1.5  # m
+
+  - id: "UVReactor"
+    dexpi_class: "PressureVessel"
+    tag_prefix: "R"
+    count: 1
+    condition: "channel_configuration == 'closed_vessel'"
+    default_params:
+      type: "UV Reactor"
+      material: "Stainless Steel"
+      diameter: 1.5  # m
+
+  - id: "UVBank"
+    dexpi_class: "CustomEquipment"
+    tag_prefix: "UV"
+    count: 2  # Number of banks per train
+    mount_to: "${channel_configuration|open_channel} == 'open_channel' ? 'UVChannel' : 'UVReactor'"
+    default_params:
+      lamp_count: 48  # lamps per bank
+      lamp_type: "${lamp_type|low_pressure}"
+      power_per_lamp: 0.32  # kW
+
+  - id: "LevelGate"
+    dexpi_class: "GateValve"
+    tag_prefix: "G"
+    count: 1
+    condition: "${channel_configuration|open_channel} == 'open_channel'"
+    default_params:
+      type: "Automatic Level Gate"
+
+shared_equipment:
+  - id: "ControlPanel"
+    dexpi_class: "CustomEquipment"
+    tag_prefix: "CP"
+    count: 1
+    default_params:
+      type: "UV Control System"
+      voltage: 480  # V
+
+  - id: "PowerSupply"
+    dexpi_class: "CustomEquipment"
+    tag_prefix: "PS"
+    count: 2  # Per UV bank
+    default_params:
+      type: "Electronic Ballast"
+      power: 20  # kW
+
+  - id: "CleaningSystem"
+    dexpi_class: "CustomEquipment"
+    tag_prefix: "CL"
+    count: 1
+    condition: "${cleaning_system|mechanical} != 'manual'"
+    default_params:
+      type: "${cleaning_system|mechanical}"
+
+  - id: "UVIntensityMeter"
+    dexpi_class: "ProcessSignalGeneratingSystem"
+    tag_prefix: "AIT"
+    count: 2  # Per bank
+    mount_to: "UVBank"
+    default_params:
+      type: "UV Intensity Sensor"
+
+  - id: "UVTransmittance"
+    dexpi_class: "ProcessSignalGeneratingSystem"
+    tag_prefix: "AT"
+    count: 1
+    default_params:
+      type: "Online UVT Analyzer"
+
+  - id: "FlowMeter"
+    $ref: equipment_library.magnetic_flow_meter
+    tag_prefix: "FIT"
+    count: 1
+
+# Connection DSL
+connections: |
+  # Open channel flow
+  BFD.inlet -> UVChannel-*.inlet
+  UVChannel-*.outlet -> LevelGate-*.inlet
+  LevelGate-*.outlet -> BFD.outlet
+
+  # Closed vessel flow (conditional)
+  BFD.inlet -> UVReactor-*.inlet
+  UVReactor-*.outlet -> BFD.outlet
+
+  # Power connections
+  ControlPanel -> PowerSupply-1
+  ControlPanel -> PowerSupply-2
+  PowerSupply-1 -> UVBank-1
+  PowerSupply-2 -> UVBank-2
+
+  # Cleaning system
+  CleaningSystem -> UVBank-*
+
+# Port mappings to BFD
+port_mappings:
+  BFD.inlet: UVChannel.inlet
+  BFD.outlet: LevelGate.outlet
+
+# Typical operating parameters
+operating_parameters:
+  dose: 30-40  # mJ/cm2
+  transmittance: 65-75  # % UVT
+  lamp_life: 12000  # hours
+  power_consumption: 30-50  # kWh/MLD
+  log_reduction: 3-4  # log units

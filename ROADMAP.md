@@ -1,7 +1,22 @@
 # Engineering MCP Server - Consolidated Roadmap
 
-**Last Updated:** November 7, 2025
-**Status:** Phase 0-4 Complete, BFD System Planned
+**Last Updated:** January 9, 2025 (After Bug Surfacing Sprint & Document Consolidation)
+**Status:** ✅ Core Layer Ready for Migration - Phase 0 Complete, All Fallbacks Removed
+
+---
+
+## Planning Documents
+
+This roadmap provides the **master project timeline and phase tracking**. Detailed planning documents are organized as follows:
+
+### Active Plans (require regular updates)
+- **[CORE_LAYER_MIGRATION_PLAN.md](docs/active/CORE_LAYER_MIGRATION_PLAN.md)** - Multi-phase core layer migration (Phase 0 pending)
+- **[VISUALIZATION_PLAN.md](docs/active/VISUALIZATION_PLAN.md)** - Federated rendering platform (blocked on core layer)
+
+### Completed Plans (archived for reference)
+- **[BUG_SURFACING_SPRINT.md](docs/completed/BUG_SURFACING_SPRINT.md)** - All fallback patterns removed (Jan 9, 2025)
+
+See `docs/active/README.md` and `docs/completed/README.md` for document lifecycle guidelines.
 
 ---
 
@@ -1739,13 +1754,104 @@ ezdxf>=1.0
 
 ---
 
-### Phase 2: Advanced Features (2-3 months) - NOT STARTED 🔴
+## Sprint 4: Federated Visualization Platform (Current) - 🔵 IN PROGRESS
+
+**Status:** Started 2025-11-09 | Architecture approved
+**Strategy:** Federated rendering platform using best-in-class tools
+**Duration:** Phase 1 (2-3 weeks), Full platform (6+ weeks)
+
+### Core Architecture Decision
+Based on extensive Codex review, we're building a **federated rendering platform** that:
+- Uses existing best-in-class tools (GraphicBuilder, ProteusXMLDrawing)
+- Leverages NOAKADEXPI symbols (MIT licensed, 291 production SVGs)
+- Orchestrates via Python rather than reimplementing renderers
+- Delivers production quality immediately while building incrementally
+
+### Phase 1: Orchestration Foundation (Weeks 1-2)
+**Goal:** Production visualization via existing tools
+
+#### Week 1: Foundation & Integration
+1. **Orchestration Service** (`src/visualization/orchestrator/`)
+   - Model service for SFILES→pyDEXPI enrichment
+   - Renderer router to select appropriate backend
+   - Proteus XML serialization from pyDEXPI
+   - Job scheduling and caching
+
+2. **GraphicBuilder Integration** (`src/visualization/graphicbuilder/`)
+   - Containerize GraphicBuilder with Docker
+   - Create Python wrapper for subprocess calls
+   - Parse SVG/PNG output with imagemaps
+   - Establish quality baseline benchmarks
+
+3. **Symbol Catalog** (`src/visualization/symbols/`)
+   - Import priority NOAKADEXPI symbols (30-40 for templates)
+   - Extract metadata (ports, bounding boxes, anchors)
+   - Build DEXPI class → symbol mapping
+   - Serve symbols via asset service
+
+#### Week 2: Web Client & MCP Integration
+1. **ProteusXMLDrawing Fork** (TypeScript)
+   - Fork and enhance for web visualization
+   - Fix known limitations (text, splines, hatches)
+   - Add layer management for P&ID views
+   - Wire WebSocket for real-time updates
+
+2. **MCP Tool Integration**
+   - Add `visualize_bfd(model_id)` → SVG/PNG
+   - Add `visualize_pfd(model_id)` → SVG/PNG
+   - Router selects renderer based on requirements
+   - Cache rendered outputs
+
+### Phase 2: Enhanced Platform (Weeks 3-6)
+1. **ProteusXMLDrawing Improvements**
+   - Complete missing presentation features
+   - Add interactive selection and properties
+   - Implement collaboration features
+   - Modern React UI components
+
+2. **Advanced Symbol Management**
+   - Import all 291 NOAKADEXPI symbols
+   - Symbol variant selection logic
+   - Custom symbol upload capability
+   - Symbol versioning and CDN distribution
+
+3. **Performance Optimization**
+   - Parallel rendering for multiple diagrams
+   - Incremental rendering for changes
+   - Smart caching strategies
+   - Load balancing across renderers
+
+### Key Benefits of Federated Approach
+✅ **Production quality from Day 1** - GraphicBuilder already works
+✅ **No risky rewrites** - Use proven tools as-is
+✅ **Best of all worlds** - Java quality + TypeScript interactivity + Python orchestration
+✅ **Incremental evolution** - Replace components independently
+✅ **Lower risk** - Multiple fallback options
+
+### Deliverables
+- Docker-based GraphicBuilder service
+- Enhanced ProteusXMLDrawing web client
+- Python orchestration layer
+- NOAKADEXPI symbol catalog
+- MCP visualization tools
+
+### Success Criteria
+✅ Generate production SVG/PNG via GraphicBuilder
+✅ Interactive web viewing via ProteusXMLDrawing
+✅ All 8 templates render correctly
+✅ Symbol catalog operational
+✅ Orchestration routing working
+
+---
+
+### Phase 2: Advanced Features (3+ months) - FUTURE
 
 **Planned Features:**
-1. Interactive editor (Sprotty + elkjs)
+1. Interactive editor (Sprotty + enhanced ProteusXMLDrawing)
 2. Advanced templates (nested patterns, N+1 logic)
 3. Process simulator integration (Aspen Plus, DWSIM)
 4. AI-assisted design (template recommendation, anomaly detection)
+5. Native Python renderer (if/when needed)
 
 **Status:** Deferred until Phase 1 complete
 
@@ -1753,11 +1859,32 @@ ezdxf>=1.0
 
 ## Success Metrics
 
-### Phase 0 Complete ✅
+### Phase 0 Complete ✅ (Updated January 9, 2025)
 - ✅ Zero import failures in production
 - ✅ DEXPI validation via MLGraphLoader
 - ✅ SFILES round-trip validation passing
 - ✅ BFD support fully functional
+- ✅ **Core layer stabilization complete** (Phase 1 refactoring)
+- ✅ **Critical bugs fixed** (BFD tags, nozzles, symbol mappings)
+- ✅ **Real pyDEXPI classes instantiate** (no fallbacks)
+- ✅ **94 symbols mapped to DEXPI classes** (11.7% coverage)
+
+### Bug Surfacing Sprint Complete ✅ (January 9, 2025)
+- ✅ **ALL 21 fallback patterns removed** (100% complete)
+  - 9 bare exception handlers → Specific errors with clear messages
+  - 5 silent import failures → Fail loudly on missing dependencies
+  - 1 type aliasing pattern → Real class imports or raise ImportError
+  - 6 additional fallbacks found by Codex → All eliminated
+- ✅ **11 bugs discovered and fixed** (previously masked by fallbacks)
+  - Wrong import paths (pyDEXPI API)
+  - Template condition syntax errors
+  - BFD expansion API usage
+  - Nozzle connectivity checks
+  - Transaction manager fallbacks
+- ✅ **Test suite: 316/319 passing (99.1%)** - 3 skipped, 0 failures
+- ✅ **Regression tests added** - Prevent fallbacks from creeping back
+- ✅ **Pre-commit hooks configured** - Block fallback patterns in CI/CD
+- ✅ **Parameter metadata system documented** - Safe template expansion
 
 ### Phase 1 Target (Week 2 End)
 - ⏳ Pattern instantiation working end-to-end

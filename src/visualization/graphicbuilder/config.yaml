@@ -1,0 +1,52 @@
+# GraphicBuilder Service Configuration
+graphicbuilder:
+  jar_path: /app/GraphicBuilder/target/GraphicBuilder.jar
+  symbol_path: /app/symbols
+  temp_dir: /tmp/graphicbuilder
+  java_opts: "-Xmx2G -Djava.awt.headless=true"
+
+server:
+  host: 0.0.0.0
+  port: 8080
+  max_file_size: 52428800  # 50MB
+  timeout: 60  # seconds
+
+rendering:
+  default_format: SVG
+  default_dpi: 300
+  supported_formats:
+    - SVG
+    - PNG
+    - PDF
+
+  # Default rendering options
+  defaults:
+    scale: 1.0
+    include_imagemap: true
+    layers:
+      - process
+      - instrumentation
+      - equipment
+
+# Symbol library configuration
+symbols:
+  noakadexpi:
+    path: /app/symbols/NOAKADEXPI
+    enabled: true
+
+  custom:
+    path: /app/symbols/custom
+    enabled: true
+
+# Caching configuration
+cache:
+  enabled: true
+  max_size: 100  # MB
+  ttl: 3600  # seconds
+  path: /tmp/graphicbuilder/cache
+
+# Logging configuration
+logging:
+  level: INFO
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: /app/logs/graphicbuilder.log

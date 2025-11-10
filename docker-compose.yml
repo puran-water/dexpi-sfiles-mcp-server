@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  # GraphicBuilder - Production DEXPI P&ID Renderer
+  graphicbuilder:
+    build:
+      context: ./src/visualization/graphicbuilder
+      dockerfile: Dockerfile
+    image: engineering-mcp/graphicbuilder:latest
+    container_name: graphicbuilder
+    ports:
+      - "8080:8080"
+    volumes:
+      # Symbol libraries
+      - ./src/visualization/symbols/assets:/app/symbols:ro
+      # Cache directory
+      - ./cache/graphicbuilder:/tmp/graphicbuilder/cache
+      # Logs
+      - ./logs/graphicbuilder:/app/logs
+    environment:
+      - JAVA_OPTS=-Xmx2G -Djava.awt.headless=true
+      - SYMBOL_PATH=/app/symbols/NOAKADEXPI
+      - LOG_LEVEL=INFO
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # ProteusXMLDrawing - Web Viewer (Future)
+  # proteus-viewer:
+  #   build:
+  #     context: ./src/web-client/proteus-viewer
+  #     dockerfile: Dockerfile
+  #   image: engineering-mcp/proteus-viewer:latest
+  #   container_name: proteus-viewer
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     - NODE_ENV=production
+  #   restart: unless-stopped
+
+  # Python Orchestrator (Future)
+  # orchestrator:
+  #   build:
+  #     context: ./src/visualization/orchestrator
+  #     dockerfile: Dockerfile
+  #   image: engineering-mcp/orchestrator:latest
+  #   container_name: orchestrator
+  #   ports:
+  #     - "5000:5000"
+  #   volumes:
+  #     - ./cache/orchestrator:/app/cache
+  #   environment:
+  #     - GRAPHICBUILDER_URL=http://graphicbuilder:8080
+  #     - PROTEUS_VIEWER_URL=http://proteus-viewer:3000
+  #   depends_on:
+  #     - graphicbuilder
+  #   restart: unless-stopped
+
+networks:
+  default:
+    name: engineering-mcp-network
+    driver: bridge
+
+volumes:
+  cache:
+    driver: local
+  logs:
+    driver: local

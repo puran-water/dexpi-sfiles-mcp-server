@@ -1,0 +1,64 @@
+============================================================
+SYMBOL LIBRARY MERGE REPORT
+============================================================
+
+STATISTICS
+----------------------------------------
+NOAKADEXPI symbols: 661
+DISCDEXPI symbols: 794
+Merged total: 805
+
+UNIQUE TO NOAKADEXPI (11 symbols)
+----------------------------------------
+  - ND0008 (Annotations)
+  - ND0008_Detail (Detail)
+  - ND0008_Origo (Origo)
+  - ND0009 (Annotations)
+  - ND0009_Detail (Detail)
+  - ND0009_Origo (Origo)
+  - ND0013_Option1 (Annotations)
+  - ND0034 (Annotations)
+  - ND0034_Detail (Detail)
+  - ND0034_Origo (Origo)
+  - PE012A_Option1 (Equipment)
+
+UNIQUE TO DISCDEXPI (144 symbols)
+----------------------------------------
+  - ND0000 (Annotations)
+  - ND0000_Detail (Detail)
+  - ND0000_Origo (Origo)
+  - ND0008A (Annotations)
+  - ND0008A_Detail (Detail)
+  - ND0008A_Origo (Origo)
+  - ND0008B (Annotations)
+  - ND0008B_Detail (Detail)
+  - ND0008B_Origo (Origo)
+  - ND0009A (Annotations)
+  - ND0009A_Detail (Detail)
+  - ND0009A_Origo (Origo)
+  - ND0009B (Annotations)
+  - ND0009B_Detail (Detail)
+  - ND0009B_Origo (Origo)
+  - ND0034A (Annotations)
+  - ND0034A_Detail (Detail)
+  - ND0034A_Origo (Origo)
+  - ND0034B (Annotations)
+  - ND0034B_Detail (Detail)
+  ... and 124 more
+
+CATEGORY BREAKDOWN
+----------------------------------------
+Annotations: 68 symbols
+Detail: 257 symbols
+Equipment: 45 symbols
+Filters: 15 symbols
+Instrumentation: 6 symbols
+Origo: 250 symbols
+Pumps: 17 symbols
+Separators: 16 symbols
+Special: 1 symbols
+Tanks: 12 symbols
+Unknown: 65 symbols
+Valves: 53 symbols
+
+============================================================

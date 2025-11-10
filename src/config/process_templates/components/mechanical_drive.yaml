@@ -1,0 +1,21 @@
+# Component for mechanical drive systems
+id: mechanical_drive
+description: "Motor and gearbox for mechanical equipment"
+
+equipment:
+  - id: "Motor"
+    dexpi_class: "AlternatingCurrentMotor"
+    tag_prefix: "M"
+    default_params:
+      power: 10  # kW
+      voltage: 480  # V
+
+  - id: "Gearbox"
+    dexpi_class: "GearBox"
+    tag_prefix: "GB"
+    default_params:
+      ratio: 10
+
+connections: |
+  Motor.output -> Gearbox.input
+  Gearbox.output -> ${equipment_ref}.drive_input

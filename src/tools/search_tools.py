@@ -12,10 +12,13 @@ from ..utils.response import success_response, error_response
 # Import native pyDEXPI capabilities for attribute extraction
 try:
     from pydexpi.loaders.ml_graph_loader import MLGraphLoader
-    from pydexpi.loaders.utils import get_data_attributes
-except ImportError:
-    MLGraphLoader = None
-    get_data_attributes = None
+    from pydexpi.toolkits.base_model_utils import get_data_attributes
+except ImportError as e:
+    raise ImportError(
+        "Failed to import required pyDEXPI modules for search functionality. "
+        "Ensure pydexpi is installed with: pip install pydexpi "
+        f"Original error: {e}"
+    ) from e
 
 logger = logging.getLogger(__name__)
 
@@ -772,15 +775,8 @@ class SearchTools:
         
         if model.conceptualModel and model.conceptualModel.taggedPlantItems:
             for item in model.conceptualModel.taggedPlantItems:
-                # Use native pyDEXPI attribute extraction if available
-                if get_data_attributes:
-                    try:
-                        item_dict = get_data_attributes(item)
-                    except:
-                        # Fallback to manual extraction
-                        item_dict = self._extract_attributes_manual(item)
-                else:
-                    item_dict = self._extract_attributes_manual(item)
+                # Use native pyDEXPI attribute extraction (no fallback)
+                item_dict = get_data_attributes(item)
                 
                 if self._match_attributes(item_dict, attributes, match_type):
                     results.append({
@@ -792,20 +788,7 @@ class SearchTools:
                     })
         
         return results
-    
-    def _extract_attributes_manual(self, item: Any) -> Dict:
-        """Manual fallback for attribute extraction."""
-        item_dict = {}
-        for attr in dir(item):
-            if not attr.startswith('_'):
-                try:
-                    value = getattr(item, attr)
-                    if not callable(value):
-                        item_dict[attr] = value
-                except:
-                    pass
-        return item_dict
-    
+
     def _match_pattern(self, text: str, pattern_str: str,
                       compiled_pattern: Any, fuzzy: bool) -> bool:
         """Match text against pattern."""

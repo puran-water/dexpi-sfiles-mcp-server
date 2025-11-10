@@ -1,0 +1,121 @@
+# Primary Clarifier Template
+process_unit_id: "CL"
+area_number: 130
+name: "Primary Clarifier"
+description: "Primary sedimentation tank for suspended solids removal"
+
+# Parameters for variations
+parameters:
+  clarifier_type:
+    type: enum
+    values: [circular, rectangular]
+    default: circular
+    affects: [equipment, connections]
+
+  scraper_type:
+    type: enum
+    values: [rotating, chain_flight]
+    default: rotating
+    affects: [equipment]
+
+  scum_removal:
+    type: boolean
+    default: true
+    affects: [equipment]
+
+# Equipment specifications
+per_train_equipment:
+  - id: "Clarifier"
+    $ref: equipment_library.primary_clarifier_tank
+    tag_prefix: "CL"
+    count: 1
+    default_params:
+      diameter: 30  # m (for circular)
+      depth: 4  # m
+      material: "Concrete"
+
+  - id: "Scraper"
+    dexpi_class: "CustomEquipment"
+    tag_prefix: "SC"
+    count: 1
+    mount_to: "Clarifier"
+    condition: "${scraper_type|rotating} == 'rotating'"
+    default_params:
+      type: "Center Drive Scraper"
+      power: 2  # kW
+
+  - id: "ChainScraper"
+    dexpi_class: "CustomEquipment"
+    tag_prefix: "SC"
+    count: 1
+    mount_to: "Clarifier"
+    condition: "scraper_type == 'chain_flight'"
+    default_params:
+      type: "Chain and Flight"
+      power: 3  # kW
+
+  - id: "ScumSkimmer"
+    dexpi_class: "CustomEquipment"
+    tag_prefix: "SK"
+    count: 1
+    mount_to: "Clarifier"
+    condition: "${scum_removal|true}"
+    default_params:
+      type: "Rotating Skimmer"
+
+shared_equipment:
+  - id: "SludgePump"
+    $ref: equipment_library.primary_sludge_pump
+    tag_prefix: "P"
+    count: 2  # 1 duty + 1 standby
+    default_params:
+      flow_rate: 5  # % of influent
+      head: 10  # m
+
+  - id: "ScumPump"
+    dexpi_class: "CentrifugalPump"
+    tag_prefix: "P"
+    count: 1
+    condition: "${scum_removal|true}"
+    default_params:
+      flow_rate: 0.5  # % of influent
+
+  - id: "Drive"
+    dexpi_class: "Motor"
+    tag_prefix: "M"
+    count: 1
+    mount_to: "Scraper"
+
+# Connection DSL
+connections: |
+  # Main flow
+  BFD.inlet -> Clarifier-*.inlet
+  Clarifier-*.outlet -> BFD.outlet
+
+  # Sludge withdrawal
+  Clarifier-*.sludge -> SludgePump-1.suction
+  Clarifier-*.sludge -> SludgePump-2.suction
+  SludgePump-1.discharge -> SludgeThickening
+  SludgePump-2.discharge -> SludgeThickening
+
+  # Scum removal (conditional)
+  Clarifier-*.scum -> ScumPump.suction
+  ScumPump.discharge -> ScumProcessing
+
+  # Drive connection
+  Drive.shaft -> Scraper.drive_input
+
+# Port mappings to BFD
+port_mappings:
+  BFD.inlet: Clarifier.inlet
+  BFD.outlet: Clarifier.outlet
+  BFD.sludge: SludgePump.discharge
+  BFD.scum: ScumPump.discharge
+
+# Typical operating parameters
+operating_parameters:
+  hrt: 2-3  # hours
+  surface_loading: 30-50  # m3/m2/day
+  solids_loading: 100-150  # kg/m2/day
+  tss_removal: 50-70  # %
+  bod_removal: 25-35  # %

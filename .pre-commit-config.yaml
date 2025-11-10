@@ -1,0 +1,87 @@
+# Pre-commit hooks to maintain code quality and prevent regression
+# Install: pip install pre-commit
+# Setup: pre-commit install
+# Run manually: pre-commit run --all-files
+
+repos:
+  # Standard Python code quality checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: check-json
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: detect-private-key
+
+  # Python formatting
+  - repo: https://github.com/psf/black
+    rev: 24.1.1
+    hooks:
+      - id: black
+        language_version: python3
+        args: ['--line-length=100']
+
+  # Import sorting
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: ['--profile', 'black', '--line-length', '100']
+
+  # Linting
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.0.0
+    hooks:
+      - id: flake8
+        args: ['--max-line-length=100', '--extend-ignore=E203,W503']
+
+  # Type checking
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0
+    hooks:
+      - id: mypy
+        additional_dependencies: [types-all]
+        args: ['--ignore-missing-imports', '--no-strict-optional']
+
+  # CRITICAL: Fallback pattern detection
+  # This prevents the patterns removed in Bug Surfacing Sprint from creeping back
+  - repo: local
+    hooks:
+      - id: no-bare-except
+        name: No bare except clauses
+        entry: python -c "import sys; import re; files = sys.argv[1:]; violations = [(f, i+1, line) for f in files for i, line in enumerate(open(f).readlines()) if re.search(r'\\bexcept\\s*:', line)]; sys.exit(1 if violations else 0) or print('\\n'.join(f'{f}:{i} - {line.strip()}' for f, i, line in violations))"
+        language: system
+        files: \.py$
+        pass_filenames: true
+
+      - id: no-silent-imports
+        name: No silent import failures
+        entry: bash -c 'if grep -rn --include="*.py" "except ImportError:" src/ | grep -E "(= None|pass)"; then echo "FAIL: Silent import failure detected"; exit 1; fi'
+        language: system
+        pass_filenames: false
+
+      - id: run-fallback-tests
+        name: Run fallback pattern regression tests
+        entry: python -m pytest tests/test_no_fallback_patterns.py --tb=short -q
+        language: system
+        pass_filenames: false
+        always_run: true
+
+  # Security checks
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.6
+    hooks:
+      - id: bandit
+        args: ['-ll', '--skip', 'B101,B601']  # Skip assert and shell=True warnings
+
+  # Documentation
+  - repo: https://github.com/pycqa/pydocstyle
+    rev: 6.3.0
+    hooks:
+      - id: pydocstyle
+        args: ['--convention=google', '--add-ignore=D100,D104,D107']

@@ -1,0 +1,193 @@
+# Dual Media Filter Template
+process_unit_id: "DMF"
+area_number: 310
+name: "Dual Media Filter"
+description: "Tertiary dual media filtration for suspended solids removal"
+
+# Parameters for variations
+parameters:
+  filter_configuration:
+    type: enum
+    values: [gravity, pressure]
+    default: gravity
+    affects: [equipment]
+
+  backwash_type:
+    type: enum
+    values: [air_water, water_only]
+    default: air_water
+    affects: [equipment, connections]
+
+  filter_cells:
+    type: integer
+    default: 4
+    min: 2
+    max: 12
+    affects: [equipment]
+
+  automation_level:
+    type: enum
+    values: [manual, semi_auto, full_auto]
+    default: full_auto
+    affects: [instrumentation]
+
+# Equipment specifications
+per_train_equipment:
+  - id: "FilterCell"
+    dexpi_class: "Tank"
+    tag_prefix: "F"
+    count: 4  # Multiple filter cells (adjust via parameters at runtime)
+    default_params:
+      area: 25  # m2 per cell
+      depth: 3.5  # m
+      material: "Concrete"
+
+  - id: "MediaBed"
+    dexpi_class: "CustomEquipment"
+    tag_prefix: "MB"
+    count: 4
+    mount_to: "FilterCell"
+    default_params:
+      anthracite_depth: 0.6  # m
+      sand_depth: 0.3  # m
+      support_gravel: 0.3  # m
+
+  - id: "Underdrain"
+    dexpi_class: "CustomEquipment"
+    tag_prefix: "UD"
+    count: 4
+    mount_to: "FilterCell"
+    default_params:
+      type: "Leopold Type S"
+      material: "HDPE"
+
+  - id: "SurfaceWashSystem"
+    dexpi_class: "CustomEquipment"
+    tag_prefix: "SW"
+    count: 4
+    mount_to: "FilterCell"
+    condition: "${backwash_type|air_water} == 'air_water'"
+    default_params:
+      type: "Rotating Surface Wash"
+      nozzle_count: 24
+
+shared_equipment:
+  - id: "BackwashPump"
+    $ref: equipment_library.vertical_turbine_pump
+    tag_prefix: "P"
+    count: 2  # 1 duty + 1 standby
+    default_params:
+      flow_rate: 1000  # m3/h
+      head: 10  # m
+
+  - id: "BackwashBlower"
+    dexpi_class: "CentrifugalBlower"
+    tag_prefix: "BL"
+    count: 2  # 1 duty + 1 standby
+    condition: "${backwash_type|air_water} == 'air_water'"
+    default_params:
+      flow_rate: 500  # m3/h
+      pressure: 0.7  # bar
+
+  - id: "FiltratePump"
+    dexpi_class: "CentrifugalPump"
+    tag_prefix: "P"
+    count: 2
+    default_params:
+      flow_rate: 500  # m3/h
+      head: 5  # m
+
+  - id: "BackwashTank"
+    dexpi_class: "Tank"
+    tag_prefix: "TK"
+    count: 1
+    default_params:
+      volume: 500  # m3
+      material: "Concrete"
+
+  - id: "InletValve"
+    dexpi_class: "ButterflyValve"
+    tag_prefix: "V"
+    count: 4
+    default_params:
+      size: "DN400"
+      actuation: "Pneumatic"
+
+  - id: "OutletValve"
+    dexpi_class: "ButterflyValve"
+    tag_prefix: "V"
+    count: 4
+    default_params:
+      size: "DN400"
+      actuation: "Pneumatic"
+
+  - id: "BackwashValve"
+    dexpi_class: "ButterflyValve"
+    tag_prefix: "V"
+    count: 4
+    default_params:
+      size: "DN500"
+      actuation: "Pneumatic"
+
+  - id: "TurbidityMeter"
+    dexpi_class: "ProcessSignalGeneratingSystem"
+    tag_prefix: "AT"
+    count: 2  # Inlet and outlet
+    condition: "${automation_level|full_auto} != 'manual'"
+    default_params:
+      type: "Online Turbidity"
+      range: "0-10 NTU"
+
+  - id: "HeadlossMeter"
+    dexpi_class: "ProcessSignalGeneratingSystem"
+    tag_prefix: "PDT"
+    count: 4
+    condition: "${automation_level|full_auto} == 'full_auto'"
+    mount_to: "FilterCell"
+    default_params:
+      type: "Differential Pressure"
+
+  - id: "FilterController"
+    dexpi_class: "ProcessControlFunction"
+    tag_prefix: "PLC"
+    count: 1
+    condition: "${automation_level|full_auto} != 'manual'"
+    default_params:
+      type: "Filter Control PLC"
+
+# Connection DSL
+connections: |
+  # Filtration mode
+  BFD.inlet -> InletValve-*.inlet
+  InletValve-*.outlet -> FilterCell-*.inlet
+  FilterCell-*.filtrate -> OutletValve-*.inlet
+  OutletValve-*.outlet -> FiltratePump-*.suction
+  FiltratePump-*.discharge -> BackwashTank.inlet
+  BackwashTank.outlet -> BFD.outlet
+
+  # Backwash mode
+  BackwashTank.outlet -> BackwashPump-*.suction
+  BackwashPump-*.discharge -> BackwashValve-*.inlet
+  BackwashValve-*.outlet -> FilterCell-*.underdrain
+
+  # Air scour (if air_water backwash)
+  BackwashBlower-*.discharge -> FilterCell-*.air_inlet
+
+  # Waste backwash
+  FilterCell-*.backwash_waste -> WasteChannel
+
+# Port mappings to BFD
+port_mappings:
+  BFD.inlet: InletValve.inlet
+  BFD.outlet: BackwashTank.outlet
+  BFD.backwash_waste: WasteChannel.outlet
+
+# Typical operating parameters
+operating_parameters:
+  filtration_rate: 5-10  # m/h
+  run_length: 24-72  # hours
+  backwash_rate: 40-50  # m/h
+  air_scour_rate: 50-100  # m/h
+  backwash_duration: 10-15  # minutes
+  turbidity_effluent: 0.5-2  # NTU
+  headloss_terminal: 2-2.5  # m

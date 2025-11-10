@@ -1,0 +1,117 @@
+# Aeration Tank Template - Complete Example
+process_unit_id: "TK"
+area_number: 230
+name: "Aeration Tank"
+description: "Activated sludge aeration basin with fine bubble diffusion"
+
+# Parameters for variations
+parameters:
+  aeration_type:
+    type: enum
+    values: [fine_bubble, coarse_bubble, mechanical]
+    default: fine_bubble
+    affects: [equipment, connections]
+
+  do_control:
+    type: boolean
+    default: true
+    affects: [instrumentation]
+
+  basin_configuration:
+    type: enum
+    values: [single, series, parallel]
+    default: parallel
+    affects: [connections]
+
+# Compose from reusable components
+components:
+  - aeration_system  # Adds blowers and air distribution
+
+# Equipment specific to this template
+per_train_equipment:
+  - id: "Basin"
+    $ref: equipment_library.standard_aeration_basin
+    tag_prefix: "T"
+    count: 1
+    default_params:
+      volume: 1500  # m3 per train
+      depth: 5  # m
+      material: "Concrete"
+
+  - id: "DOSensor"
+    $ref: equipment_library.dissolved_oxygen_sensor
+    tag_prefix: "AIT"
+    count: 1
+    mount_to: "Basin"
+    condition: "${do_control|true}"
+
+  - id: "Mixer"
+    $ref: equipment_library.submersible_mixer
+    tag_prefix: "MX"
+    count: 2  # Two mixers per basin
+    mount_to: "Basin"
+    default_params:
+      power: 5  # kW
+
+shared_equipment:
+  - id: "RASPump"
+    $ref: equipment_library.ras_pump
+    tag_prefix: "P"
+    count: 2  # 1 duty + 1 standby
+    default_params:
+      flow_rate: 100  # % of influent flow
+      head: 5  # m
+
+  - id: "WASPump"
+    $ref: equipment_library.was_pump
+    tag_prefix: "P"
+    count: 1
+    default_params:
+      flow_rate: 2  # % of influent flow
+
+  - id: "AirFlowMeter"
+    $ref: equipment_library.flow_meter
+    tag_prefix: "FIT"
+    count: 1
+    mount_to: "AirHeader"
+
+  - id: "RASFlowMeter"
+    $ref: equipment_library.flow_meter
+    tag_prefix: "FIT"
+    count: 1
+    mount_to: "RASPump"
+
+# Connection DSL
+connections: |
+  # Main flow through basins (parallel configuration default)
+  BFD.inlet -> Basin-*.inlet
+  Basin-*.outlet -> BFD.outlet
+
+  # Air distribution (from aeration_system component)
+  # Component already connects: Blower -> AirHeader -> Basin.air_inlet
+
+  # RAS recycle from downstream clarifier
+  SecondaryClaririer.underflow -> RASPump-1.suction
+  SecondaryClaririer.underflow -> RASPump-2.suction
+  RASPump-1.discharge -> Basin-*.ras_return
+  RASPump-2.discharge -> Basin-*.ras_return
+
+  # WAS wasting
+  RASPump-1.discharge -> WASPump.suction
+  WASPump.discharge -> SludgeThickening
+
+# Port mappings to BFD
+port_mappings:
+  BFD.inlet: Basin.inlet
+  BFD.outlet: Basin.outlet
+  BFD.air: AirHeader.inlet
+  BFD.ras: RASPump.suction
+  BFD.was: WASPump.discharge
+
+# Typical operating parameters (for reference)
+operating_parameters:
+  srt: 5-15  # days
+  mlss: 2000-4000  # mg/L
+  do_setpoint: 2.0  # mg/L
+  ras_ratio: 0.5-1.5  # Q_ras/Q_influent
+  f_m_ratio: 0.05-0.15  # kg BOD/kg MLSS/day
