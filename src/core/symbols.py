@@ -164,7 +164,7 @@ class SymbolRegistry:
 
             # Tanks (verified in catalog where available)
             ("PE025A", "Storage Tank", SymbolCategory.TANKS, "Tank"),
-            ("PT001A", "Pressure Vessel", SymbolCategory.TANKS, "Vessel"),  # Placeholder
+            ("PT002A", "Pressure Vessel", SymbolCategory.TANKS, "PressureVessel"),  # Verified in XLSM
             ("PT006A", "Silo", SymbolCategory.TANKS, "Silo"),
 
             # Equipment (verified in catalog where available)
@@ -183,7 +183,7 @@ class SymbolRegistry:
 
             # Instrumentation (verified in catalog where available)
             ("IM005A", "Transmitter", SymbolCategory.INSTRUMENTATION, "Transmitter"),  # Placeholder
-            ("ND0006", "Controller", SymbolCategory.INSTRUMENTATION, "ProcessControlFunction"),
+            ("ND0006", "Controller", SymbolCategory.ANNOTATIONS, "ProcessControlFunction"),  # Exception: ND series uses 4-digit format
             ("IM017A", "Indicator", SymbolCategory.INSTRUMENTATION, "ProcessIndicator"),  # Placeholder
         ]
 

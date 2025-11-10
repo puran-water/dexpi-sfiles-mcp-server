@@ -89,8 +89,9 @@ visualization/catalog.py:  P-01-01 (hyphens, 2 digits)
    - Fixed PT001A → PT002A for "Pressure Vessel" based on XLSM data
 
 **Note:** Backward compatibility was deemed unnecessary since:
-- merged_catalog.json already uses PP001A format exclusively (805 symbols)
-- Symbol SVG files on disk use PP001A naming
+- merged_catalog.json uses PP001A format for 99% of symbols (805 symbols total)
+- **Format exceptions**: ND series (annotations) uses 4-digit format (ND0006, ND0007, etc.) - documented in catalog
+- Symbol SVG files on disk use PP001A naming (with ND exceptions)
 - No external systems depend on old formats
 - mapper.py scheduled for deprecation in Phase 3.1 anyway
 
@@ -984,11 +985,15 @@ class SymbolCatalog:
 ## Appendix B: Testing Checklist
 
 ### Phase 0: Symbol Format
-- [ ] Test symbol lookup with PP0101 format → finds PP001A
-- [ ] Test symbol lookup with P-01-01 format → finds PP001A
-- [ ] Test symbol lookup with PP001A format → finds PP001A
-- [ ] Test file path resolution for all formats
-- [ ] Test backward compatibility with old tests
+- [x] Test symbol registry loads 805 symbols
+- [x] Test default symbols use PP001A format (with ND exceptions)
+- [x] Test PT002A correctly maps to PressureVessel
+- [x] Test equipment registry uses PP001A symbols
+- [x] Test all equipment symbols exist in registry
+- [x] Test symbol path resolution works
+- [x] Test old PP0101 format no longer works (backward compat removed)
+- [x] Test hyphenated format no longer works (backward compat removed)
+- [x] Test symbol count remains at 805
 
 ### Phase 1: Quick Wins
 - [ ] Test equipment creation equivalence (old vs new)
