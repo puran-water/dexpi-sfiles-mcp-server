@@ -5,14 +5,15 @@ This directory contains **active planning documents** that require regular updat
 ## Current Active Plans
 
 - **CORE_LAYER_MIGRATION_PLAN.md** - Multi-phase plan to migrate from pyDEXPI to core layer
-  - Status: Phase 0 (not started)
-  - Blockers: Symbol normalization, converter utility implementation
-  - Priority: HIGH - Blocks visualization work
+  - Status: ✅ Phase 0-1 COMPLETE | 🚧 Phase 5 Week 1 COMPLETE (Nov 10, 2025)
+  - Next: Phase 5 Week 2 - Remove model_service.py duplication (~400 lines)
+  - Priority: HIGH - Ongoing architectural consolidation
 
 - **VISUALIZATION_PLAN.md** - Federated rendering platform implementation
-  - Status: BLOCKED - Waiting on core layer bug fixes
-  - Dependencies: CORE_LAYER_MIGRATION_PLAN Phase 0
-  - Priority: HIGH - Critical for user experience
+  - Status: ✅ UNBLOCKED - All bugs fixed (Nov 10, 2025)
+  - Week 1 Complete: Symbol catalog backfill (308/805 symbols), nozzle defaults, validation
+  - Next: Week 2 - Remove model_service.py, Week 4 - GraphicBuilder deployment
+  - Priority: HIGH - Ready for rendering implementation
 
 ## Document Lifecycle
 

@@ -5,6 +5,49 @@ All notable changes to the Engineering MCP Server are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.1] - 2025-11-10
+
+### Added - Phase 5 Week 1: Symbol Catalog & Nozzle Fixes
+- **Symbol Catalog Backfill** (`scripts/backfill_symbol_dexpi_classes.py`):
+  - Reverse-mapped DEXPI classes to symbol IDs from merged_catalog.json
+  - Added actuated valve variants (11 A→B conversions: PV003B, PV005B, etc.)
+  - Added alternative mappings (5 fallback types: Pump, Valve, Vessel, etc.)
+  - Intelligent suffix-stripping for symbol ID variants (_Origo, _Detail, _Option1/2/3)
+- **Symbol Validation Script** (`scripts/validate_symbol_catalog.py`):
+  - Percentage-based thresholds for regression protection (≥35% total, ≥70% equipment)
+  - JSON structure validation
+  - Category breakdown reporting
+  - Exit codes: 0 (pass), 1 (fail)
+- **DEXPI-Compliant Nozzle Creation** (`src/core/equipment.py:519-549`):
+  - PipingNode with diameter properties (nominalDiameterRepresentation: DN50)
+  - Numerical diameter value (nominalDiameterNumericalValueRepresentation: 50)
+  - Nozzle pressure representation (nominalPressureRepresentation: PN16)
+  - Sequential naming: N1, N2, N3, etc.
+
+### Changed - Phase 5 Week 1: Symbol Coverage Improvements
+- **Symbol Coverage**: 94 → 308 symbols mapped (+227% improvement)
+  - Total coverage: 11.7% → 38.3% (308/805 symbols)
+  - Equipment coverage: 20.2% → 76.7% (289/377 equipment symbols)
+- **Equipment Symbol Resolution**: `SymbolRegistry.get_by_dexpi_class()` now works for 76.7% of equipment
+- **Unmapped Symbols**: 88 equipment symbols (30 unique base IDs) identified as lacking upstream DEXPI classes
+
+### Fixed - Phase 5 Week 1: Visualization Blockers
+- Bug #2 (Symbol Catalog): Backfilled 214 additional dexpi_class mappings
+- Bug #3 (Nozzle Creation): Equipment now creates proper connection points with DEXPI-compliant structure
+- Symbol registry no longer returns `None` for majority of equipment lookups
+
+### Documentation - Phase 5 Week 1
+- Updated VISUALIZATION_PLAN.md: Status changed from "BLOCKED" to "WEEK 1 COMPLETE"
+- Updated docs/active/README.md: Phase 0-1 and Week 1 completion status
+- Updated ROADMAP.md: Phase 5 Week 1 section added
+- Updated MIGRATION_SUMMARY.md: Phase 5 update section with Week 1 metrics
+
+### Validation
+- ✅ 308 symbols have dexpi_class mappings (38.3% coverage)
+- ✅ 289 equipment symbols mapped (76.7% coverage)
+- ✅ Catalog structure valid
+- ✅ Regression protection thresholds in place
+
 ## [0.4.0] - 2025-11-06
 
 ### Added - Phase 1 & 2.1 Infrastructure
