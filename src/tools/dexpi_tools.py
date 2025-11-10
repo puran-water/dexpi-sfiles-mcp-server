@@ -368,96 +368,55 @@ class DexpiTools:
         })
     
     async def _add_equipment(self, args: dict) -> dict:
-        """Add equipment to P&ID model with mandatory nozzles."""
+        """Add equipment to P&ID model with mandatory nozzles.
+
+        Phase 1 Migration: Now uses core equipment factory instead of manual type checking.
+        This reduces code from 91 lines to ~30 lines while supporting 30+ equipment types.
+        """
         model_id = args["model_id"]
         if model_id not in self.models:
             raise ValueError(f"Model {model_id} not found")
-        
+
         model = self.models[model_id]
         equipment_type = args["equipment_type"]
         tag_name = args["tag_name"]
         specs = args.get("specifications", {})
         nozzle_configs = args.get("nozzles", [])
-        
-        # Create equipment based on type
-        if equipment_type == "Tank":
-            equipment = Tank(tagName=tag_name, **specs)
-        elif equipment_type == "Pump":
-            equipment = Pump(tagName=tag_name, **specs)
-        elif equipment_type == "Compressor":
-            equipment = Compressor(tagName=tag_name, **specs)
-        elif equipment_type == "HeatExchanger":
-            equipment = HeatExchanger(tagName=tag_name, **specs)
-        else:
-            # Try to get the class dynamically from the introspector
-            try:
-                from pydexpi.dexpi_classes import equipment as eq_module
-                equipment_class = getattr(eq_module, equipment_type, None)
-                if equipment_class is None:
-                    raise ValueError(
-                        f"Invalid equipment type '{equipment_type}'. "
-                        f"Class not found in pydexpi.dexpi_classes.equipment. "
-                        f"Use schema_query(operation='list_classes', schema_type='dexpi', category='equipment') "
-                        f"to see available equipment types."
-                    )
-                equipment = equipment_class(tagName=tag_name, **specs)
-            except ImportError as e:
-                raise ImportError(
-                    f"Failed to import pydexpi equipment module. "
-                    f"Ensure pydexpi is installed correctly. Original error: {e}"
-                ) from e
-            except AttributeError as e:
-                raise AttributeError(
-                    f"Failed to instantiate equipment type '{equipment_type}'. "
-                    f"Check that the class constructor accepts tagName and specifications. "
-                    f"Original error: {e}"
-                ) from e
-        
-        # Always create nozzles for equipment (critical for GraphML export)
-        if not nozzle_configs:
-            # Default nozzles if none specified
-            nozzle_configs = [
-                {"subTagName": "N1", "nominalPressure": "PN16", "nominalDiameter": "DN50"},
-                {"subTagName": "N2", "nominalPressure": "PN16", "nominalDiameter": "DN50"}
-            ]
-        
-        # Create nozzles
-        nozzles = []
-        for idx, nozzle_config in enumerate(nozzle_configs):
-            nozzle = Nozzle(
-                id=f"nozzle_{idx}_{tag_name}",
-                subTagName=nozzle_config.get("subTagName", f"N{idx+1}"),
-                nominalPressureRepresentation=nozzle_config.get("nominalPressure", "PN16"),
-                nominalPressureNumericalValueRepresentation=nozzle_config.get("nominalPressure", "16").replace("PN", "")
+
+        # Use core equipment factory (Phase 1 migration)
+        from src.core.equipment import get_factory, UnknownEquipmentTypeError
+
+        factory = get_factory()
+
+        try:
+            # Create equipment via core factory
+            # Factory handles type validation and nozzle creation
+            equipment = factory.create(
+                equipment_type=equipment_type,
+                tag=tag_name,
+                params=specs,
+                nozzles=nozzle_configs if nozzle_configs else None
             )
-            
-            # Add piping node to nozzle if diameter specified
-            if "nominalDiameter" in nozzle_config:
-                node = PipingNode(
-                    nominalDiameterRepresentation=nozzle_config["nominalDiameter"],
-                    nominalDiameterNumericalValueRepresentation=nozzle_config["nominalDiameter"].replace("DN", "")
-                )
-                nozzle.nodes = [node]
-            
-            nozzles.append(nozzle)
-        
-        # Assign nozzles to equipment
-        equipment.nozzles = nozzles
-        
+        except UnknownEquipmentTypeError as e:
+            # Return error with available types for MCP client
+            return error_response(
+                f"Invalid equipment type '{equipment_type}'. {str(e)}"
+            )
+
         # Add to model
         if not model.conceptualModel:
             model.conceptualModel = ConceptualModel()
-        
+
         if not model.conceptualModel.taggedPlantItems:
             model.conceptualModel.taggedPlantItems = []
-        
+
         model.conceptualModel.taggedPlantItems.append(equipment)
-        
+
         return success_response({
             "equipment_type": equipment_type,
             "tag_name": tag_name,
             "model_id": model_id,
-            "nozzles_created": len(nozzles)
+            "nozzles_created": len(equipment.nozzles) if hasattr(equipment, 'nozzles') else 0
         })
     
     async def _add_piping(self, args: dict) -> dict:
@@ -1539,16 +1498,10 @@ class DexpiTools:
     # Project tool handlers removed - now handled by unified ProjectTools
     # Schema introspection methods removed - now handled by unified SchemaTools
     async def _convert_from_sfiles(self, args: dict) -> dict:
-        """Convert SFILES flowsheet to DEXPI P&ID model."""
-        try:
-            from ..converters.sfiles_dexpi_mapper import SfilesDexpiMapper
-        except ImportError as exc:
-            raise ImportError(
-                "Failed to import SfilesDexpiMapper from src.converters.sfiles_dexpi_mapper. "
-                "Install engineering-mcp-server in editable mode (pip install -e .) "
-                "so package-relative imports resolve correctly."
-            ) from exc
+        """Convert SFILES flowsheet to DEXPI P&ID model.
 
+        Phase 1 Migration: Now uses core conversion engine instead of legacy mapper.
+        """
         # Use safe import adapter for SFILES2
         from ..adapters.sfiles_adapter import get_flowsheet_class
         Flowsheet = get_flowsheet_class()
@@ -1564,11 +1517,25 @@ class DexpiTools:
             }
         
         flowsheet = self.flowsheets[flowsheet_id]
-        
-        # Convert to DEXPI
-        mapper = SfilesDexpiMapper()
+
+        # Convert to DEXPI (Phase 1 migration: use core engine)
+        from src.core.conversion import get_engine
+
+        engine = get_engine()
         try:
-            dexpi_model = mapper.sfiles_to_dexpi(flowsheet)
+            # Handle SFILES2 API: flowsheet.convert_to_sfiles() sets flowsheet.sfiles
+            if hasattr(flowsheet, 'sfiles') and flowsheet.sfiles:
+                sfiles_string = flowsheet.sfiles
+            elif hasattr(flowsheet, 'convert_to_sfiles'):
+                flowsheet.convert_to_sfiles()
+                sfiles_string = flowsheet.sfiles
+            else:
+                # Fallback: try str(flowsheet)
+                sfiles_string = str(flowsheet)
+
+            # Parse SFILES and convert to DEXPI via core engine
+            sfiles_model = engine.parse_sfiles(sfiles_string)
+            dexpi_model = engine.sfiles_to_dexpi(sfiles_model)
             
             # Store the model
             if not model_id:
