@@ -116,7 +116,7 @@ class EquipmentRegistry:
     def _register_all_equipment(self):
         """Register all known equipment types."""
 
-        # Pumps (from multiple sources)
+        # Pumps (from multiple sources) - Updated to PP001A format
         self._register(EquipmentDefinition(
             sfiles_type="pump",
             dexpi_class=CentrifugalPump,
@@ -124,7 +124,7 @@ class EquipmentRegistry:
             category=EquipmentCategory.ROTATING,
             display_name="Centrifugal Pump",
             description="Rotodynamic pump for liquid transfer",
-            symbol_id="PP0101",  # NOAKADEXPI/DISCDEXPI symbol
+            symbol_id="PP001A",  # NOAKADEXPI standard format
             required_attributes=["tagName"],
             optional_attributes={"flowRate": None, "head": None, "power": None},
             nozzle_count_default=2
@@ -135,7 +135,7 @@ class EquipmentRegistry:
             dexpi_class=CentrifugalPump,
             category=EquipmentCategory.ROTATING,
             display_name="Centrifugal Pump",
-            symbol_id="PP0101"
+            symbol_id="PP001A"
         ))
 
         self._register(EquipmentDefinition(
@@ -143,10 +143,10 @@ class EquipmentRegistry:
             dexpi_class=Pump,  # Generic pump class
             category=EquipmentCategory.ROTATING,
             display_name="Reciprocating Pump",
-            symbol_id="PP0102"
+            symbol_id="PP010A"
         ))
 
-        # Tanks and Vessels
+        # Tanks and Vessels - Updated to PP001A format
         self._register(EquipmentDefinition(
             sfiles_type="tank",
             dexpi_class=Tank,
@@ -154,7 +154,7 @@ class EquipmentRegistry:
             category=EquipmentCategory.STORAGE,
             display_name="Storage Tank",
             description="Atmospheric storage vessel",
-            symbol_id="PT0101",
+            symbol_id="PE025A",  # Verified in merged catalog
             required_attributes=["tagName"],
             optional_attributes={"volume": None, "diameter": None, "height": None},
             nozzle_count_default=4
@@ -165,7 +165,7 @@ class EquipmentRegistry:
             dexpi_class=Vessel,
             category=EquipmentCategory.STORAGE,
             display_name="Pressure Vessel",
-            symbol_id="PT0201",
+            symbol_id="PT002A",  # Verified in XLSM catalog
             nozzle_count_default=4
         ))
 
@@ -176,19 +176,19 @@ class EquipmentRegistry:
             category=EquipmentCategory.REACTION,
             display_name="Reactor",
             description="Chemical reactor vessel",
-            symbol_id="PE0401",
+            symbol_id="PE003A",  # Placeholder
             expansion_template="cstr_reactor",
             nozzle_count_default=4
         ))
 
-        # Heat Transfer Equipment
+        # Heat Transfer Equipment - Updated to PP001A format
         self._register(EquipmentDefinition(
             sfiles_type="heat_exchanger",
             dexpi_class=HeatExchanger,
             bfd_type="heat_exchange",
             category=EquipmentCategory.HEAT_TRANSFER,
             display_name="Heat Exchanger",
-            symbol_id="PE0301",
+            symbol_id="PE037A",  # Verified in merged catalog
             nozzle_count_default=4
         ))
 
@@ -197,7 +197,7 @@ class EquipmentRegistry:
             dexpi_class=Heater,
             category=EquipmentCategory.HEAT_TRANSFER,
             display_name="Heater",
-            symbol_id="PE0302"
+            symbol_id="PE001A"  # Placeholder
         ))
 
         self._register(EquipmentDefinition(
@@ -205,17 +205,17 @@ class EquipmentRegistry:
             dexpi_class=HeatExchanger,  # Note: pydexpi has no Cooler class, use HeatExchanger
             category=EquipmentCategory.HEAT_TRANSFER,
             display_name="Cooler",
-            symbol_id="PE0303"
+            symbol_id="PE002A"  # Placeholder
         ))
 
-        # Separation Equipment
+        # Separation Equipment - Updated to PP001A format
         self._register(EquipmentDefinition(
             sfiles_type="separator",
             dexpi_class=Separator,
             bfd_type="separation",
             category=EquipmentCategory.SEPARATION,
             display_name="Separator",
-            symbol_id="PE0501"
+            symbol_id="PE012A"  # Verified in merged catalog
         ))
 
         self._register(EquipmentDefinition(
@@ -223,7 +223,7 @@ class EquipmentRegistry:
             dexpi_class=Centrifuge,
             category=EquipmentCategory.SEPARATION,
             display_name="Centrifuge",
-            symbol_id="PE0502"
+            symbol_id="PE030A"  # Verified in merged catalog
         ))
 
         self._register(EquipmentDefinition(
@@ -232,7 +232,7 @@ class EquipmentRegistry:
             bfd_type="filtration",
             category=EquipmentCategory.SEPARATION,
             display_name="Filter",
-            symbol_id="PF0101"
+            symbol_id="PS014A"  # Verified in merged catalog
         ))
 
         self._register(EquipmentDefinition(
@@ -241,18 +241,18 @@ class EquipmentRegistry:
             bfd_type="distillation",
             category=EquipmentCategory.SEPARATION,
             display_name="Process Column",
-            symbol_id="PE0601",
+            symbol_id="PE004A",  # Placeholder
             nozzle_count_default=6
         ))
 
-        # Mixing Equipment
+        # Mixing Equipment - Updated to PP001A format
         self._register(EquipmentDefinition(
             sfiles_type="mixer",
             dexpi_class=Mixer,
             bfd_type="mixing",
             category=EquipmentCategory.REACTION,
             display_name="Mixer",
-            symbol_id="PE0701"
+            symbol_id="PE005A"  # Placeholder
         ))
 
         self._register(EquipmentDefinition(
@@ -260,17 +260,17 @@ class EquipmentRegistry:
             dexpi_class=Agitator,
             category=EquipmentCategory.REACTION,
             display_name="Agitator",
-            symbol_id="PE0702"
+            symbol_id="PE006A"  # Placeholder
         ))
 
-        # Compressors and Blowers
+        # Compressors and Blowers - Updated to PP001A format
         self._register(EquipmentDefinition(
             sfiles_type="compressor",
             dexpi_class=Compressor,
             bfd_type="compression",
             category=EquipmentCategory.ROTATING,
             display_name="Compressor",
-            symbol_id="PC0101"
+            symbol_id="PA001A"  # Placeholder (using PA for compressors)
         ))
 
         self._register(EquipmentDefinition(
@@ -278,7 +278,7 @@ class EquipmentRegistry:
             dexpi_class=Blower,
             category=EquipmentCategory.ROTATING,
             display_name="Blower",
-            symbol_id="PC0201"
+            symbol_id="PA002A"  # Placeholder
         ))
 
         self._register(EquipmentDefinition(
@@ -286,17 +286,17 @@ class EquipmentRegistry:
             dexpi_class=Fan,
             category=EquipmentCategory.ROTATING,
             display_name="Fan",
-            symbol_id="PC0301"
+            symbol_id="PA003A"  # Placeholder
         ))
 
-        # Special Equipment
+        # Special Equipment - Updated to PP001A format
         self._register(EquipmentDefinition(
             sfiles_type="dryer",
             dexpi_class=Dryer,
             bfd_type="drying",
             category=EquipmentCategory.TREATMENT,
             display_name="Dryer",
-            symbol_id="PE0801"
+            symbol_id="PD001A"  # Placeholder (using PD for dryers)
         ))
 
         self._register(EquipmentDefinition(
@@ -304,7 +304,7 @@ class EquipmentRegistry:
             dexpi_class=Furnace,
             category=EquipmentCategory.HEAT_TRANSFER,
             display_name="Furnace",
-            symbol_id="PE0901"
+            symbol_id="PE007A"  # Placeholder
         ))
 
         self._register(EquipmentDefinition(
@@ -312,7 +312,7 @@ class EquipmentRegistry:
             dexpi_class=Turbine,
             category=EquipmentCategory.ROTATING,
             display_name="Turbine",
-            symbol_id="PC0401"
+            symbol_id="PT011A"  # Placeholder
         ))
 
         # BFD-specific blocks (from pfd_expansion_engine)

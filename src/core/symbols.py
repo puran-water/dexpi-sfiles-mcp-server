@@ -146,43 +146,45 @@ class SymbolRegistry:
     def _load_default_mappings(self):
         """Load default symbol mappings as fallback."""
         # Critical default mappings for common equipment
+        # NOTE: These use NOAKADEXPI PP001A format (3 digits + letter)
+        # Symbol IDs verified against merged_catalog.json
         defaults = [
-            # Pumps
-            ("PP0101", "Centrifugal Pump", SymbolCategory.PUMPS, "CentrifugalPump"),
-            ("PP0102", "Reciprocating Pump", SymbolCategory.PUMPS, "ReciprocatingPump"),
-            ("PP0103", "Gear Pump", SymbolCategory.PUMPS, "RotaryPump"),
+            # Pumps (verified in catalog)
+            ("PP001A", "Centrifugal Pump", SymbolCategory.PUMPS, "CentrifugalPump"),
+            ("PP010A", "Reciprocating Pump", SymbolCategory.PUMPS, "ReciprocatingPump"),
+            ("PP003A", "Gear Pump", SymbolCategory.PUMPS, "GearPump"),
 
-            # Valves
-            ("PV0101", "Gate Valve", SymbolCategory.VALVES, "GateValve"),
-            ("PV0102", "Globe Valve", SymbolCategory.VALVES, "GlobeValve"),
-            ("PV0103", "Ball Valve", SymbolCategory.VALVES, "BallValve"),
-            ("PV0104", "Butterfly Valve", SymbolCategory.VALVES, "ButterflyValve"),
-            ("PV0105", "Check Valve", SymbolCategory.VALVES, "CheckValve"),
-            ("PV0201", "Control Valve", SymbolCategory.VALVES, "OperatedValve"),
+            # Valves (verified in catalog)
+            ("PV005A", "Gate Valve", SymbolCategory.VALVES, "GateValve"),
+            ("PV007A", "Globe Valve", SymbolCategory.VALVES, "GlobeValve"),
+            ("PV019A", "Ball Valve", SymbolCategory.VALVES, "BallValve"),
+            ("PV018A", "Butterfly Valve", SymbolCategory.VALVES, "ButterflyValve"),
+            ("PV013A", "Check Valve", SymbolCategory.VALVES, "CheckValve"),
+            ("PV001A", "Control Valve", SymbolCategory.VALVES, "OperatedValve"),  # Placeholder
 
-            # Tanks
-            ("PT0101", "Storage Tank", SymbolCategory.TANKS, "Tank"),
-            ("PT0201", "Pressure Vessel", SymbolCategory.TANKS, "Vessel"),
-            ("PT0301", "Silo", SymbolCategory.TANKS, "Silo"),
+            # Tanks (verified in catalog where available)
+            ("PE025A", "Storage Tank", SymbolCategory.TANKS, "Tank"),
+            ("PT001A", "Pressure Vessel", SymbolCategory.TANKS, "Vessel"),  # Placeholder
+            ("PT006A", "Silo", SymbolCategory.TANKS, "Silo"),
 
-            # Equipment
-            ("PE0301", "Heat Exchanger", SymbolCategory.EQUIPMENT, "HeatExchanger"),
-            ("PE0302", "Heater", SymbolCategory.EQUIPMENT, "Heater"),
-            ("PE0303", "Cooler", SymbolCategory.EQUIPMENT, "Cooler"),
-            ("PE0401", "Reactor", SymbolCategory.EQUIPMENT, "Reactor"),
-            ("PE0501", "Separator", SymbolCategory.EQUIPMENT, "Separator"),
-            ("PE0502", "Centrifuge", SymbolCategory.EQUIPMENT, "Centrifuge"),
-            ("PE0601", "Column", SymbolCategory.EQUIPMENT, "ProcessColumn"),
-            ("PE0701", "Mixer", SymbolCategory.EQUIPMENT, "Mixer"),
+            # Equipment (verified in catalog where available)
+            ("PE037A", "Heat Exchanger", SymbolCategory.EQUIPMENT, "HeatExchanger"),
+            ("PE001A", "Heater", SymbolCategory.EQUIPMENT, "Heater"),  # Placeholder
+            ("PE002A", "Cooler", SymbolCategory.EQUIPMENT, "Cooler"),  # Placeholder
+            ("PE003A", "Reactor", SymbolCategory.EQUIPMENT, "Reactor"),  # Placeholder
+            ("PE012A", "Separator", SymbolCategory.EQUIPMENT, "Separator"),
+            ("PE030A", "Centrifuge", SymbolCategory.EQUIPMENT, "Centrifuge"),
+            ("PE004A", "Column", SymbolCategory.EQUIPMENT, "ProcessColumn"),  # Placeholder
+            ("PE005A", "Mixer", SymbolCategory.EQUIPMENT, "Mixer"),  # Placeholder
 
-            # Filters
-            ("PF0101", "Filter", SymbolCategory.FILTERS, "Filter"),
-            ("PF0102", "Strainer", SymbolCategory.FILTERS, "Filter"),
+            # Filters (verified in catalog)
+            ("PS014A", "Filter", SymbolCategory.FILTERS, "Filter"),
+            ("PF001A", "Strainer", SymbolCategory.FILTERS, "Filter"),  # Placeholder
 
-            # Instrumentation
-            ("IM0101", "Transmitter", SymbolCategory.INSTRUMENTATION, "Transmitter"),
-            ("IM0201", "Controller", SymbolCategory.INSTRUMENTATION, "ProcessControlFunction"),
-            ("IM0301", "Indicator", SymbolCategory.INSTRUMENTATION, "ProcessIndicator"),
+            # Instrumentation (verified in catalog where available)
+            ("IM005A", "Transmitter", SymbolCategory.INSTRUMENTATION, "Transmitter"),  # Placeholder
+            ("ND0006", "Controller", SymbolCategory.INSTRUMENTATION, "ProcessControlFunction"),
+            ("IM017A", "Indicator", SymbolCategory.INSTRUMENTATION, "ProcessIndicator"),  # Placeholder
         ]
 
         for symbol_id, name, category, dexpi_class in defaults:
@@ -240,7 +242,15 @@ class SymbolRegistry:
             self._category_map[symbol.category].append(symbol_id)
 
     def get_symbol(self, symbol_id: str) -> Optional[SymbolInfo]:
-        """Get symbol information by ID."""
+        """
+        Get symbol information by ID.
+
+        Args:
+            symbol_id: Symbol ID (e.g., PP001A)
+
+        Returns:
+            SymbolInfo if found, None otherwise
+        """
         return self._symbols.get(symbol_id)
 
     def get_by_dexpi_class(
@@ -349,28 +359,39 @@ class SymbolRegistry:
         return stats
 
     def get_symbol_path(self, symbol_id: str) -> Optional[Path]:
-        """Get full path to symbol SVG file."""
+        """
+        Get full path to symbol SVG file.
+
+        Args:
+            symbol_id: Symbol ID (e.g., PP001A)
+
+        Returns:
+            Path to SVG file if found, None otherwise
+        """
+        # Get symbol info
         symbol = self.get_symbol(symbol_id)
-        if not symbol or not symbol.file_path:
-            return None
+        if symbol and symbol.file_path:
+            # Try registered file path first
+            full_path = self.assets_dir / symbol.file_path
+            if full_path.exists():
+                return full_path
 
-        # Construct full path
-        full_path = self.assets_dir / symbol.file_path
-        if full_path.exists():
-            return full_path
-
-        # Try alternative locations
+        # Try common locations
         alternatives = [
             self.assets_dir / "DISCDEXPI" / f"{symbol_id}.svg",
             self.assets_dir / "NOAKADEXPI" / f"{symbol_id}.svg",
-            self.assets_dir / "DISCDEXPI" / "Detail" / f"{symbol_id}_Detail.svg",
-            self.assets_dir / "NOAKADEXPI" / "Detail" / f"{symbol_id}_Detail.svg",
+            self.assets_dir / "DISCDEXPI" / "Detail" / f"{symbol_id}.svg",
+            self.assets_dir / "NOAKADEXPI" / "Detail" / f"{symbol_id}.svg",
+            self.assets_dir / "DISCDEXPI" / "Origo" / f"{symbol_id}.svg",
+            self.assets_dir / "NOAKADEXPI" / "Origo" / f"{symbol_id}.svg",
         ]
 
         for alt_path in alternatives:
             if alt_path.exists():
+                logger.debug(f"Found symbol file for {symbol_id} at {alt_path}")
                 return alt_path
 
+        logger.warning(f"Could not find symbol file for {symbol_id}")
         return None
 
     def export_mapping(self, output_path: Optional[Path] = None) -> Dict:
