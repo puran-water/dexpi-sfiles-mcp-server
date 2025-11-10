@@ -1,0 +1,27 @@
+{
+  "case_0": {
+    "input": "tank[storage]->pump[centrifugal]",
+    "error": "'SfilesModel' object has no attribute 'state'",
+    "status": "FAILED"
+  },
+  "case_1": {
+    "input": "pump[centrifugal]->tank[storage]",
+    "error": "'SfilesModel' object has no attribute 'state'",
+    "status": "FAILED"
+  },
+  "case_2": {
+    "input": "tank[storage]->pump[centrifugal]->reactor[vessel]",
+    "error": "'SfilesModel' object has no attribute 'state'",
+    "status": "FAILED"
+  },
+  "case_3": {
+    "input": "feed[tank]->P-101[pump]->T-201[reactor]",
+    "error": "'SfilesModel' object has no attribute 'state'",
+    "status": "FAILED"
+  },
+  "case_4": {
+    "input": "pump[pump_centrifugal]->heater[heater]->mixer[mixer]",
+    "error": "'SfilesModel' object has no attribute 'state'",
+    "status": "FAILED"
+  }
+}

@@ -1,0 +1,389 @@
+{
+  "Tank_TK-101": {
+    "type": "Tank",
+    "equipment_type": "Tank",
+    "tagName": "TK-101",
+    "nozzle_count": 2,
+    "nozzle_details": [
+      {
+        "id": "nozzle_0_TK-101",
+        "subTagName": "N1",
+        "nominalPressure": "PN16",
+        "has_nodes": true
+      },
+      {
+        "id": "nozzle_1_TK-101",
+        "subTagName": "N2",
+        "nominalPressure": "PN16",
+        "has_nodes": true
+      }
+    ],
+    "attributes": {
+      "id": "d86236e0-8454-42ea-9921-9652c6077fd2",
+      "uri": "https://pyDEXPI.org/schemas/pydexpi_1_3/equipment/tank.py",
+      "plantTrain": "None",
+      "plantSystem": "None",
+      "plantArea": "None",
+      "parentStructure": "None",
+      "customAttributes": "[]",
+      "tagName": "TK-101",
+      "tagNamePrefix": "None",
+      "tagNameSequenceNumber": "None",
+      "tagNameSuffix": "None",
+      "chambers": "[]",
+      "dryingChambers": "[]",
+      "gearBoxes": "[]",
+      "motors": "[]",
+      "sprayNozzles": "[]",
+      "equipmentDescription": "None",
+      "nominalCapacityVolume": "None",
+      "agitator": "None",
+      "columnSections": "[]",
+      "cylinderLength": "None"
+    }
+  },
+  "Pump_P-201": {
+    "type": "Pump",
+    "equipment_type": "Pump",
+    "tagName": "P-201",
+    "nozzle_count": 2,
+    "nozzle_details": [
+      {
+        "id": "nozzle_0_P-201",
+        "subTagName": "N1",
+        "nominalPressure": "PN16",
+        "has_nodes": true
+      },
+      {
+        "id": "nozzle_1_P-201",
+        "subTagName": "N2",
+        "nominalPressure": "PN16",
+        "has_nodes": true
+      }
+    ],
+    "attributes": {
+      "id": "15eac856-9cfe-49e8-9795-e3d2a51c047f",
+      "uri": "https://pyDEXPI.org/schemas/pydexpi_1_3/equipment/pump.py",
+      "plantTrain": "None",
+      "plantSystem": "None",
+      "plantArea": "None",
+      "parentStructure": "None",
+      "customAttributes": "[]",
+      "tagName": "P-201",
+      "tagNamePrefix": "None",
+      "tagNameSequenceNumber": "None",
+      "tagNameSuffix": "None",
+      "chambers": "[]",
+      "dryingChambers": "[]",
+      "gearBoxes": "[]",
+      "motors": "[]",
+      "sprayNozzles": "[]",
+      "equipmentDescription": "None",
+      "designPressureHead": "None",
+      "designVolumeFlowRate": "None",
+      "differentialPressure": "None"
+    }
+  },
+  "Compressor_C-301": {
+    "type": "Compressor",
+    "equipment_type": "Compressor",
+    "tagName": "C-301",
+    "nozzle_count": 2,
+    "nozzle_details": [
+      {
+        "id": "nozzle_0_C-301",
+        "subTagName": "N1",
+        "nominalPressure": "PN16",
+        "has_nodes": true
+      },
+      {
+        "id": "nozzle_1_C-301",
+        "subTagName": "N2",
+        "nominalPressure": "PN16",
+        "has_nodes": true
+      }
+    ],
+    "attributes": {
+      "id": "6b5b3fe2-6a17-428b-94c1-9200720eef40",
+      "uri": "https://pyDEXPI.org/schemas/pydexpi_1_3/equipment/compressor.py",
+      "plantTrain": "None",
+      "plantSystem": "None",
+      "plantArea": "None",
+      "parentStructure": "None",
+      "customAttributes": "[]",
+      "tagName": "C-301",
+      "tagNamePrefix": "None",
+      "tagNameSequenceNumber": "None",
+      "tagNameSuffix": "None",
+      "chambers": "[]",
+      "dryingChambers": "[]",
+      "gearBoxes": "[]",
+      "motors": "[]",
+      "sprayNozzles": "[]",
+      "equipmentDescription": "None",
+      "designVolumeFlowRate": "None",
+      "differentialPressure": "None"
+    }
+  },
+  "HeatExchanger_HE-401": {
+    "type": "HeatExchanger",
+    "equipment_type": "HeatExchanger",
+    "tagName": "HE-401",
+    "nozzle_count": 2,
+    "nozzle_details": [
+      {
+        "id": "nozzle_0_HE-401",
+        "subTagName": "N1",
+        "nominalPressure": "PN16",
+        "has_nodes": true
+      },
+      {
+        "id": "nozzle_1_HE-401",
+        "subTagName": "N2",
+        "nominalPressure": "PN16",
+        "has_nodes": true
+      }
+    ],
+    "attributes": {
+      "id": "a004dbfe-2100-4ded-80ea-847ef0f63e61",
+      "uri": "https://pyDEXPI.org/schemas/pydexpi_1_3/equipment/heatExchanger.py",
+      "plantTrain": "None",
+      "plantSystem": "None",
+      "plantArea": "None",
+      "parentStructure": "None",
+      "customAttributes": "[]",
+      "tagName": "HE-401",
+      "tagNamePrefix": "None",
+      "tagNameSequenceNumber": "None",
+      "tagNameSuffix": "None",
+      "chambers": "[]",
+      "dryingChambers": "[]",
+      "gearBoxes": "[]",
+      "motors": "[]",
+      "sprayNozzles": "[]",
+      "equipmentDescription": "None",
+      "designHeatFlowRate": "None",
+      "designHeatTransferArea": "None",
+      "designHeatTransferCoefficient": "None",
+      "agitator": "None"
+    }
+  },
+  "CentrifugalPump_P-202": {
+    "type": "CentrifugalPump",
+    "equipment_type": "CentrifugalPump",
+    "tagName": "P-202",
+    "nozzle_count": 2,
+    "nozzle_details": [
+      {
+        "id": "nozzle_0_P-202",
+        "subTagName": "N1",
+        "nominalPressure": "PN16",
+        "has_nodes": true
+      },
+      {
+        "id": "nozzle_1_P-202",
+        "subTagName": "N2",
+        "nominalPressure": "PN16",
+        "has_nodes": true
+      }
+    ],
+    "attributes": {
+      "id": "a76af62b-a601-47a1-bca0-936af7755f64",
+      "uri": "https://pyDEXPI.org/schemas/pydexpi_1_3/equipment/centrifugalPump.py",
+      "plantTrain": "None",
+      "plantSystem": "None",
+      "plantArea": "None",
+      "parentStructure": "None",
+      "customAttributes": "[]",
+      "tagName": "P-202",
+      "tagNamePrefix": "None",
+      "tagNameSequenceNumber": "None",
+      "tagNameSuffix": "None",
+      "chambers": "[]",
+      "dryingChambers": "[]",
+      "gearBoxes": "[]",
+      "motors": "[]",
+      "sprayNozzles": "[]",
+      "equipmentDescription": "None",
+      "designPressureHead": "None",
+      "designVolumeFlowRate": "None",
+      "differentialPressure": "None",
+      "impellers": "[]",
+      "designRotationalSpeed": "None",
+      "designShaftPower": "None"
+    }
+  },
+  "ReciprocatingPump_P-203": {
+    "type": "ReciprocatingPump",
+    "equipment_type": "ReciprocatingPump",
+    "tagName": "P-203",
+    "nozzle_count": 2,
+    "nozzle_details": [
+      {
+        "id": "nozzle_0_P-203",
+        "subTagName": "N1",
+        "nominalPressure": "PN16",
+        "has_nodes": true
+      },
+      {
+        "id": "nozzle_1_P-203",
+        "subTagName": "N2",
+        "nominalPressure": "PN16",
+        "has_nodes": true
+      }
+    ],
+    "attributes": {
+      "id": "3486bb5c-e10a-48b8-a64b-7697effa60ff",
+      "uri": "https://pyDEXPI.org/schemas/pydexpi_1_3/equipment/reciprocatingPump.py",
+      "plantTrain": "None",
+      "plantSystem": "None",
+      "plantArea": "None",
+      "parentStructure": "None",
+      "customAttributes": "[]",
+      "tagName": "P-203",
+      "tagNamePrefix": "None",
+      "tagNameSequenceNumber": "None",
+      "tagNameSuffix": "None",
+      "chambers": "[]",
+      "dryingChambers": "[]",
+      "gearBoxes": "[]",
+      "motors": "[]",
+      "sprayNozzles": "[]",
+      "equipmentDescription": "None",
+      "designPressureHead": "None",
+      "designVolumeFlowRate": "None",
+      "differentialPressure": "None",
+      "displacers": "[]",
+      "designRotationalSpeed": "None",
+      "designShaftPower": "None"
+    }
+  },
+  "Vessel_V-501": {
+    "type": "Vessel",
+    "equipment_type": "Vessel",
+    "tagName": "V-501",
+    "nozzle_count": 2,
+    "nozzle_details": [
+      {
+        "id": "nozzle_0_V-501",
+        "subTagName": "N1",
+        "nominalPressure": "PN16",
+        "has_nodes": true
+      },
+      {
+        "id": "nozzle_1_V-501",
+        "subTagName": "N2",
+        "nominalPressure": "PN16",
+        "has_nodes": true
+      }
+    ],
+    "attributes": {
+      "id": "e3b87070-1e4f-468a-ba92-195c63afdb0c",
+      "uri": "https://pyDEXPI.org/schemas/pydexpi_1_3/equipment/vessel.py",
+      "plantTrain": "None",
+      "plantSystem": "None",
+      "plantArea": "None",
+      "parentStructure": "None",
+      "customAttributes": "[]",
+      "tagName": "V-501",
+      "tagNamePrefix": "None",
+      "tagNameSequenceNumber": "None",
+      "tagNameSuffix": "None",
+      "chambers": "[]",
+      "dryingChambers": "[]",
+      "gearBoxes": "[]",
+      "motors": "[]",
+      "sprayNozzles": "[]",
+      "equipmentDescription": "None",
+      "nominalCapacityVolume": "None",
+      "agitator": "None",
+      "columnSections": "[]"
+    }
+  },
+  "PressureVessel_V-502": {
+    "type": "PressureVessel",
+    "equipment_type": "PressureVessel",
+    "tagName": "V-502",
+    "nozzle_count": 2,
+    "nozzle_details": [
+      {
+        "id": "nozzle_0_V-502",
+        "subTagName": "N1",
+        "nominalPressure": "PN16",
+        "has_nodes": true
+      },
+      {
+        "id": "nozzle_1_V-502",
+        "subTagName": "N2",
+        "nominalPressure": "PN16",
+        "has_nodes": true
+      }
+    ],
+    "attributes": {
+      "id": "005c2951-393c-4226-a11f-d6b538c43bcc",
+      "uri": "https://pyDEXPI.org/schemas/pydexpi_1_3/equipment/pressureVessel.py",
+      "plantTrain": "None",
+      "plantSystem": "None",
+      "plantArea": "None",
+      "parentStructure": "None",
+      "customAttributes": "[]",
+      "tagName": "V-502",
+      "tagNamePrefix": "None",
+      "tagNameSequenceNumber": "None",
+      "tagNameSuffix": "None",
+      "chambers": "[]",
+      "dryingChambers": "[]",
+      "gearBoxes": "[]",
+      "motors": "[]",
+      "sprayNozzles": "[]",
+      "equipmentDescription": "None",
+      "nominalCapacityVolume": "None",
+      "agitator": "None",
+      "columnSections": "[]",
+      "cylinderLength": "None"
+    }
+  },
+  "Tank_TK-102": {
+    "type": "Tank",
+    "equipment_type": "Tank",
+    "tagName": "TK-102",
+    "nozzle_count": 2,
+    "nozzle_details": [
+      {
+        "id": "nozzle_0_TK-102",
+        "subTagName": "INLET",
+        "nominalPressure": "PN25",
+        "has_nodes": true
+      },
+      {
+        "id": "nozzle_1_TK-102",
+        "subTagName": "OUTLET",
+        "nominalPressure": "PN25",
+        "has_nodes": true
+      }
+    ],
+    "attributes": {
+      "id": "0dbb57d1-85aa-4f2b-8190-d1839c28715f",
+      "uri": "https://pyDEXPI.org/schemas/pydexpi_1_3/equipment/tank.py",
+      "plantTrain": "None",
+      "plantSystem": "None",
+      "plantArea": "None",
+      "parentStructure": "None",
+      "customAttributes": "[]",
+      "tagName": "TK-102",
+      "tagNamePrefix": "None",
+      "tagNameSequenceNumber": "None",
+      "tagNameSuffix": "None",
+      "chambers": "[]",
+      "dryingChambers": "[]",
+      "gearBoxes": "[]",
+      "motors": "[]",
+      "sprayNozzles": "[]",
+      "equipmentDescription": "None",
+      "nominalCapacityVolume": "None",
+      "agitator": "None",
+      "columnSections": "[]",
+      "cylinderLength": "None"
+    }
+  }
+}
