@@ -132,7 +132,7 @@
       "id": "PE012A_Option1",
       "name": "PE012A_Option1",
       "category": "Equipment",
-      "dexpi_class": null,
+      "dexpi_class": "Separator",
       "source_file": "NOAKADEXPI/PE012A_Option1.svg",
       "provenance": {
         "source_repo": "NOAKADEXPI",
@@ -177,7 +177,7 @@
       "id": "PV010A_Origo",
       "name": "PV010A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "ChokeValve",
       "source_file": "DISCDEXPI/Origo/PV010A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -192,7 +192,7 @@
       "id": "PT005A_Origo",
       "name": "PT005A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "DomeRoofTank",
       "source_file": "DISCDEXPI/Origo/PT005A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -207,7 +207,7 @@
       "id": "PP006A_Origo",
       "name": "PP006A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "LiquidRingPump",
       "source_file": "DISCDEXPI/Origo/PP006A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -237,7 +237,7 @@
       "id": "PV015B_Origo",
       "name": "PV015B_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "OperatedDiaphragmValve",
       "source_file": "DISCDEXPI/Origo/PV015B_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -252,7 +252,7 @@
       "id": "PP017A_Origo",
       "name": "PP017A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "Agitator",
       "source_file": "DISCDEXPI/Origo/PP017A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -342,7 +342,7 @@
       "id": "PT006A_Origo",
       "name": "PT006A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "Silo",
       "source_file": "DISCDEXPI/Origo/PT006A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -387,7 +387,7 @@
       "id": "PV022A_Origo",
       "name": "PV022A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "FlowControlCheckValve",
       "source_file": "DISCDEXPI/Origo/PV022A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -402,7 +402,7 @@
       "id": "PS014A_Origo",
       "name": "PS014A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "Filter",
       "source_file": "DISCDEXPI/Origo/PS014A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -417,7 +417,7 @@
       "id": "PP011A_Origo",
       "name": "PP011A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "CentrifugalCompressor",
       "source_file": "DISCDEXPI/Origo/PP011A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -447,7 +447,7 @@
       "id": "PE030A_Origo",
       "name": "PE030A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "Centrifuge",
       "source_file": "DISCDEXPI/Origo/PE030A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -462,7 +462,7 @@
       "id": "PE022A_Origo",
       "name": "PE022A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "Crusher",
       "source_file": "DISCDEXPI/Origo/PE022A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -522,7 +522,7 @@
       "id": "PS006A_Origo",
       "name": "PS006A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "ScrewedCap",
       "source_file": "DISCDEXPI/Origo/PS006A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -537,7 +537,7 @@
       "id": "PP016A_Origo",
       "name": "PP016A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "SumpPump",
       "source_file": "DISCDEXPI/Origo/PP016A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -582,7 +582,7 @@
       "id": "PP010A_Origo",
       "name": "PP010A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "ReciprocatingPump",
       "source_file": "DISCDEXPI/Origo/PP010A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -612,7 +612,7 @@
       "id": "PS016A_Origo",
       "name": "PS016A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "TStrainer",
       "source_file": "DISCDEXPI/Origo/PS016A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -657,7 +657,7 @@
       "id": "PT007A_Origo",
       "name": "PT007A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "GasBottle",
       "source_file": "DISCDEXPI/Origo/PT007A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -672,7 +672,7 @@
       "id": "PS013A_Origo",
       "name": "PS013A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "DuplexStrainer",
       "source_file": "DISCDEXPI/Origo/PS013A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -702,7 +702,7 @@
       "id": "PT011A_Origo",
       "name": "PT011A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "Hopper",
       "source_file": "DISCDEXPI/Origo/PT011A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -747,7 +747,7 @@
       "id": "PP005A_Origo",
       "name": "PP005A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "SlidingVanePump",
       "source_file": "DISCDEXPI/Origo/PP005A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -777,7 +777,7 @@
       "id": "PV023A_Origo",
       "name": "PV023A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "PlugValve",
       "source_file": "DISCDEXPI/Origo/PV023A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -837,7 +837,7 @@
       "id": "PE023A_Origo",
       "name": "PE023A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "BagFilter",
       "source_file": "DISCDEXPI/Origo/PE023A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -852,7 +852,7 @@
       "id": "PP004A_Origo",
       "name": "PP004A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "HandPump",
       "source_file": "DISCDEXPI/Origo/PP004A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -912,7 +912,7 @@
       "id": "PE029A_Origo",
       "name": "PE029A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "AirCooledInduced",
       "source_file": "DISCDEXPI/Origo/PE029A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -942,7 +942,7 @@
       "id": "PV004B_Origo",
       "name": "PV004B_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "OperatedFourWayValve",
       "source_file": "DISCDEXPI/Origo/PV004B_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -972,7 +972,7 @@
       "id": "PV015A_Origo",
       "name": "PV015A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "DiaphragmValve",
       "source_file": "DISCDEXPI/Origo/PV015A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -1017,7 +1017,7 @@
       "id": "PT004A_Origo",
       "name": "PT004A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "QuickOpenLidTank",
       "source_file": "DISCDEXPI/Origo/PT004A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -1032,7 +1032,7 @@
       "id": "PT003A_Origo",
       "name": "PT003A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "Tower",
       "source_file": "DISCDEXPI/Origo/PT003A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -1092,7 +1092,7 @@
       "id": "PV016B_Origo",
       "name": "PV016B_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "OperatedNeedleValve",
       "source_file": "DISCDEXPI/Origo/PV016B_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -1182,7 +1182,7 @@
       "id": "PP008A_Origo",
       "name": "PP008A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "ProportioningPump",
       "source_file": "DISCDEXPI/Origo/PP008A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -1212,7 +1212,7 @@
       "id": "PE026A_Origo",
       "name": "PE026A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "Burner",
       "source_file": "DISCDEXPI/Origo/PE026A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -1257,7 +1257,7 @@
       "id": "PE036A_Origo",
       "name": "PE036A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "Reboiler",
       "source_file": "DISCDEXPI/Origo/PE036A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -1317,7 +1317,7 @@
       "id": "PP007A_Origo",
       "name": "PP007A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "Blower",
       "source_file": "DISCDEXPI/Origo/PP007A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -1362,7 +1362,7 @@
       "id": "PV012A_Origo",
       "name": "PV012A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "SafetyValveOrFitting",
       "source_file": "DISCDEXPI/Origo/PV012A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -1422,7 +1422,7 @@
       "id": "PT008A_Origo",
       "name": "PT008A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "ToteTank",
       "source_file": "DISCDEXPI/Origo/PT008A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -1467,7 +1467,7 @@
       "id": "PE032A_Origo",
       "name": "PE032A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "SubmersiblePump",
       "source_file": "DISCDEXPI/Origo/PE032A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -1512,7 +1512,7 @@
       "id": "PV001A_Origo",
       "name": "PV001A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "Flange",
       "source_file": "DISCDEXPI/Origo/PV001A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -1572,7 +1572,7 @@
       "id": "PE021A_Origo",
       "name": "PE021A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "Turbine",
       "source_file": "DISCDEXPI/Origo/PE021A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -1647,7 +1647,7 @@
       "id": "PE028A_Origo",
       "name": "PE028A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "AirCooledForced",
       "source_file": "DISCDEXPI/Origo/PE028A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -1677,7 +1677,7 @@
       "id": "PP012A_Origo",
       "name": "PP012A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "ScrewCompressor",
       "source_file": "DISCDEXPI/Origo/PP012A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -1782,7 +1782,7 @@
       "id": "PV014A_Origo",
       "name": "PV014A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "PinchValve",
       "source_file": "DISCDEXPI/Origo/PV014A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -1857,7 +1857,7 @@
       "id": "PV009A_Origo",
       "name": "PV009A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "MinFlowCheckValve",
       "source_file": "DISCDEXPI/Origo/PV009A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -1887,7 +1887,7 @@
       "id": "PV016A_Origo",
       "name": "PV016A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "NeedleValve",
       "source_file": "DISCDEXPI/Origo/PV016A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -1902,7 +1902,7 @@
       "id": "PP009A_Origo",
       "name": "PP009A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "TriplexPump",
       "source_file": "DISCDEXPI/Origo/PP009A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -1917,7 +1917,7 @@
       "id": "PE025A_Origo",
       "name": "PE025A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "Tank",
       "source_file": "DISCDEXPI/Origo/PE025A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -1947,7 +1947,7 @@
       "id": "PV004A_Origo",
       "name": "PV004A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "FourWayValve",
       "source_file": "DISCDEXPI/Origo/PV004A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -1977,7 +1977,7 @@
       "id": "PV023B_Origo",
       "name": "PV023B_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "OperatedPlugValve",
       "source_file": "DISCDEXPI/Origo/PV023B_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -2067,7 +2067,7 @@
       "id": "PV014B_Origo",
       "name": "PV014B_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "OperatedPinchValve",
       "source_file": "DISCDEXPI/Origo/PV014B_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -2082,7 +2082,7 @@
       "id": "PE038A_Origo",
       "name": "PE038A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "ShellAndTubeHeatExchanger",
       "source_file": "DISCDEXPI/Origo/PE038A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -2142,7 +2142,7 @@
       "id": "PT009A_Origo",
       "name": "PT009A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "OpenPit",
       "source_file": "DISCDEXPI/Origo/PT009A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -2202,7 +2202,7 @@
       "id": "PE019A_Origo",
       "name": "PE019A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "WeighFeeder",
       "source_file": "DISCDEXPI/Origo/PE019A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -2292,7 +2292,7 @@
       "id": "PP015A_Origo",
       "name": "PP015A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "LiftPump",
       "source_file": "DISCDEXPI/Origo/PP015A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -2307,7 +2307,7 @@
       "id": "PS015A_Origo",
       "name": "PS015A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "YStrainer",
       "source_file": "DISCDEXPI/Origo/PS015A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -2322,7 +2322,7 @@
       "id": "PS005A_Origo",
       "name": "PS005A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "WeldedCap",
       "source_file": "DISCDEXPI/Origo/PS005A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -2337,7 +2337,7 @@
       "id": "PP001A_Detail",
       "name": "PP001A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "CentrifugalPump",
       "source_file": "DISCDEXPI/Detail/PP001A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -2457,7 +2457,7 @@
       "id": "PE010A_Origo",
       "name": "PE010A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "PlateHeatExchanger",
       "source_file": "DISCDEXPI/Origo/PE010A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -2472,7 +2472,7 @@
       "id": "PV003B_Option2",
       "name": "PV003B_Option2",
       "category": "Valves",
-      "dexpi_class": null,
+      "dexpi_class": "OperatedThreeWayValve",
       "source_file": "DISCDEXPI/PV003B_Option2.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -2577,7 +2577,7 @@
       "id": "PE028A_Detail",
       "name": "PE028A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "AirCooledForced",
       "source_file": "DISCDEXPI/Detail/PE028A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -2697,7 +2697,7 @@
       "id": "PE030A_Detail",
       "name": "PE030A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "Centrifuge",
       "source_file": "DISCDEXPI/Detail/PE030A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -2757,7 +2757,7 @@
       "id": "PE002A_Detail",
       "name": "PE002A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "EccentricReducer",
       "source_file": "DISCDEXPI/Detail/PE002A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -2997,7 +2997,7 @@
       "id": "PE032A_Detail",
       "name": "PE032A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "SubmersiblePump",
       "source_file": "DISCDEXPI/Detail/PE032A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -3027,7 +3027,7 @@
       "id": "PP002A_Origo",
       "name": "PP002A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "DiaphragmPump",
       "source_file": "DISCDEXPI/Origo/PP002A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -3057,7 +3057,7 @@
       "id": "LZ009A_Detail",
       "name": "LZ009A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "CustomEquipment",
       "source_file": "DISCDEXPI/Detail/LZ009A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -3087,7 +3087,7 @@
       "id": "PV010A_Detail",
       "name": "PV010A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "ChokeValve",
       "source_file": "DISCDEXPI/Detail/PV010A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -3102,7 +3102,7 @@
       "id": "PE037A_Origo",
       "name": "PE037A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "HeatExchanger",
       "source_file": "DISCDEXPI/Origo/PE037A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -3177,7 +3177,7 @@
       "id": "PE019A_Detail",
       "name": "PE019A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "WeighFeeder",
       "source_file": "DISCDEXPI/Detail/PE019A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -3237,7 +3237,7 @@
       "id": "PE029A_Detail",
       "name": "PE029A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "AirCooledInduced",
       "source_file": "DISCDEXPI/Detail/PE029A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -3312,7 +3312,7 @@
       "id": "PT005A_Detail",
       "name": "PT005A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "DomeRoofTank",
       "source_file": "DISCDEXPI/Detail/PT005A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -3342,7 +3342,7 @@
       "id": "PS001A_Origo",
       "name": "PS001A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "SpectacleBlind",
       "source_file": "DISCDEXPI/Origo/PS001A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -3357,7 +3357,7 @@
       "id": "PE003A_Origo",
       "name": "PE003A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "StaticMixer",
       "source_file": "DISCDEXPI/Origo/PE003A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -3372,7 +3372,7 @@
       "id": "PV016B_Option1",
       "name": "PV016B_Option1",
       "category": "Valves",
-      "dexpi_class": null,
+      "dexpi_class": "OperatedNeedleValve",
       "source_file": "DISCDEXPI/PV016B_Option1.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -3402,7 +3402,7 @@
       "id": "PE012A_Origo",
       "name": "PE012A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "Separator",
       "source_file": "DISCDEXPI/Origo/PE012A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -3432,7 +3432,7 @@
       "id": "PE006B_Origo",
       "name": "PE006B_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "Ejector",
       "source_file": "DISCDEXPI/Origo/PE006B_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -3447,7 +3447,7 @@
       "id": "PV007A_Origo",
       "name": "PV007A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "GlobeValve",
       "source_file": "DISCDEXPI/Origo/PV007A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -3462,7 +3462,7 @@
       "id": "PV004B_Detail",
       "name": "PV004B_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "OperatedFourWayValve",
       "source_file": "DISCDEXPI/Detail/PV004B_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -3522,7 +3522,7 @@
       "id": "PV003A_Detail",
       "name": "PV003A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "ThreeWayValve",
       "source_file": "DISCDEXPI/Detail/PV003A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -3552,7 +3552,7 @@
       "id": "PP012A_Detail",
       "name": "PP012A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "ScrewCompressor",
       "source_file": "DISCDEXPI/Detail/PP012A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -3612,7 +3612,7 @@
       "id": "PP014A_Detail",
       "name": "PP014A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "ScrewPump",
       "source_file": "DISCDEXPI/Detail/PP014A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -3687,7 +3687,7 @@
       "id": "PE023A_Detail",
       "name": "PE023A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "BagFilter",
       "source_file": "DISCDEXPI/Detail/PE023A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -3702,7 +3702,7 @@
       "id": "PV005B_Origo",
       "name": "PV005B_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "OperatedGateValve",
       "source_file": "DISCDEXPI/Origo/PV005B_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -3747,7 +3747,7 @@
       "id": "PV003B_Detail",
       "name": "PV003B_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "OperatedThreeWayValve",
       "source_file": "DISCDEXPI/Detail/PV003B_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -3777,7 +3777,7 @@
       "id": "PT004A_Detail",
       "name": "PT004A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "QuickOpenLidTank",
       "source_file": "DISCDEXPI/Detail/PT004A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -3897,7 +3897,7 @@
       "id": "PE015A_Detail",
       "name": "PE015A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "ConveyorScrew",
       "source_file": "DISCDEXPI/Detail/PE015A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -3972,7 +3972,7 @@
       "id": "PE003A_Detail",
       "name": "PE003A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "StaticMixer",
       "source_file": "DISCDEXPI/Detail/PE003A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -4047,7 +4047,7 @@
       "id": "PE018A_Origo",
       "name": "PE018A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "ElectricMotor",
       "source_file": "DISCDEXPI/Origo/PE018A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -4167,7 +4167,7 @@
       "id": "PV005A_Option1",
       "name": "PV005A_Option1",
       "category": "Valves",
-      "dexpi_class": null,
+      "dexpi_class": "GateValve",
       "source_file": "DISCDEXPI/PV005A_Option1.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -4242,7 +4242,7 @@
       "id": "PV005B_Detail",
       "name": "PV005B_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "OperatedGateValve",
       "source_file": "DISCDEXPI/Detail/PV005B_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -4257,7 +4257,7 @@
       "id": "PV013A_Detail",
       "name": "PV013A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "CheckValve",
       "source_file": "DISCDEXPI/Detail/PV013A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -4272,7 +4272,7 @@
       "id": "PS001A_Detail",
       "name": "PS001A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "SpectacleBlind",
       "source_file": "DISCDEXPI/Detail/PS001A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -4287,7 +4287,7 @@
       "id": "PT006A_Detail",
       "name": "PT006A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "Silo",
       "source_file": "DISCDEXPI/Detail/PT006A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -4347,7 +4347,7 @@
       "id": "PT007A_Detail",
       "name": "PT007A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "GasBottle",
       "source_file": "DISCDEXPI/Detail/PT007A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -4392,7 +4392,7 @@
       "id": "PV019B_Option1",
       "name": "PV019B_Option1",
       "category": "Valves",
-      "dexpi_class": null,
+      "dexpi_class": "OperatedBallValve",
       "source_file": "DISCDEXPI/PV019B_Option1.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -4437,7 +4437,7 @@
       "id": "PV023A_Option1",
       "name": "PV023A_Option1",
       "category": "Valves",
-      "dexpi_class": null,
+      "dexpi_class": "PlugValve",
       "source_file": "DISCDEXPI/PV023A_Option1.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -4467,7 +4467,7 @@
       "id": "LZ009A_Origo",
       "name": "LZ009A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "CustomEquipment",
       "source_file": "DISCDEXPI/Origo/LZ009A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -4572,7 +4572,7 @@
       "id": "PV002A_Origo",
       "name": "PV002A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "BlindFlange",
       "source_file": "DISCDEXPI/Origo/PV002A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -4587,7 +4587,7 @@
       "id": "PE011A_Detail",
       "name": "PE011A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "FinHeatExchanger",
       "source_file": "DISCDEXPI/Detail/PE011A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -4617,7 +4617,7 @@
       "id": "PT002A_Option1",
       "name": "PT002A_Option1",
       "category": "Tanks",
-      "dexpi_class": null,
+      "dexpi_class": "PressureVessel",
       "source_file": "DISCDEXPI/PT002A_Option1.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -4707,7 +4707,7 @@
       "id": "PV023A_Detail",
       "name": "PV023A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "PlugValve",
       "source_file": "DISCDEXPI/Detail/PV023A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -4962,7 +4962,7 @@
       "id": "PV004B",
       "name": "PV004B",
       "category": "Valves",
-      "dexpi_class": "FourWayValve",
+      "dexpi_class": "OperatedFourWayValve",
       "source_file": "DISCDEXPI/PV004B.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -4992,7 +4992,7 @@
       "id": "PP011A_Detail",
       "name": "PP011A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "CentrifugalCompressor",
       "source_file": "DISCDEXPI/Detail/PP011A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -5052,7 +5052,7 @@
       "id": "PE009A_Origo",
       "name": "PE009A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "CompactHeatExchanger",
       "source_file": "DISCDEXPI/Origo/PE009A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -5247,7 +5247,7 @@
       "id": "PP017A_Detail",
       "name": "PP017A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "Agitator",
       "source_file": "DISCDEXPI/Detail/PP017A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -5277,7 +5277,7 @@
       "id": "ND0006_Detail",
       "name": "ND0006_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "ProcessControlFunction",
       "source_file": "DISCDEXPI/Detail/ND0006_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -5337,7 +5337,7 @@
       "id": "PV019B_Origo",
       "name": "PV019B_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "OperatedBallValve",
       "source_file": "DISCDEXPI/Origo/PV019B_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -5367,7 +5367,7 @@
       "id": "PE011A_Origo",
       "name": "PE011A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "FinHeatExchanger",
       "source_file": "DISCDEXPI/Origo/PE011A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -5382,7 +5382,7 @@
       "id": "PE038A_Detail",
       "name": "PE038A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "ShellAndTubeHeatExchanger",
       "source_file": "DISCDEXPI/Detail/PE038A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -5457,7 +5457,7 @@
       "id": "PV023B_Option1",
       "name": "PV023B_Option1",
       "category": "Valves",
-      "dexpi_class": null,
+      "dexpi_class": "OperatedPlugValve",
       "source_file": "DISCDEXPI/PV023B_Option1.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -5472,7 +5472,7 @@
       "id": "PV007B_Option1",
       "name": "PV007B_Option1",
       "category": "Valves",
-      "dexpi_class": null,
+      "dexpi_class": "OperatedGlobeValve",
       "source_file": "DISCDEXPI/PV007B_Option1.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -5562,7 +5562,7 @@
       "id": "PP006A_Detail",
       "name": "PP006A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "LiquidRingPump",
       "source_file": "DISCDEXPI/Detail/PP006A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -5622,7 +5622,7 @@
       "id": "PP016A_Detail",
       "name": "PP016A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "SumpPump",
       "source_file": "DISCDEXPI/Detail/PP016A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -5667,7 +5667,7 @@
       "id": "PV014A_Detail",
       "name": "PV014A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "PinchValve",
       "source_file": "DISCDEXPI/Detail/PV014A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -5787,7 +5787,7 @@
       "id": "PV018B_Option1",
       "name": "PV018B_Option1",
       "category": "Valves",
-      "dexpi_class": null,
+      "dexpi_class": "OperatedButterflyValve",
       "source_file": "DISCDEXPI/PV018B_Option1.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -5847,7 +5847,7 @@
       "id": "PE014A_Detail",
       "name": "PE014A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "DrillingCentrifuge",
       "source_file": "DISCDEXPI/Detail/PE014A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -5877,7 +5877,7 @@
       "id": "PV007A_Detail",
       "name": "PV007A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "GlobeValve",
       "source_file": "DISCDEXPI/Detail/PV007A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -5892,7 +5892,7 @@
       "id": "PP003A_Origo",
       "name": "PP003A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "GearPump",
       "source_file": "DISCDEXPI/Origo/PP003A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -5952,7 +5952,7 @@
       "id": "PV004A_Option1",
       "name": "PV004A_Option1",
       "category": "Valves",
-      "dexpi_class": null,
+      "dexpi_class": "FourWayValve",
       "source_file": "DISCDEXPI/PV004A_Option1.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -6117,7 +6117,7 @@
       "id": "PV015A_Detail",
       "name": "PV015A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "DiaphragmValve",
       "source_file": "DISCDEXPI/Detail/PV015A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -6192,7 +6192,7 @@
       "id": "PP008A_Detail",
       "name": "PP008A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "ProportioningPump",
       "source_file": "DISCDEXPI/Detail/PP008A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -6252,7 +6252,7 @@
       "id": "PV015B_Detail",
       "name": "PV015B_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "OperatedDiaphragmValve",
       "source_file": "DISCDEXPI/Detail/PV015B_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -6372,7 +6372,7 @@
       "id": "PV016B_Detail",
       "name": "PV016B_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "OperatedNeedleValve",
       "source_file": "DISCDEXPI/Detail/PV016B_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -6417,7 +6417,7 @@
       "id": "PV002A_Detail",
       "name": "PV002A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "BlindFlange",
       "source_file": "DISCDEXPI/Detail/PV002A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -6432,7 +6432,7 @@
       "id": "PS003A_Origo",
       "name": "PS003A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "Spade",
       "source_file": "DISCDEXPI/Origo/PS003A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -6492,7 +6492,7 @@
       "id": "PP009A_Detail",
       "name": "PP009A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "TriplexPump",
       "source_file": "DISCDEXPI/Detail/PP009A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -6567,7 +6567,7 @@
       "id": "PS004A_Detail",
       "name": "PS004A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "Spacer",
       "source_file": "DISCDEXPI/Detail/PS004A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -6597,7 +6597,7 @@
       "id": "PE014A_Origo",
       "name": "PE014A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "DrillingCentrifuge",
       "source_file": "DISCDEXPI/Origo/PE014A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -6687,7 +6687,7 @@
       "id": "PV004A_Option3",
       "name": "PV004A_Option3",
       "category": "Valves",
-      "dexpi_class": null,
+      "dexpi_class": "FourWayValve",
       "source_file": "DISCDEXPI/PV004A_Option3.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -6762,7 +6762,7 @@
       "id": "PV016A_Option1",
       "name": "PV016A_Option1",
       "category": "Valves",
-      "dexpi_class": null,
+      "dexpi_class": "NeedleValve",
       "source_file": "DISCDEXPI/PV016A_Option1.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -6792,7 +6792,7 @@
       "id": "IM005A_Detail",
       "name": "IM005A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "ProcessSignalGeneratingSystem",
       "source_file": "DISCDEXPI/Detail/IM005A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -6807,7 +6807,7 @@
       "id": "PP004A_Detail",
       "name": "PP004A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "HandPump",
       "source_file": "DISCDEXPI/Detail/PP004A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -6852,7 +6852,7 @@
       "id": "PP005A_Detail",
       "name": "PP005A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "SlidingVanePump",
       "source_file": "DISCDEXPI/Detail/PP005A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -6867,7 +6867,7 @@
       "id": "PF015A_Detail",
       "name": "PF015A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "OrificePlate",
       "source_file": "DISCDEXPI/Detail/PF015A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -6882,7 +6882,7 @@
       "id": "PV004B_Option3",
       "name": "PV004B_Option3",
       "category": "Valves",
-      "dexpi_class": null,
+      "dexpi_class": "OperatedFourWayValve",
       "source_file": "DISCDEXPI/PV004B_Option3.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -6897,7 +6897,7 @@
       "id": "PV003A_Origo",
       "name": "PV003A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "ThreeWayValve",
       "source_file": "DISCDEXPI/Origo/PV003A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -6927,7 +6927,7 @@
       "id": "PS016A_Detail",
       "name": "PS016A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "TStrainer",
       "source_file": "DISCDEXPI/Detail/PS016A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -7062,7 +7062,7 @@
       "id": "PE002A_Origo",
       "name": "PE002A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "EccentricReducer",
       "source_file": "DISCDEXPI/Origo/PE002A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -7137,7 +7137,7 @@
       "id": "PV004B_Option1",
       "name": "PV004B_Option1",
       "category": "Valves",
-      "dexpi_class": null,
+      "dexpi_class": "OperatedFourWayValve",
       "source_file": "DISCDEXPI/PV004B_Option1.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -7182,7 +7182,7 @@
       "id": "PP015A_Detail",
       "name": "PP015A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "LiftPump",
       "source_file": "DISCDEXPI/Detail/PP015A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -7302,7 +7302,7 @@
       "id": "PS006A_Detail",
       "name": "PS006A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "ScrewedCap",
       "source_file": "DISCDEXPI/Detail/PS006A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -7317,7 +7317,7 @@
       "id": "PF001A_Detail",
       "name": "PF001A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "FlowElement",
       "source_file": "DISCDEXPI/Detail/PF001A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -7332,7 +7332,7 @@
       "id": "PP001A_Origo",
       "name": "PP001A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "CentrifugalPump",
       "source_file": "DISCDEXPI/Origo/PP001A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -7362,7 +7362,7 @@
       "id": "PV018B_Origo",
       "name": "PV018B_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "OperatedButterflyValve",
       "source_file": "DISCDEXPI/Origo/PV018B_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -7407,7 +7407,7 @@
       "id": "PE026A_Detail",
       "name": "PE026A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "Burner",
       "source_file": "DISCDEXPI/Detail/PE026A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -7452,7 +7452,7 @@
       "id": "PV023B",
       "name": "PV023B",
       "category": "Valves",
-      "dexpi_class": "PlugValve",
+      "dexpi_class": "OperatedPlugValve",
       "source_file": "DISCDEXPI/PV023B.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -7572,7 +7572,7 @@
       "id": "PE012A_Detail",
       "name": "PE012A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "Separator",
       "source_file": "DISCDEXPI/Detail/PE012A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -7722,7 +7722,7 @@
       "id": "IM005A_Origo",
       "name": "IM005A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "ProcessSignalGeneratingSystem",
       "source_file": "DISCDEXPI/Origo/IM005A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -7797,7 +7797,7 @@
       "id": "PV009A_Detail",
       "name": "PV009A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "MinFlowCheckValve",
       "source_file": "DISCDEXPI/Detail/PV009A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -7827,7 +7827,7 @@
       "id": "PV014B",
       "name": "PV014B",
       "category": "Valves",
-      "dexpi_class": "PinchValve",
+      "dexpi_class": "OperatedPinchValve",
       "source_file": "DISCDEXPI/PV014B.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -7842,7 +7842,7 @@
       "id": "PF015A_Origo",
       "name": "PF015A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "OrificePlate",
       "source_file": "DISCDEXPI/Origo/PF015A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -7902,7 +7902,7 @@
       "id": "PV003B_Option1",
       "name": "PV003B_Option1",
       "category": "Valves",
-      "dexpi_class": null,
+      "dexpi_class": "OperatedThreeWayValve",
       "source_file": "DISCDEXPI/PV003B_Option1.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -7947,7 +7947,7 @@
       "id": "PV023B_Detail",
       "name": "PV023B_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "OperatedPlugValve",
       "source_file": "DISCDEXPI/Detail/PV023B_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -8037,7 +8037,7 @@
       "id": "PP002A_Detail",
       "name": "PP002A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "DiaphragmPump",
       "source_file": "DISCDEXPI/Detail/PP002A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -8067,7 +8067,7 @@
       "id": "PV005A_Origo",
       "name": "PV005A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "GateValve",
       "source_file": "DISCDEXPI/Origo/PV005A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -8082,7 +8082,7 @@
       "id": "PV003B_Origo",
       "name": "PV003B_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "OperatedThreeWayValve",
       "source_file": "DISCDEXPI/Origo/PV003B_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -8217,7 +8217,7 @@
       "id": "PV003A_Option1",
       "name": "PV003A_Option1",
       "category": "Valves",
-      "dexpi_class": null,
+      "dexpi_class": "ThreeWayValve",
       "source_file": "DISCDEXPI/PV003A_Option1.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -8292,7 +8292,7 @@
       "id": "PE015A_Origo",
       "name": "PE015A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "ConveyorScrew",
       "source_file": "DISCDEXPI/Origo/PE015A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -8367,7 +8367,7 @@
       "id": "PV018A_Detail",
       "name": "PV018A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "ButterflyValve",
       "source_file": "DISCDEXPI/Detail/PV018A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -8442,7 +8442,7 @@
       "id": "PV019B_Detail",
       "name": "PV019B_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "OperatedBallValve",
       "source_file": "DISCDEXPI/Detail/PV019B_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -8472,7 +8472,7 @@
       "id": "PE001A_Detail",
       "name": "PE001A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "ConcentricReducer",
       "source_file": "DISCDEXPI/Detail/PE001A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -8577,7 +8577,7 @@
       "id": "PV014B_Detail",
       "name": "PV014B_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "OperatedPinchValve",
       "source_file": "DISCDEXPI/Detail/PV014B_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -8607,7 +8607,7 @@
       "id": "PE001A_Origo",
       "name": "PE001A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "ConcentricReducer",
       "source_file": "DISCDEXPI/Origo/PE001A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -8652,7 +8652,7 @@
       "id": "PV004A_Option2",
       "name": "PV004A_Option2",
       "category": "Valves",
-      "dexpi_class": null,
+      "dexpi_class": "FourWayValve",
       "source_file": "DISCDEXPI/PV004A_Option2.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -8667,7 +8667,7 @@
       "id": "PT002A_Detail",
       "name": "PT002A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "PressureVessel",
       "source_file": "DISCDEXPI/Detail/PT002A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -8772,7 +8772,7 @@
       "id": "PV013A_Origo",
       "name": "PV013A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "CheckValve",
       "source_file": "DISCDEXPI/Origo/PV013A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -8877,7 +8877,7 @@
       "id": "PS001A_Option1",
       "name": "PS001A_Option1",
       "category": "Separators",
-      "dexpi_class": null,
+      "dexpi_class": "SpectacleBlind",
       "source_file": "DISCDEXPI/PS001A_Option1.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -8967,7 +8967,7 @@
       "id": "PT003A_Detail",
       "name": "PT003A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "Tower",
       "source_file": "DISCDEXPI/Detail/PT003A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -9027,7 +9027,7 @@
       "id": "PV001A_Detail",
       "name": "PV001A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "Flange",
       "source_file": "DISCDEXPI/Detail/PV001A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -9072,7 +9072,7 @@
       "id": "PT002A_Origo",
       "name": "PT002A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "PressureVessel",
       "source_file": "DISCDEXPI/Origo/PT002A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -9132,7 +9132,7 @@
       "id": "PE036A_Detail",
       "name": "PE036A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "Reboiler",
       "source_file": "DISCDEXPI/Detail/PE036A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -9147,7 +9147,7 @@
       "id": "PE018A_Detail",
       "name": "PE018A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "ElectricMotor",
       "source_file": "DISCDEXPI/Detail/PE018A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -9222,7 +9222,7 @@
       "id": "PS015A_Detail",
       "name": "PS015A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "YStrainer",
       "source_file": "DISCDEXPI/Detail/PS015A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -9252,7 +9252,7 @@
       "id": "PE006B_Detail",
       "name": "PE006B_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "Ejector",
       "source_file": "DISCDEXPI/Detail/PE006B_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -9372,7 +9372,7 @@
       "id": "PE004A_Detail",
       "name": "PE004A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "MixingTee",
       "source_file": "DISCDEXPI/Detail/PE004A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -9402,7 +9402,7 @@
       "id": "PV022A_Detail",
       "name": "PV022A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "FlowControlCheckValve",
       "source_file": "DISCDEXPI/Detail/PV022A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -9417,7 +9417,7 @@
       "id": "PE006A_Detail",
       "name": "PE006A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "Eductor",
       "source_file": "DISCDEXPI/Detail/PE006A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -9432,7 +9432,7 @@
       "id": "PS013A_Detail",
       "name": "PS013A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "DuplexStrainer",
       "source_file": "DISCDEXPI/Detail/PS013A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -9537,7 +9537,7 @@
       "id": "PT008A_Detail",
       "name": "PT008A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "ToteTank",
       "source_file": "DISCDEXPI/Detail/PT008A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -9612,7 +9612,7 @@
       "id": "PP003A_Detail",
       "name": "PP003A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "GearPump",
       "source_file": "DISCDEXPI/Detail/PP003A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -9642,7 +9642,7 @@
       "id": "PV019A_Detail",
       "name": "PV019A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "BallValve",
       "source_file": "DISCDEXPI/Detail/PV019A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -9762,7 +9762,7 @@
       "id": "PE010A_Detail",
       "name": "PE010A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "PlateHeatExchanger",
       "source_file": "DISCDEXPI/Detail/PE010A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -9792,7 +9792,7 @@
       "id": "PE005A_Detail",
       "name": "PE005A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "UnionCoupling",
       "source_file": "DISCDEXPI/Detail/PE005A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -9807,7 +9807,7 @@
       "id": "PV019A_Option1",
       "name": "PV019A_Option1",
       "category": "Valves",
-      "dexpi_class": null,
+      "dexpi_class": "BallValve",
       "source_file": "DISCDEXPI/PV019A_Option1.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -9822,7 +9822,7 @@
       "id": "PP014A_Origo",
       "name": "PP014A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "ScrewPump",
       "source_file": "DISCDEXPI/Origo/PP014A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -9867,7 +9867,7 @@
       "id": "PE005A_Origo",
       "name": "PE005A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "UnionCoupling",
       "source_file": "DISCDEXPI/Origo/PE005A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -9882,7 +9882,7 @@
       "id": "PF002A_Origo",
       "name": "PF002A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "FlowDetector",
       "source_file": "DISCDEXPI/Origo/PF002A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -9927,7 +9927,7 @@
       "id": "PE009A_Detail",
       "name": "PE009A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "CompactHeatExchanger",
       "source_file": "DISCDEXPI/Detail/PE009A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -9957,7 +9957,7 @@
       "id": "PV004B_Option2",
       "name": "PV004B_Option2",
       "category": "Valves",
-      "dexpi_class": null,
+      "dexpi_class": "OperatedFourWayValve",
       "source_file": "DISCDEXPI/PV004B_Option2.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -10047,7 +10047,7 @@
       "id": "PV016A_Detail",
       "name": "PV016A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "NeedleValve",
       "source_file": "DISCDEXPI/Detail/PV016A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -10152,7 +10152,7 @@
       "id": "ND0006_Origo",
       "name": "ND0006_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "ProcessControlFunction",
       "source_file": "DISCDEXPI/Origo/ND0006_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -10182,7 +10182,7 @@
       "id": "PV003A_Option2",
       "name": "PV003A_Option2",
       "category": "Valves",
-      "dexpi_class": null,
+      "dexpi_class": "ThreeWayValve",
       "source_file": "DISCDEXPI/PV003A_Option2.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -10272,7 +10272,7 @@
       "id": "PV018A_Option1",
       "name": "PV018A_Option1",
       "category": "Valves",
-      "dexpi_class": null,
+      "dexpi_class": "ButterflyValve",
       "source_file": "DISCDEXPI/PV018A_Option1.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -10317,7 +10317,7 @@
       "id": "PE025A_Detail",
       "name": "PE025A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "Tank",
       "source_file": "DISCDEXPI/Detail/PE025A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -10392,7 +10392,7 @@
       "id": "PP007A_Detail",
       "name": "PP007A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "Blower",
       "source_file": "DISCDEXPI/Detail/PP007A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -10527,7 +10527,7 @@
       "id": "PP010A_Detail",
       "name": "PP010A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "ReciprocatingPump",
       "source_file": "DISCDEXPI/Detail/PP010A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -10557,7 +10557,7 @@
       "id": "PV004A_Detail",
       "name": "PV004A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "FourWayValve",
       "source_file": "DISCDEXPI/Detail/PV004A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -10572,7 +10572,7 @@
       "id": "PV007A_Option1",
       "name": "PV007A_Option1",
       "category": "Valves",
-      "dexpi_class": null,
+      "dexpi_class": "GlobeValve",
       "source_file": "DISCDEXPI/PV007A_Option1.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -10617,7 +10617,7 @@
       "id": "PV015B",
       "name": "PV015B",
       "category": "Valves",
-      "dexpi_class": "DiaphragmValve",
+      "dexpi_class": "OperatedDiaphragmValve",
       "source_file": "DISCDEXPI/PV015B.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -10752,7 +10752,7 @@
       "id": "PV018B_Detail",
       "name": "PV018B_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "OperatedButterflyValve",
       "source_file": "DISCDEXPI/Detail/PV018B_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -10782,7 +10782,7 @@
       "id": "PV007B_Origo",
       "name": "PV007B_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "OperatedGlobeValve",
       "source_file": "DISCDEXPI/Origo/PV007B_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -10812,7 +10812,7 @@
       "id": "PF001A_Origo",
       "name": "PF001A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "FlowElement",
       "source_file": "DISCDEXPI/Origo/PF001A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -10902,7 +10902,7 @@
       "id": "PE021A_Detail",
       "name": "PE021A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "Turbine",
       "source_file": "DISCDEXPI/Detail/PE021A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -10917,7 +10917,7 @@
       "id": "PE006A_Origo",
       "name": "PE006A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "Eductor",
       "source_file": "DISCDEXPI/Origo/PE006A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -11007,7 +11007,7 @@
       "id": "PS003A_Detail",
       "name": "PS003A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "Spade",
       "source_file": "DISCDEXPI/Detail/PS003A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -11037,7 +11037,7 @@
       "id": "PS014A_Detail",
       "name": "PS014A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "Filter",
       "source_file": "DISCDEXPI/Detail/PS014A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -11142,7 +11142,7 @@
       "id": "PT011A_Detail",
       "name": "PT011A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "Hopper",
       "source_file": "DISCDEXPI/Detail/PT011A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -11217,7 +11217,7 @@
       "id": "PV005B_Option1",
       "name": "PV005B_Option1",
       "category": "Valves",
-      "dexpi_class": null,
+      "dexpi_class": "OperatedGateValve",
       "source_file": "DISCDEXPI/PV005B_Option1.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -11232,7 +11232,7 @@
       "id": "PE004A_Origo",
       "name": "PE004A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "MixingTee",
       "source_file": "DISCDEXPI/Origo/PE004A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -11247,7 +11247,7 @@
       "id": "PT009A_Detail",
       "name": "PT009A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "OpenPit",
       "source_file": "DISCDEXPI/Detail/PT009A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -11337,7 +11337,7 @@
       "id": "PV003B",
       "name": "PV003B",
       "category": "Valves",
-      "dexpi_class": "ThreeWayValve",
+      "dexpi_class": "OperatedThreeWayValve",
       "source_file": "DISCDEXPI/PV003B.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -11397,7 +11397,7 @@
       "id": "PF002A_Detail",
       "name": "PF002A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "FlowDetector",
       "source_file": "DISCDEXPI/Detail/PF002A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -11472,7 +11472,7 @@
       "id": "PE022A_Detail",
       "name": "PE022A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "Crusher",
       "source_file": "DISCDEXPI/Detail/PE022A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -11517,7 +11517,7 @@
       "id": "PS005A_Detail",
       "name": "PS005A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "WeldedCap",
       "source_file": "DISCDEXPI/Detail/PS005A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -11637,7 +11637,7 @@
       "id": "PV012A_Detail",
       "name": "PV012A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "SafetyValveOrFitting",
       "source_file": "DISCDEXPI/Detail/PV012A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -11667,7 +11667,7 @@
       "id": "PV018A_Origo",
       "name": "PV018A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "ButterflyValve",
       "source_file": "DISCDEXPI/Origo/PV018A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -11712,7 +11712,7 @@
       "id": "PV016B",
       "name": "PV016B",
       "category": "Valves",
-      "dexpi_class": "NeedleValve",
+      "dexpi_class": "OperatedNeedleValve",
       "source_file": "DISCDEXPI/PV016B.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -11772,7 +11772,7 @@
       "id": "LZ009A",
       "name": "LZ009A",
       "category": "Special",
-      "dexpi_class": null,
+      "dexpi_class": "CustomEquipment",
       "source_file": "DISCDEXPI/LZ009A.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -11832,7 +11832,7 @@
       "id": "PE037A_Detail",
       "name": "PE037A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "HeatExchanger",
       "source_file": "DISCDEXPI/Detail/PE037A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -11862,7 +11862,7 @@
       "id": "PV007B_Detail",
       "name": "PV007B_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "OperatedGlobeValve",
       "source_file": "DISCDEXPI/Detail/PV007B_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -11952,7 +11952,7 @@
       "id": "PV019A_Origo",
       "name": "PV019A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "BallValve",
       "source_file": "DISCDEXPI/Origo/PV019A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -11982,7 +11982,7 @@
       "id": "PS004A_Origo",
       "name": "PS004A_Origo",
       "category": "Origo",
-      "dexpi_class": null,
+      "dexpi_class": "Spacer",
       "source_file": "DISCDEXPI/Origo/PS004A_Origo.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",
@@ -12012,7 +12012,7 @@
       "id": "PV005A_Detail",
       "name": "PV005A_Detail",
       "category": "Detail",
-      "dexpi_class": null,
+      "dexpi_class": "GateValve",
       "source_file": "DISCDEXPI/Detail/PV005A_Detail.svg",
       "provenance": {
         "source_repo": "DISCDEXPI",

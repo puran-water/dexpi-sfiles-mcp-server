@@ -337,7 +337,37 @@ Tue:      Performance validation
 
 ---
 
-**Document Version**: 1.0  
-**Author**: System Architecture Analysis  
-**Status**: READY FOR APPROVAL  
-**Next Review**: After Phase 0 completion
+**Document Version**: 2.0 (Updated with Phase 5 plan)
+**Author**: System Architecture Analysis
+**Status**: ✅ Phase 0-4 COMPLETE | 🚧 Phase 5 IN PROGRESS (Week 1)
+**Last Updated**: January 10, 2025
+**Next Review**: End of Phase 5 Week 1 (January 17, 2025)
+
+---
+
+## Phase 5 Update (January 2025)
+
+**New Phase Added:** Upstream Integration & Visualization (8 weeks)
+
+**Key Changes from Original Plan:**
+- Core layer migration (Phase 0-1) ✅ COMPLETE
+- Tool consolidation (Phase 2-4) ✅ COMPLETE
+- **NEW:** Phase 5 focuses on upstream duplication elimination + visualization
+
+**Critical Findings from Codex Review:**
+- Actual duplication: ~1,115 lines (vs initial 700-line estimate)
+- `model_service.py` (~400 lines) is largest hotspot
+- Bug #1 (BFD tag suffix) already fixed in `equipment.py:537-585`
+- GraphicBuilder requires GitLab source (GitHub mirror deprecated)
+
+**Phase 5 Goals:**
+1. Eliminate ALL ~1,115 lines of upstream duplication
+2. Deploy production visualization (GraphicBuilder + ProteusXMLDrawing)
+3. Increase upstream leverage (30% → 95% pyDEXPI usage)
+4. Enforce zero-fallback compliance
+
+**See:** `ROADMAP.md` Phase 5 section for complete 8-week plan
+
+---
+
+## Original Migration Summary (Phase 0-1)

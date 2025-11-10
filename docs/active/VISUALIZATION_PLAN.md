@@ -1,72 +1,109 @@
 # Visualization Plan: Federated Rendering Platform
 
 **Created:** 2025-11-09
-**Last Updated:** 2025-01-09
-**Status:** BLOCKED - Core Layer Bugs Must Be Fixed First
+**Last Updated:** 2025-01-10 (Updated after Codex review)
+**Status:** WEEK 1 IN PROGRESS - Bug #2 & #3 fixing
 **Sprint:** Sprint 4 (Visualization Infrastructure)
 **Current Phase:** Core Layer Stabilization Complete - Bug Fixes Pending
 
 ---
 
-## ⚠️ CURRENT STATUS - JANUARY 9, 2025
+## ⚠️ CURRENT STATUS - JANUARY 10, 2025 (UPDATED AFTER CODEX REVIEW)
 
 ### Core Layer Integration Blockers
 
-The visualization system depends on the core layer (`src/core/`) for model enrichment and symbol resolution. **Phase 1 of core layer stabilization is complete**, but **5 bugs must be fixed** before visualization implementation can proceed:
+The visualization system depends on the core layer (`src/core/`) for model enrichment and symbol resolution. **Phase 1 of core layer stabilization is complete**, but **2 bugs must be fixed** before visualization implementation can proceed.
+
+**⚠️ CRITICAL CORRECTION FROM CODEX REVIEW:**
+- Initial plan identified 3 blocking bugs
+- **Bug #1 is ALREADY FIXED** in `src/core/equipment.py:537-585`
+- Only 2 bugs remain as blockers
 
 #### 🔴 Critical Bugs (BLOCKING)
 
-**Bug #1: BFD Expansion Tag Suffix** (HIGH Priority - 2 hours)
-- **Location:** `src/core/equipment.py:533-537`
-- **Impact:** BFD expansion adds `-{area_code}` suffix to equipment tags
-- **Example:** `FEED` becomes `FEED-100` (breaks symbol lookups)
-- **Fix Required:** Remove suffix from tag generation
-- **Blocks:** BFD workflow integration with visualization
+**Bug #1: BFD Expansion Tag Suffix** ✅ **ALREADY FIXED**
+- **Location:** `src/core/equipment.py:537-585`
+- **Status:** ✅ COMPLETE - Code review confirms tag suffix correctly removed
+- **Impact:** No longer blocking - BFD tags no longer have `-{area_code}` suffix
+- **Verification:** Core layer maintains tag fidelity through expansion
 
 **Bug #2: Symbol Catalog Missing DEXPI Mappings** (HIGH Priority - 1 day)
 - **Location:** `src/visualization/symbols/assets/merged_catalog.json`
-- **Impact:** All 805 symbols have `dexpi_class: null`
-- **Result:** `SymbolRegistry.get_by_dexpi_class()` always returns `None`
-- **Fix Required:** Populate dexpi_class field from mapper.py
+- **Impact:** **711 of 805 symbols** have `dexpi_class: null` (not all 805 as initially thought)
+- **Result:** `SymbolRegistry.get_by_dexpi_class()` returns `None` for 88% of symbols
+- **Fix Required:** Use `pydexpi.toolkits.base_model_utils.get_dexpi_class()` to backfill
 - **Blocks:** Equipment → Symbol ID resolution for rendering
+- **Script Needed:** Validation to prevent regression
 
 **Bug #3: Nozzle Creation Stub** (MEDIUM Priority - 4 hours)
-- **Location:** `src/core/equipment.py:497-509`
+- **Location:** `src/core/equipment.py:518-535`
 - **Impact:** All equipment have 0 nozzles (should have 2-6)
 - **Result:** No connection points for piping
-- **Fix Required:** Implement proper Nozzle instantiation
+- **Fix Required:** Implement proper Nozzle instantiation with default connection points
 - **Blocks:** Connection rendering in diagrams
 
-#### 🟡 Medium Priority Bugs (NOT BLOCKING PHASE 1)
+#### 🟡 Additional Duplication Issues (MUST FIX IN WEEK 2-3)
 
-**Bug #4: Piping Connections Missing Toolkit**
-- Connections don't use `piping_toolkit.connect_piping_network_segment()`
-- Can proceed with Phase 1, fix in Phase 2
+**Codex Critical Finding - Larger Duplication Than Expected:**
+- Initial estimate: ~700 lines of duplicate code
+- **Actual finding: ~1,115 lines** across 5 major files
 
-**Bug #5: Missing Instrumentation Support**
-- Conversion engine lacks control loop support
-- Can proceed with Phase 1, fix in Phase 2
+**Duplicate #1: model_service.py (~400 lines)** - LARGEST HOTSPOT
+- **Location:** `src/visualization/orchestrator/model_service.py:43-537`
+- **Impact:** Reimplements SFILES parsing, equipment instantiation, piping creation
+- **Duplicates:** `src/core/conversion.py` + `pydexpi.toolkits.piping_toolkit`
+- **Fix Required:** Remove entire file, replace with `core.conversion.get_engine()`
+- **Priority:** CRITICAL - This is the real architectural blocker
 
-### Timeline Impact
+**Duplicate #2: symbols/mapper.py (~220 lines)**
+- **Location:** `src/visualization/symbols/mapper.py:1-220`
+- **Impact:** Second DEXPI→symbol registry with different ID format
+- **Duplicates:** `src/core/symbols.py`
+- **Fix Required:** Deprecate and consolidate to core registry
 
-**Original Plan:** Start implementation immediately
-**Updated Plan:** Fix bugs #1-#3 first (1 week), then proceed
+**Duplicate #3: dexpi_tools.py instrumentation (~165 lines)**
+- **Location:** `src/tools/dexpi_tools.py:475-640`
+- **Impact:** Hand-built instrumentation flows
+- **Duplicates:** `pydexpi.toolkits.instrumentation_toolkit`
+- **Fix Required:** Replace with `instrumentation_toolkit` calls
 
-**Revised Schedule:**
-- **Week of Jan 13:** Fix bugs #1, #2, #3
-- **Week of Jan 20:** Begin Phase 1 implementation (originally Week 1)
-- **Week of Jan 27:** Continue Phase 1 (originally Week 2)
-- **Feb 3 onwards:** Phase 2 enhancements
+**Duplicate #4: dexpi_tools.py manual lookups (~30 lines)**
+- **Location:** `src/tools/dexpi_tools.py:705-735`
+- **Impact:** Manual equipment traversal via `taggedPlantItems`
+- **Duplicates:** `model_toolkit.get_instances_with_attribute`
+- **Fix Required:** Use upstream toolkit
+
+**Duplicate #5: dexpi_introspector.py (~300 lines)**
+- **Location:** `src/tools/dexpi_introspector.py`
+- **Impact:** Reimplements Pydantic introspection
+- **Duplicates:** `pydexpi.toolkits.base_model_utils`
+- **Fix Required:** Replace entirely with upstream
+
+### Timeline Impact - REVISED
+
+**Original Plan:** 1 week of bug fixes → 2 weeks of implementation
+**Updated Plan (Post-Codex):** 1 week blockers → 2 weeks duplication → 2 weeks rendering → 3 weeks enhancement
+
+**REVISED 8-WEEK SCHEDULE:**
+- **Week 1 (Jan 13-17):** Fix bugs #2-#3, create validation script
+- **Week 2 (Jan 20-24):** Remove model_service.py, replace with core layer
+- **Week 3 (Jan 27-31):** Deprecate mapper.py, refactor dexpi_tools, replace introspector
+- **Week 4 (Feb 3-7):** GraphicBuilder Docker container from **GitLab** (GitHub mirror deprecated!)
+- **Week 5 (Feb 10-14):** ProteusXMLDrawing fork + critical fixes + MCP tools
+- **Week 6 (Feb 17-21):** SFILES2 visualization integration (parallel with rendering)
+- **Week 7 (Feb 24-28):** Complete upstream toolkit adoption
+- **Week 8 (Mar 3-7):** Eliminate CustomEquipment fallbacks (NO FALLBACKS mandate)
 
 ### Dependencies Ready
 
 ✅ **Core Layer Architecture:** Production-ready for basic operations
 ✅ **pyDEXPI Integration:** Real classes instantiate correctly
 ✅ **SFILES Parsing:** Working correctly
-✅ **Symbol Registry:** Loading 805 symbols (needs dexpi_class mapping)
+✅ **Symbol Registry:** Loading 805 symbols (711 need dexpi_class mapping)
 ✅ **Fail-Fast Philosophy:** No fallbacks masking bugs
+✅ **Bug #1:** Already fixed in equipment.py:537-585
 
-**Next Action:** Fix Bug #1 (BFD tag suffix) to unblock BFD workflow
+**Next Action:** Fix Bug #2 (symbol catalog backfill) - highest priority blocker
 
 ---
 
@@ -519,46 +556,83 @@ Focus on 30-40 symbols needed for our 8 templates:
 
 ---
 
-## Implementation Checklist
+## Implementation Checklist (Revised 8-Week Plan)
 
-### Phase 0: Core Layer Bug Fixes (Week of Jan 13) - **IN PROGRESS**
-- [ ] **Bug #1 Fixed:** BFD tag suffix removed (src/core/equipment.py:533-537)
-- [ ] **Bug #3 Fixed:** Nozzle creation implemented (src/core/equipment.py:497-509)
-- [ ] **Bug #2 Fixed:** Symbol catalog dexpi_class populated (merged_catalog.json)
-- [ ] **Regression tests:** Verify fixes don't break existing functionality
-- [ ] **Integration tests:** Test BFD expansion with real pyDEXPI classes
+### Week 1: Visualization Blockers (Jan 13-17) - **IN PROGRESS**
+- [x] **Bug #1:** ✅ ALREADY FIXED - BFD tag suffix removed (src/core/equipment.py:537-585)
+- [ ] **Bug #2:** Populate dexpi_class for 711/805 symbols in merged_catalog.json
+  - Use `pydexpi.toolkits.base_model_utils.get_dexpi_class()` for backfill
+  - Create validation script in scripts/validate_symbol_catalog.py
+- [ ] **Bug #3:** Implement nozzle defaults (src/core/equipment.py:518-535)
+  - Add proper Nozzle instantiation with default connection points
+- [ ] Regression tests updated (26 existing + 5 new)
+- [ ] Documentation: Bug fix summary
 
-### Week 1 Deliverables (Week of Jan 20) - **BLOCKED**
-- [ ] GraphicBuilder Docker container running
-- [ ] 30-40 NOAKADEXPI symbols imported with metadata
-- [ ] Basic orchestration service functional
-- [ ] Proteus XML serialization working
-- [ ] Initial test suite passing
+### Week 2-3: Eliminate Duplication (Jan 20 - Feb 7) - **PENDING**
+- [ ] **Week 2:** Remove model_service.py (~400 lines)
+  - Replace with `core.conversion.get_engine()` + `piping_toolkit`
+  - Create core-based replacement path
+  - Parallel testing before switch
+- [ ] **Week 3:** Consolidate registries and refactor tools
+  - Deprecate symbols/mapper.py (~220 lines)
+  - Refactor dexpi_tools.py instrumentation (~165 lines) → `instrumentation_toolkit`
+  - Replace dexpi_introspector.py (~300 lines) → `base_model_utils`
+  - Replace manual lookups (~30 lines) → `model_toolkit`
+- [ ] **Total:** ~1,115 lines eliminated
+- [ ] 50+ tests updated
+- [ ] Documentation: Integration guide
 
-**Blockers:** Requires Bug #2 fixed (symbol mappings)
+### Week 4-5: Federated Rendering (Feb 3-14) - **BLOCKED**
+- [ ] **Week 4:** GraphicBuilder Docker container (from GitLab, not GitHub)
+  - Pin GitLab repo/commit in Dockerfile
+  - Capture Maven build steps
+  - Orchestrator service routing
+  - GraphicBuilder wrapper for MCP
+- [ ] **Week 5:** ProteusXMLDrawing integration
+  - Fork and fix critical issues (text, splines, rotation)
+  - WebSocket for live updates
+  - MCP tools: visualize_bfd/pfd/pid
+- [ ] 30-40 NOAKADEXPI symbols imported
+- [ ] Documentation: Federated rendering architecture
 
-### Week 2 Deliverables (Week of Jan 27) - **BLOCKED**
-- [ ] GraphicBuilder wrapper complete with caching
-- [ ] ProteusXMLDrawing fork with critical fixes
-- [ ] MCP visualization tools integrated
-- [ ] All 8 templates rendering
-- [ ] Documentation updated
+**Blockers:** Requires Week 1-3 complete
 
-**Blockers:** Requires Week 1 complete
+### Week 6: SFILES2 Integration (Feb 17-21) - **PENDING**
+- [ ] Expose `SFILES2.visualize_flowsheet()` via `sfiles_tools.py`
+- [ ] Add stream/unit table generation
+- [ ] Enable OntoCape semantic mapping
+- [ ] Documentation: SFILES2 features guide
 
-### Phase 1 Complete (Early February) - **BLOCKED**
-- [ ] Production visualization operational
-- [ ] Quality benchmarks established
-- [ ] Performance targets met
-- [ ] Integration tests passing
-- [ ] Ready for Phase 2 enhancements
+**Can proceed in parallel with Week 4-5 (low coupling)**
 
-**Blockers:** Requires Week 1-2 complete
+### Week 7: Upstream Toolkit Adoption (Feb 24-28) - **PENDING**
+- [ ] Adopt `model_toolkit` for all equipment retrieval
+- [ ] Adopt `instrumentation_toolkit` for all signal chains
+- [ ] Adopt `piping_toolkit` for all segment operations
+- [ ] Remove all manual traversal code
+- [ ] 20+ tests for toolkit usage
+- [ ] Documentation: Toolkit integration patterns
 
-### Current Focus (January 9, 2025)
-**Active Task:** Fixing Bug #1 (BFD tag suffix)
-**Next:** Fix Bug #3 (nozzle creation)
-**Then:** Fix Bug #2 (symbol mappings)
+### Week 8: Fallback Elimination (Mar 3-7) - **PENDING**
+- [ ] Remove `_create_simple_expansion` fallback to CustomEquipment
+- [ ] Enforce fail-fast behavior through factory
+- [ ] Audit all CustomEquipment usages
+- [ ] Add CI validation to prevent regression
+- [ ] Documentation: No-fallback policy
+
+### Phase 5 Complete (Mid-March 2025) - **TARGET**
+- [ ] **Duplication:** 0 lines (vs ~1,115 eliminated)
+- [ ] **Upstream Integration:** 95% pyDEXPI usage (vs 30%)
+- [ ] **Visualization:** 100% functional (GraphicBuilder + ProteusXMLDrawing + SFILES2)
+- [ ] **Symbol Catalog:** 100% complete (711/805 fixed)
+- [ ] **Fallbacks:** 0 silent failures
+- [ ] **Code Reduction:** -18% (13.2K → 10.8K lines)
+- [ ] Ready for Phase 6 enhancements
+
+### Current Focus (January 10, 2025)
+**Active Task:** Week 1 - Bug #2 (symbol catalog backfill)
+**Next:** Bug #3 (nozzle creation)
+**Then:** Week 2 - Remove model_service.py
 
 ---
 
@@ -624,6 +698,6 @@ Response:
 
 **END OF VISUALIZATION PLAN**
 
-**Document Version:** 1.0
-**Last Updated:** 2025-11-09
-**Next Review:** End of Week 1 (progress check)
+**Document Version:** 2.0 (Revised after Codex review)
+**Last Updated:** 2025-01-10
+**Next Review:** End of Week 1 (January 17, 2025 - progress check on Bug #2 & #3)

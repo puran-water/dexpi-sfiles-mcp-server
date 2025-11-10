@@ -2061,6 +2061,256 @@ Based on extensive Codex review, we're building a **federated rendering platform
 
 ---
 
+## Phase 5: Upstream Integration & Visualization (8 Weeks) - 🚧 IN PROGRESS
+
+**Status:** Week 1 in progress (January 2025)
+**Last Codex Review:** January 10, 2025
+**Completion Target:** March 2025
+
+### Executive Summary
+
+Following Phase 1-4 completion (tool consolidation, core layer migration), Phase 5 focuses on:
+1. **Eliminating ALL upstream duplication** (~1,115 lines identified)
+2. **Deploying production visualization** (GraphicBuilder + ProteusXMLDrawing)
+3. **Maximizing upstream leverage** (30% → 95% pyDEXPI usage)
+4. **Zero fallback enforcement** (strict fail-fast compliance)
+
+**Critical Finding from Codex Review:**
+- Initial analysis underestimated duplication (~700 lines)
+- **Actual duplication: ~1,115 lines** across 5 major files
+- `model_service.py` (~400 lines) is largest hotspot, not `graph_converter.py`
+- Bug #1 (BFD tag suffix) already fixed in `equipment.py:537-585`
+- GraphicBuilder must use GitLab (GitHub mirror deprecated)
+
+###Week 1: Fix Visualization Blockers - 🚧 IN PROGRESS
+
+**Status:** IN PROGRESS (January 13-17, 2025)
+**Goal:** Unblock entire visualization pipeline
+
+#### Tasks:
+1. ✅ **Bug #1: ALREADY FIXED** - BFD tag suffix removed in `equipment.py:537-585`
+2. ⏳ **Bug #2: Populate dexpi_class for 711/805 symbols** (HIGH Priority - 1 day)
+   - Location: `src/visualization/symbols/assets/merged_catalog.json`
+   - Impact: All 805 symbols have `dexpi_class: null`
+   - Fix: Use `pydexpi.toolkits.base_model_utils.get_dexpi_class()` to backfill
+   - Create validation script to prevent regression
+
+3. ⏳ **Bug #3: Implement nozzle defaults** (MEDIUM Priority - 4 hours)
+   - Location: `src/core/equipment.py:518-535`
+   - Impact: All equipment have 0 nozzles (should have 2-6)
+   - Fix: Implement proper Nozzle instantiation with default connection points
+
+**Deliverables:**
+- [ ] Symbol catalog with valid `dexpi_class` mappings (711/805 fixed)
+- [ ] Nozzle creation working for all equipment types
+- [ ] Validation script in `scripts/validate_symbol_catalog.py`
+- [ ] Regression tests updated (26 existing + 5 new)
+- [ ] Documentation: Bug fix summary in VISUALIZATION_PLAN.md
+
+**Outcome:** SymbolRegistry functional, visualization pipeline unblocked
+
+---
+
+### Week 2-3: Eliminate Architectural Duplication
+
+**Status:** PENDING (January 20 - February 7, 2025)
+**Goal:** Remove all ~1,115 lines of upstream duplication
+
+#### Week 2: Retire model_service.py (Biggest Win)
+**Duration:** 5 days | **Priority:** CRITICAL | **Impact:** -400 lines
+
+**Tasks:**
+1. **Remove**: `src/visualization/orchestrator/model_service.py` (~400 lines)
+2. **Replace with**: `core.conversion.get_engine()` + `pydexpi.toolkits.piping_toolkit`
+3. **Impact**: Eliminates largest duplication block, enforces single conversion path
+4. **Risk**: HIGH - touches visualization orchestrator, needs thorough testing
+
+**Implementation Strategy:**
+- Create core-based replacement path
+- Run both in parallel with feature flag
+- Comprehensive testing before switch
+- Remove old code only after 1-week validation
+
+#### Week 3: Consolidate Symbol Registry + Refactor Tools
+**Duration:** 5 days | **Priority:** HIGH | **Impact:** -715 lines
+
+**Tasks:**
+1. **Deprecate**: `visualization/symbols/mapper.py` (~220 lines)
+2. **Enforce**: `core/symbols.py` as single source of truth
+3. **Refactor dexpi_tools.py**:
+   - Replace instrumentation code (lines 475-640, ~165 lines) with `instrumentation_toolkit`
+   - Replace manual lookups (lines 705-735, ~30 lines) with `model_toolkit.get_instances_with_attribute`
+4. **Replace**: `dexpi_introspector.py` with `base_model_utils` (~300 lines)
+
+**Deliverables:**
+- [ ] model_service.py removed, replaced with core layer (~400 lines)
+- [ ] mapper.py deprecated, symbol registry consolidated (~220 lines)
+- [ ] dexpi_tools.py refactored to use upstream toolkits (~195 lines)
+- [ ] dexpi_introspector.py replaced with base_model_utils (~300 lines)
+- [ ] **Total: ~1,115 lines eliminated**
+- [ ] 50+ tests updated for upstream usage
+- [ ] Documentation: Integration guide in docs/upstream_integration.md
+
+**Outcome:** ZERO upstream duplication, 18% code reduction (13.2K → 10.8K lines)
+
+---
+
+### Week 4-5: Deploy Federated Rendering
+
+**Status:** BLOCKED (needs Week 1-3 complete)
+**Goal:** Production SVG/PNG/PDF generation
+
+#### Week 4: GraphicBuilder Integration
+**Duration:** 5 days | **Priority:** HIGH
+
+**Tasks:**
+1. Docker container from **GitLab** (gitlab.com/dexpi/GraphicBuilder)
+   - ⚠️ **Critical**: GitHub mirror deprecated, use GitLab
+   - Pin GitLab repo/commit in `docker/graphicbuilder/Dockerfile`
+   - Capture Maven build steps to avoid CI breakage
+2. Orchestrator service routing
+3. GraphicBuilder wrapper for MCP
+4. 30-40 NOAKADEXPI symbols imported with metadata
+
+#### Week 5: ProteusXMLDrawing Integration
+**Duration:** 5 days | **Priority:** HIGH
+
+**Tasks:**
+1. Fork from vegarringdal/ProteusXMLDrawing
+2. **Critical fixes required** (per Codex warning):
+   - Text alignment issues
+   - Spline/curve handling
+   - Rotation bugs
+3. Budget for JS/canvas expertise + UI regression tests
+4. WebSocket for live updates
+5. MCP tool integration: `visualize_bfd/pfd/pid`
+
+**Deliverables:**
+- [ ] GraphicBuilder Docker container operational
+- [ ] 30-40 symbols imported with complete metadata
+- [ ] ProteusXMLDrawing fork with critical fixes
+- [ ] MCP visualization tools functional
+- [ ] Documentation: Federated rendering architecture
+
+**Outcome:** Production visualization with 2 rendering backends
+
+---
+
+### Week 6: Integrate SFILES2 Visualization
+
+**Status:** PENDING (February 17-21, 2025)
+**Goal:** Quick PFD/BFD previews while GraphicBuilder stabilizes
+
+**Tasks:**
+1. Expose `SFILES2.visualize_flowsheet()` via `sfiles_tools.py`
+2. Add stream/unit table generation (`create_stream_table`, `create_unit_table`)
+3. Enable OntoCape semantic mapping for AI-powered search
+4. Document SFILES2 v1.1.1 features (node/edge attribute propagation)
+5. **Watch**: SFILES2 open issues (#9 cyclic forms, #10 MultiDiGraph, #11 pyflowsheet, #12 HI merge bugs)
+
+**Deliverables:**
+- [ ] SFILES visualization integrated
+- [ ] OntoCape semantic mapping enabled
+- [ ] Stream/unit tables in outputs
+- [ ] Semantic search demonstration
+- [ ] Documentation: SFILES2 features guide
+
+**Outcome:** Quick flowsheet previews, semantic search capability
+
+---
+
+### Week 7: Complete Upstream Toolkit Adoption
+
+**Status:** PENDING (February 24-28, 2025)
+**Goal:** 95% pyDEXPI integration
+
+**Tasks:**
+1. Adopt `model_toolkit` for ALL equipment retrieval operations
+2. Adopt `instrumentation_toolkit` for ALL signal chain creation
+3. Adopt `piping_toolkit` for ALL segment operations
+4. Remove ALL manual model traversal code
+5. Ensure every MCP operation is thin wrapper around upstream
+
+**Deliverables:**
+- [ ] model_toolkit fully integrated
+- [ ] instrumentation_toolkit fully integrated
+- [ ] piping_toolkit fully integrated
+- [ ] Manual traversal code eliminated
+- [ ] 20+ tests for toolkit usage
+- [ ] Documentation: Toolkit integration patterns
+
+**Outcome:** Leverage pyDEXPI v1.1.0 fully, resilient to upstream schema changes
+
+---
+
+### Week 8: Eliminate Fallback Violations
+
+**Status:** PENDING (March 3-7, 2025)
+**Goal:** Zero silent failures, strict upstream compliance
+
+**Tasks:**
+1. **Remove**: `_create_simple_expansion` fallback to CustomEquipment (`model_service.py:435-456`)
+2. **Enforce**: Fail-fast behavior through factory instead of silent degradation
+3. **Document**: "No registries.py" - contributors must use `core.equipment`/`core.symbols`
+4. **Audit**: All remaining CustomEquipment usages (should be explicit user choice, not fallback)
+5. **Validation**: Add tests that fail when fallback logic is triggered
+
+**Deliverables:**
+- [ ] All CustomEquipment fallbacks removed
+- [ ] Fail-fast enforcement tests added
+- [ ] Documentation: No-fallback policy
+- [ ] Audit report of CustomEquipment usage
+- [ ] CI validation to prevent regression
+
+**Outcome:** Zero silent failures, strict "NO FALLBACKS" compliance
+
+---
+
+### Phase 5 Success Metrics
+
+| Metric | Current | Target | Measurement |
+|--------|---------|--------|-------------|
+| **Duplication Eliminated** | ~1,115 lines | 0 lines | model_service.py + mapper.py + instrumentation + introspector |
+| **Upstream Integration** | 30% pyDEXPI | 95% pyDEXPI | All toolkits used (model, piping, instrumentation, base_model_utils) |
+| **Code Reduction** | 13,200 lines | 10,800 lines (-18%) | `wc -l src/**/*.py` before/after |
+| **Visualization** | 0% functional | 100% functional | GraphicBuilder + ProteusXMLDrawing + SFILES2 |
+| **Symbol Completeness** | 0% (dexpi_class null) | 100% (711/805 fixed) | merged_catalog.json validation |
+| **Fallback Elimination** | Multiple fallbacks | 0 fallbacks | No CustomEquipment silent fallbacks |
+
+### Risk Mitigation
+
+| Risk | Codex Finding | Mitigation |
+|------|---------------|------------|
+| **model_service.py removal** | High-impact architectural change | Phased: 1) Create core path, 2) Parallel testing, 3) Switch, 4) Remove |
+| **Symbol catalog backfill** | 711 symbols need mapping | Script with `base_model_utils.get_dexpi_class`, validate |
+| **ProteusXMLDrawing complexity** | Text/spline/rotation non-trivial | Budget JS expertise, keep GraphicBuilder fallback, regression tests |
+| **GraphicBuilder source** | GitHub mirror deprecated | Use GitLab, pin commit, capture Maven build in Dockerfile |
+| **SFILES2 instability** | 4 open issues affecting features | Pin v1.1.1, monitor issues, plan MultiDiGraph migration for Phase 6 |
+| **Fallback discovery** | More CustomEquipment fallbacks exist | Comprehensive audit Week 8, CI validation |
+
+---
+
+### Timeline & Dependencies
+
+```
+Week 1: Fix Blockers (Bug #2, #3, validation script)
+  ↓
+Week 2-3: Eliminate Duplication (model_service, mapper, tools)
+  ↓
+Week 4-5: Deploy Rendering (GraphicBuilder + ProteusXMLDrawing)
+  ↓ (parallel)
+Week 6: SFILES2 Integration (quick wins while rendering stabilizes)
+  ↓
+Week 7: Complete Toolkit Adoption (full upstream leverage)
+  ↓
+Week 8: Eliminate Fallbacks (compliance enforcement)
+```
+
+**Critical Path:** Week 1 → Week 2-3 → Week 4-5
+**Parallel Work:** Week 6 can overlap with Week 4-5 (low coupling)
+
+---
+
 ## Documents Consolidated Into This Roadmap
 
 This document replaces and consolidates:
@@ -2099,5 +2349,5 @@ This document replaces and consolidates:
 
 **END OF ROADMAP**
 
-**Last Updated:** November 7, 2025
-**Next Review:** Before BFD System implementation (Part 2)
+**Last Updated:** January 10, 2025 (Phase 5 added after Codex review)
+**Next Review:** End of Phase 5 Week 1 (January 17, 2025)

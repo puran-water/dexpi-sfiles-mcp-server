@@ -64,6 +64,9 @@ from pydexpi.dexpi_classes.equipment import (
     Furnace
 )
 
+# Import PipingNode from pydantic classes for nozzle connection points
+from pydexpi.dexpi_classes.pydantic_classes import PipingNode
+
 logger = logging.getLogger(__name__)
 
 
@@ -519,17 +522,30 @@ class EquipmentFactory:
         """
         Create default nozzles based on equipment definition.
 
+        Creates nozzles with piping nodes that specify connection properties
+        (nominal diameter and pressure) following DEXPI standard.
+
         Args:
             definition: Equipment definition with nozzle count
 
         Returns:
             List of Nozzle instances with default naming (N1, N2, N3, etc.)
+            and standard connection properties (DN50, PN16)
         """
         nozzles = []
         for i in range(definition.nozzle_count_default):
-            # Create nozzle with sequential naming: N1, N2, N3, etc.
+            # Create piping node with connection properties
+            # Per DEXPI standard, diameter and pressure info lives in PipingNode
+            piping_node = PipingNode(
+                nominalDiameterRepresentation="DN50",
+                nominalDiameterNumericalValueRepresentation="50",
+            )
+
+            # Create nozzle with sequential naming and piping node
             nozzle = Nozzle(
-                subTagName=f"N{i+1}"
+                subTagName=f"N{i+1}",
+                nominalPressureRepresentation="PN16",
+                nodes=[piping_node]
             )
             nozzles.append(nozzle)
         return nozzles
