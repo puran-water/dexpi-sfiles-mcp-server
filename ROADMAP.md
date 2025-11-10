@@ -1,7 +1,7 @@
 # Engineering MCP Server - Consolidated Roadmap
 
-**Last Updated:** January 9, 2025 (After Bug Surfacing Sprint & Document Consolidation)
-**Status:** ✅ Core Layer Ready for Migration - Phase 0 Complete, All Fallbacks Removed
+**Last Updated:** January 10, 2025 (After Phase 0 Symbol Format Standardization)
+**Status:** ✅ Core Layer Phase 0 Complete - Symbol IDs Standardized to PP001A Format
 
 ---
 
@@ -10,7 +10,7 @@
 This roadmap provides the **master project timeline and phase tracking**. Detailed planning documents are organized as follows:
 
 ### Active Plans (require regular updates)
-- **[CORE_LAYER_MIGRATION_PLAN.md](docs/active/CORE_LAYER_MIGRATION_PLAN.md)** - Multi-phase core layer migration (Phase 0 pending)
+- **[CORE_LAYER_MIGRATION_PLAN.md](docs/active/CORE_LAYER_MIGRATION_PLAN.md)** - Multi-phase core layer migration (Phase 0 ✅ complete, Phase 1 ready)
 - **[VISUALIZATION_PLAN.md](docs/active/VISUALIZATION_PLAN.md)** - Federated rendering platform (blocked on core layer)
 
 ### Completed Plans (archived for reference)
