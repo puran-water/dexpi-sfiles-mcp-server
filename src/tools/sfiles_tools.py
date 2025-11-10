@@ -1052,43 +1052,45 @@ class SfilesTools:
         }
     
     async def _convert_from_dexpi(self, args: dict) -> dict:
-        """Convert DEXPI P&ID model to SFILES flowsheet."""
-        try:
-            from ..converters.sfiles_dexpi_mapper import SfilesDexpiMapper
-        except ImportError as exc:
-            raise ImportError(
-                "Failed to import SfilesDexpiMapper from src.converters.sfiles_dexpi_mapper. "
-                "Install engineering-mcp-server as a package (pip install -e .) "
-                "so relative imports resolve."
-            ) from exc
-        
+        """Convert DEXPI P&ID model to SFILES flowsheet.
+
+        Phase 1 Migration: Now uses core conversion engine instead of legacy mapper.
+        """
         model_id = args["model_id"]
         flowsheet_id = args.get("flowsheet_id", None)
-        
+
         # Use the model store from instance
         if model_id not in self.models:
             return {
                 "status": "error",
                 "error": f"Model {model_id} not found"
             }
-        
+
         dexpi_model = self.models[model_id]
-        
-        # Convert to SFILES
-        mapper = SfilesDexpiMapper()
+
+        # Convert to SFILES (Phase 1 migration: use core engine)
+        from src.core.conversion import get_engine
+        from Flowsheet_Class.flowsheet import Flowsheet
+
+        engine = get_engine()
         try:
-            flowsheet = mapper.dexpi_to_sfiles(dexpi_model)
-            
+            # Convert DEXPI to SFILES string via core engine
+            sfiles_string = engine.dexpi_to_sfiles(dexpi_model)
+
+            # Create Flowsheet object from SFILES string (proper SFILES2 API)
+            flowsheet = Flowsheet(sfiles_in=sfiles_string)
+
             # Store the flowsheet
             if not flowsheet_id:
                 import uuid
                 flowsheet_id = str(uuid.uuid4())
-            
+
             self.flowsheets[flowsheet_id] = flowsheet
-            
-            # Generate SFILES string
-            flowsheet.convert_to_sfiles(version="v2", canonical=True)
-            
+
+            # SFILES string already set by constructor, but ensure it's in the right format
+            if not hasattr(flowsheet, 'sfiles') or not flowsheet.sfiles:
+                flowsheet.convert_to_sfiles(version="v2", canonical=True)
+
             return {
                 "status": "success",
                 "flowsheet_id": flowsheet_id,
