@@ -9,6 +9,7 @@ This repository prioritizes data fidelity over drawing aesthetics: the authorita
 
 ## Current Capabilities
 
+- **Complete pyDEXPI Coverage (Phase 2)** – All **272 pyDEXPI classes** are now accessible: 159 equipment types, 79 piping types, and 34 instrumentation types. Both SFILES aliases (e.g., `pump`, `heat_exchanger`) and DEXPI class names (e.g., `CentrifugalPump`, `PlateHeatExchanger`) are accepted. See [`docs/EQUIPMENT_CATALOG.md`](docs/EQUIPMENT_CATALOG.md) for the complete catalog and [`docs/USER_MIGRATION_GUIDE.md`](docs/USER_MIGRATION_GUIDE.md) for usage guidance.
 - **DEXPI P&ID tooling** – 14 MCP tools for creating models, adding equipment/piping/instrumentation, importing/exporting, and inserting inline valves (`src/tools/dexpi_tools.py`).
 - **SFILES BFD/PFD tooling** – 12 MCP tools for flowsheet construction, stream management, canonicalization, regex validation, and conversions from/to DEXPI (`src/tools/sfiles_tools.py`).
 - **Git-native persistence** – Project tools (`project_init/save/load/list`) wrap `src/persistence/project_persistence.py`, storing JSON/SFILES plus metadata, GraphML, and Plotly HTML in per-model folders with automatic commits.
@@ -117,6 +118,16 @@ Each template exposes typed parameters (see `template_get_schema`) and can be in
 ---
 
 ## Roadmap & Completed Work
+
+**Phase 2 (Completed):** Complete pyDEXPI Component Coverage
+- ✅ ComponentRegistry integration – Unified registry for all 272 pyDEXPI classes
+- ✅ 5.3x equipment expansion – From ~30 to 159 equipment types
+- ✅ Dual naming support – Both SFILES aliases and DEXPI class names accepted
+- ✅ Complete piping coverage – All 79 piping types now available
+- ✅ Complete instrumentation – All 34 instrumentation types create correct pyDEXPI classes
+- ✅ 46/46 tests passing (22 registry + 12 schema + 12 other)
+- ✅ User documentation: [Equipment Catalog](docs/EQUIPMENT_CATALOG.md), [Migration Guide](docs/USER_MIGRATION_GUIDE.md), [Usage Examples](docs/MCP_TOOL_EXAMPLES.md)
+- ✅ Zero breaking changes – 100% backward compatible
 
 **Phase 4 (Completed):** Tool consolidation and transaction support
 - ✅ `model_create`, `model_load`, `model_save` – Unified model lifecycle (replaces 9 legacy tools)
