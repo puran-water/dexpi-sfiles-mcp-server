@@ -1,55 +1,231 @@
-# Current Task: Remove model_service.py Duplication
+# Current Task: Phase 2.2 - Update MCP Tools for All 272 Classes
 
-**Week:** Phase 5 Week 2 (Nov 17-24, 2025)  
-**Priority:** CRITICAL  
-**Impact:** -537 lines, eliminates redundant conversion pipeline
+**Week:** Phase 5 Week 2b (Nov 11, 2025)
+**Priority:** HIGH
+**Impact:** Expose all 272 pyDEXPI classes to Claude AI users
+**Status:** APPROVED TO PROCEED (Codex review complete)
 
-## Files to Modify
+## Background
 
-### Remove
-- `src/visualization/orchestrator/model_service.py` (537 lines via `wc -l`)
-  - Lines 376-402: inline regex SFILES parser duplicates `src/core/conversion.py:110-207`
-  - Lines 409-456: BFD expansion + fallback mirrors `src/core/conversion.py:333-399`
-  - Lines 459-496: manual equipment instantiation overlaps `src/core/conversion.py:622-628` and `src/core/equipment.py:144-210`
-  - Lines 174-360: metadata/validation/statistics helpers must move into the core layer instead of visualization
+**Phase 1 (COMPLETE)**: Auto-generated registrations for ALL 272 pyDEXPI classes
+- Equipment: 159/159 classes ✅
+- Piping: 79/79 classes ✅
+- Instrumentation: 34/34 classes ✅
+- 27 families with 1:Many mappings
+- Duration: <2 hours
 
-### Update (Callers)
-- `tests/visualization/test_orchestrator_integration.py:15-205`
-  - Only runtime import of `ModelService` (`rg` limited to src/tests)
-  - All 10 tests call `enrich_sfiles_to_dexpi`, `extract_metadata`, `validate_model`, `get_model_statistics`
-  - Replace fixture with shared helpers: `core.conversion.get_engine()` for conversion (see `src/core/conversion.py:333-418`, `707-712`), new core metrics helper for metadata/stats, and validation pulled from `src/tools/validation_tools.py:1-200`
+**Phase 2.1 (COMPLETE)**: Core Layer Integration
+- Created `src/core/components.py` with unified ComponentRegistry (519 lines)
+- All 272 classes imported and registered
+- Integrated with EquipmentFactory for backward compatibility
+- **CODEX REVIEW COMPLETE**: All 5 critical issues fixed
+  - CSV packaging fixed (moved to src/core/data/)
+  - Import paths corrected (relative imports)
+  - DEXPI class name support added
+  - Category metadata preserved
+  - Fail-fast CSV loading
+- Test coverage: 22 unit tests + 10 integration tests (32/32 passing)
+- Duration: ~4 hours (including Codex review fixes)
 
-## Replacement Strategy
+## Current Task: Phase 2.2 - MCP Tool Schema Updates
 
-1. Extract metadata/validation/complexity logic from `model_service.py:174-360` into a reusable module (e.g., `src/core/analytics/model_metrics.py`) so every layer calls the same helpers.
-2. Reuse the existing conversion singleton:
-   ```python
-   from src.core.conversion import get_engine
+### Objective
+Update MCP tool schemas to expose all 272 classes to Claude AI users via the engineering-mcp-server interface.
 
-   engine = get_engine()
-   dexpi_model = engine.sfiles_to_dexpi(sfiles_string)
-   ```
-3. Surface validation by refactoring `src/tools/validation_tools.py` internals into callable helpers (instead of standalone async MCP handlers) so visualization code can synchronously check models.
-4. Provide a `summarize(model: DexpiModel)` helper that returns the metadata/validation/complexity dictionary formerly produced by `ModelService.get_model_statistics`.
-5. Update the visualization integration test suite to import the new helpers, then delete `model_service.py`.
+### Scope
+Update 4 MCP tool schemas:
+1. `dexpi_add_equipment` - expose all 159 equipment types
+2. `dexpi_add_valve` - expose all 22 valve types
+3. `dexpi_add_piping` - expose all 79 piping types (or create new tool)
+4. `dexpi_add_instrumentation` - expose all 34 instrumentation types
 
-## Implementation Steps
+### Implementation Plan
 
-1. [ ] Create `src/core/analytics/model_metrics.py` with `extract_metadata`, `validate_model`, and `summarize` functions moved verbatim (and improved) from `model_service.py:174-360`.
-2. [ ] Refactor `src/tools/validation_tools.py` so its validation routines can be invoked directly by the new metrics helper without MCP scaffolding.
-3. [ ] Replace all `ModelService` usage in `tests/visualization/test_orchestrator_integration.py:15-205` with `get_engine()` + the new metrics helper.
-4. [ ] Remove `src/visualization/orchestrator/model_service.py` and any stale imports or docs that reference it.
-5. [ ] Run visualization + core regression tests and capture results.
+#### Step 1: Update Equipment Tool (30-45 min)
+**File**: `src/tools/dexpi_tools.py` (method at line ~370)
 
-## Success Criteria
+**Changes**:
+- Use `ComponentRegistry.list_all_aliases(ComponentType.EQUIPMENT)` to build enum dynamically
+- Update tool schema description with examples
+- Include both SFILES aliases and DEXPI class names in documentation
+- Test with sample equipment types (pump, boiler, conveyor, crusher)
 
-- [ ] No file imports `visualization.orchestrator.model_service`
-- [ ] `src/visualization/orchestrator/model_service.py` deleted from the repository
-- [ ] Conversion path uses `core.conversion.get_engine()` exclusively
-- [ ] Metadata/validation/statistics helpers live under `src/core` with accompanying tests
-- [ ] Visualization integration suite (10 tests) passes using the new adapter
+**Example schema update**:
+```python
+from src.core.components import get_registry, ComponentType
 
-## Testing
+# In tool schema definition:
+equipment_registry = get_registry()
+equipment_types = equipment_registry.list_all_aliases(ComponentType.EQUIPMENT)
 
-Run: `pytest tests/visualization/test_orchestrator_integration.py -v`  
-Expected: 10 tests succeed using `core.conversion` + the shared metrics helper
+# Schema parameter:
+{
+    "name": "equipment_type",
+    "description": "Equipment type (SFILES alias or DEXPI class name). "
+                  "Examples: 'pump' (CentrifugalPump), 'boiler' (Boiler), "
+                  "'conveyor' (Conveyor), 'steam_generator' (SteamGenerator). "
+                  f"Available: {', '.join(sorted(equipment_types)[:20])}...",
+    "type": "string",
+    "enum": sorted(equipment_types)
+}
+```
+
+#### Step 2: Update Valve Tool (30-45 min)
+**File**: `src/tools/dexpi_tools.py` (method at line ~995)
+
+**Changes**:
+- Filter piping components by `category == ComponentCategory.VALVE`
+- OR use family-based filtering for valve families
+- Update examples (ball_valve, butterfly_valve, safety_valve, needle_valve)
+
+**Example**:
+```python
+from src.core.components import ComponentCategory
+
+valve_components = equipment_registry.get_all_by_category(ComponentCategory.VALVE)
+valve_types = [c.sfiles_alias for c in valve_components]
+```
+
+#### Step 3: Create/Update Piping Tool (30-45 min)
+**File**: `src/tools/dexpi_tools.py` (method at line ~422)
+
+**Changes**:
+- Expose all 79 piping types (not just valves)
+- Include flow measurement, connections, fittings, etc.
+- Update examples (electromagnetic_flow_meter, flange, orifice_plate)
+
+#### Step 4: Update Instrumentation Tool (30-45 min)
+**File**: `src/tools/dexpi_tools.py` (method at line ~475)
+
+**Changes**:
+- Use `ComponentRegistry.list_all_aliases(ComponentType.INSTRUMENTATION)`
+- Update examples (transmitter, positioner, actuator, signal_conveying_function)
+
+#### Step 5: Add Smoke Test (15-30 min)
+**File**: `tests/tools/test_dexpi_tool_schemas.py` (new)
+
+**Create test to verify**:
+- Equipment tool schema has 159 types
+- Valve tool schema has 22 types
+- Piping tool schema has 79 types
+- Instrumentation tool schema has 34 types
+
+```python
+def test_equipment_tool_schema_coverage():
+    """Verify dexpi_add_equipment exposes all 159 equipment types."""
+    from src.tools.dexpi_tools import DexpiTools
+    from src.core.components import get_registry, ComponentType
+
+    tools = DexpiTools({}, {})
+    schema = tools.get_tools()  # Get tool schemas
+
+    equipment_tool = next(t for t in schema if t['name'] == 'dexpi_add_equipment')
+    enum_values = equipment_tool['inputSchema']['properties']['equipment_type']['enum']
+
+    registry = get_registry()
+    expected_count = len(registry.get_all_by_type(ComponentType.EQUIPMENT))
+
+    assert len(enum_values) == expected_count, \
+        f"Expected {expected_count} equipment types, got {len(enum_values)}"
+```
+
+#### Step 6: Update Tool Documentation (15-30 min)
+**Files**:
+- Tool docstrings in `src/tools/dexpi_tools.py`
+- MCP server tool descriptions
+
+**Add to each tool**:
+- Count of available types
+- Examples with both aliases and class names
+- Link to component registry documentation
+
+### Files to Modify
+
+1. **`src/tools/dexpi_tools.py`** (~200 lines of changes)
+   - Update 4 tool method schemas
+   - Add dynamic enum generation from ComponentRegistry
+   - Update docstrings and examples
+
+2. **`tests/tools/test_dexpi_tool_schemas.py`** (NEW, ~100 lines)
+   - Add smoke tests for schema coverage
+   - Verify 159/79/34 counts
+
+3. **Tool descriptions** (inline in dexpi_tools.py)
+   - Update with current type counts
+   - Add usage examples
+
+### Success Criteria
+
+- [x] ComponentRegistry integration complete (Phase 2.1)
+- [x] All critical issues fixed (Codex review)
+- [x] 22 unit tests + 10 integration tests passing
+- [ ] `dexpi_add_equipment` schema has 159 equipment types
+- [ ] `dexpi_add_valve` schema has 22 valve types
+- [ ] `dexpi_add_piping` schema has 79 piping types
+- [ ] `dexpi_add_instrumentation` schema has 34 instrumentation types
+- [ ] Smoke tests verify schema coverage
+- [ ] Tool documentation updated with examples
+- [ ] All tests passing
+
+### Testing Strategy
+
+```bash
+# 1. Run ComponentRegistry tests
+source .venv/bin/activate
+python -m pytest tests/core/test_component_registry.py -v
+
+# 2. Run tool schema tests
+python -m pytest tests/tools/test_dexpi_tool_schemas.py -v
+
+# 3. Test creating equipment with new types
+python -c "
+from src.core.equipment import get_factory
+factory = get_factory()
+boiler = factory.create('boiler', 'B-001')
+print(f'Created: {boiler.__class__.__name__}')
+"
+
+# 4. Integration tests
+python -m pytest tests/visualization/test_orchestrator_integration.py -v
+```
+
+### Timeline
+
+- **Estimated effort**: 2-3 hours
+- **Priority**: HIGH
+- **Dependencies**: Phase 2.1 complete ✅
+- **Blockers**: None (Codex approved)
+
+### Codex Recommendations
+
+From Codex review:
+> "Proceeding to Phase 2.2 to wire the MCP schemas directly to `ComponentRegistry.list_all_aliases()` is the right next move. Make sure each tool description surfaces both the alias and (when different) the pyDEXPI class name so users understand what to supply."
+
+Additional recommendation:
+> "Consider adding a lightweight smoke test that ensures `dexpi_tools.DexpiTools.get_tools()` reflects the 159/79/34 counts once the schemas are dynamic."
+
+### Notes
+
+- **All critical issues fixed**: CSV packaging, imports, class name support, category preservation, fail-fast loading
+- **Test coverage**: 32/32 tests passing (22 unit + 10 integration)
+- **Codex approval**: Green light to proceed with Phase 2.2
+- **Documentation**: Complete with CODEX_REVIEW_FIXES.md
+
+### Next Steps After Phase 2.2
+
+**Phase 2.3**: Comprehensive regression test suite (if needed beyond 22 existing tests)
+**Phase 2.4**: Update user-facing documentation
+- Equipment catalog
+- User migration guide
+- MCP tool usage examples
+- CHANGELOG update
+
+**Phase 3**: Symbol mapping for placeholders (133 equipment, all piping/instrumentation)
+- Can be deferred - doesn't block functionality
+- Prioritize high-usage equipment types first
+
+---
+
+**Status**: Ready to begin Phase 2.2
+**Last Updated**: November 11, 2025
+**Approved By**: Codex MCP (review complete)

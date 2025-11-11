@@ -430,11 +430,45 @@ class EquipmentFactory:
     """
     Factory for creating equipment instances.
     Consolidates creation logic from multiple sources.
+
+    Now uses ComponentRegistry as fallback for access to all 272 pyDEXPI classes.
     """
 
-    def __init__(self, registry: Optional[EquipmentRegistry] = None):
-        """Initialize factory with registry."""
+    def __init__(self, registry: Optional[EquipmentRegistry] = None, use_component_registry: bool = True):
+        """
+        Initialize factory with registry.
+
+        Args:
+            registry: Legacy equipment registry (optional)
+            use_component_registry: If True, use ComponentRegistry as fallback for all 272 classes
+        """
         self.registry = registry or EquipmentRegistry()
+        self.use_component_registry = use_component_registry
+        self._component_registry = None
+
+    @property
+    def component_registry(self):
+        """Lazy-load ComponentRegistry only when needed."""
+        if self._component_registry is None and self.use_component_registry:
+            from .components import get_registry
+            self._component_registry = get_registry()
+        return self._component_registry
+
+    def _map_component_category(self, component_category) -> EquipmentCategory:
+        """Map ComponentCategory to EquipmentCategory to preserve metadata."""
+        from .components import ComponentCategory
+
+        mapping = {
+            ComponentCategory.ROTATING: EquipmentCategory.ROTATING,
+            ComponentCategory.HEAT_TRANSFER: EquipmentCategory.HEAT_TRANSFER,
+            ComponentCategory.SEPARATION: EquipmentCategory.SEPARATION,
+            ComponentCategory.STORAGE: EquipmentCategory.STORAGE,
+            ComponentCategory.REACTION: EquipmentCategory.REACTION,
+            ComponentCategory.TREATMENT: EquipmentCategory.TREATMENT,
+            ComponentCategory.TRANSPORT: EquipmentCategory.TRANSPORT,
+            ComponentCategory.CUSTOM: EquipmentCategory.CUSTOM,
+        }
+        return mapping.get(component_category, EquipmentCategory.CUSTOM)
 
     def create(
         self,
@@ -457,11 +491,39 @@ class EquipmentFactory:
         """
         params = params or {}
 
-        # Get equipment definition
+        # Try legacy EquipmentRegistry first
         definition = (
             self.registry.get_by_sfiles_type(equipment_type) or
             self.registry.get_by_bfd_type(equipment_type)
         )
+
+        # If not found and ComponentRegistry is enabled, try there
+        if not definition and self.component_registry:
+            try:
+                # Try as SFILES alias first
+                component_def = self.component_registry.get_by_alias(equipment_type)
+
+                # If not found, try as DEXPI class name
+                if not component_def:
+                    try:
+                        dexpi_class = self.component_registry.get_dexpi_class(equipment_type)
+                        component_def = self.component_registry.get_by_class(dexpi_class)
+                    except Exception:
+                        pass  # Will be None if not found
+
+                if component_def:
+                    logger.info(f"Using ComponentRegistry for type '{equipment_type}'")
+                    # Convert ComponentDefinition to EquipmentDefinition for compatibility
+                    definition = EquipmentDefinition(
+                        sfiles_type=component_def.sfiles_alias,
+                        dexpi_class=component_def.dexpi_class,
+                        category=self._map_component_category(component_def.category),
+                        display_name=component_def.display_name,
+                        symbol_id=component_def.symbol_id,
+                        nozzle_count_default=component_def.nozzle_count_default
+                    )
+            except Exception as e:
+                logger.debug(f"ComponentRegistry lookup failed: {e}")
 
         if not definition:
             # FAIL LOUDLY - no silent fallbacks
@@ -469,10 +531,18 @@ class EquipmentFactory:
                 list(self.registry._sfiles_map.keys()) +
                 list(self.registry._bfd_map.keys())
             ))
-            raise UnknownEquipmentTypeError(
-                f"Unknown equipment type: '{equipment_type}'. "
-                f"Available types: {available}"
-            )
+            if self.component_registry:
+                # Add hint about ComponentRegistry
+                raise UnknownEquipmentTypeError(
+                    f"Unknown equipment type: '{equipment_type}'. "
+                    f"Available types (legacy): {available[:20]}. "
+                    f"Hint: 272 additional types available via ComponentRegistry."
+                )
+            else:
+                raise UnknownEquipmentTypeError(
+                    f"Unknown equipment type: '{equipment_type}'. "
+                    f"Available types: {available}"
+                )
 
         # Prepare nozzles
         if nozzles is None:

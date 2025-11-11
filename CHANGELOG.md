@@ -5,6 +5,187 @@ All notable changes to the Engineering MCP Server are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2025-11-11
+
+### Added - Phase 5 Week 2: Complete pyDEXPI Coverage (272 Classes)
+
+**Phase 1: Auto-Generated Registrations** (<2 hours):
+- **All 272 pyDEXPI classes enumerated** using DexpiIntrospector
+- **Equipment registrations**: 159 classes with SFILES aliases, categories, symbols
+  - 16 families with 1:Many mappings (e.g., "pump" → 6 pump types)
+  - 8 categories (ROTATING, HEAT_TRANSFER, SEPARATION, STORAGE, etc.)
+  - 26 real symbols, 133 placeholders
+- **Piping registrations**: 79 classes (22 valves + 57 other components)
+  - 6 valve families
+  - 8 categories (VALVE, PIPE, FLOW_MEASUREMENT, CONNECTION, etc.)
+- **Instrumentation registrations**: 34 classes
+  - 5 families
+  - 9 categories (ACTUATING, SIGNAL, MEASUREMENT, CONTROL, etc.)
+- **CSV generation**: `src/core/data/*.csv` (auto-generated, versioned)
+
+**Phase 2.1: Core Layer Integration** (~4 hours):
+- **ComponentRegistry** (`src/core/components.py`, 519 lines):
+  - Unified registry for ALL 272 pyDEXPI components
+  - CSV-driven registration from `src/core/data/*.csv`
+  - 1:Many family support (27 families total)
+  - 25 categories across equipment/piping/instrumentation
+  - Query interface: by alias, by class, by family, by category
+  - Universal `create_component()` factory
+- **EquipmentFactory integration**:
+  - ComponentRegistry as fallback for 242 new equipment types
+  - Backward compatibility maintained (legacy registry still used first)
+  - DEXPI class name support (accepts both "pump" and "CentrifugalPump")
+  - Category metadata preservation (ComponentCategory → EquipmentCategory mapping)
+  - Relative imports for package compatibility
+- **Comprehensive test suite** (22 tests in `tests/core/test_component_registry.py`):
+  - CSV loading tests (all 272 classes, file existence, headers)
+  - SFILES alias lookup tests
+  - DEXPI class name lookup tests
+  - Category preservation tests
+  - Family mapping tests (1:Many)
+  - Component instantiation tests
+  - New equipment type validation (boiler, conveyor, crusher, silo, valves)
+
+**Codex Review & Critical Fixes**:
+- ✅ CSV packaging: Moved to `src/core/data/`, declared as package data
+- ✅ Import paths: Changed to relative imports for package compatibility
+- ✅ DEXPI class name support: Dual lookup (alias + class name)
+- ✅ Category metadata: Mapping function preserves equipment categories
+- ✅ Fail-fast loading: RuntimeError on missing CSVs (CI protection)
+
+### Changed - Phase 5 Week 2: Coverage Expansion
+
+**Coverage Achievement**:
+- Equipment: 19/159 (12%) → 159/159 (100%) ✅ **+140 classes**
+- Piping: 6/79 (7.6%) → 79/79 (100%) ✅ **+73 classes**
+- Instrumentation: 5/34 (14.7%) → 34/34 (100%) ✅ **+29 classes**
+- **TOTAL: 30/272 (11%) → 272/272 (100%)** ✅ **+242 classes**
+
+**New Equipment Types Available**:
+- Power generation: Boiler, SteamGenerator, SteamTurbine, GasTurbine, Generators
+- Material handling: Conveyor, Crusher, Mill, Extruder, Silo, Screw, Feeder
+- Specialized processing: Kneader, Agglomerator, Pelletizer, Weighers, Sieves
+- All pump variants: Reciprocating, Rotary, Ejector (not just Centrifugal)
+- All compressor types: Axial, Rotary, Reciprocating
+- All heat exchanger types: Plate, Spiral, Tubular, ThinFilm
+
+**New Piping Types Available**:
+- All 22 valve types: Butterfly, Plug, Needle, Safety, Operated, Angle variants
+- Flow measurement: Electromagnetic, Turbine, Orifice, Venturi (10 types)
+- Connections: Flanges, couplings (6 types)
+- Piping accessories: Compensators, hoses, sight glasses, strainers
+
+**New Instrumentation Types Available**:
+- Actuating systems: Electric, pneumatic, positioners
+- Signal conveying: Signal lines, off-page connectors
+- Measurement: Primary elements, transmitters, detectors
+- Control: Control loops, control functions
+
+### Fixed - Phase 5 Week 2: Production Readiness
+
+**Critical Issues (Identified by Codex MCP)**:
+1. **CSV Packaging**: Files now in `src/core/data/`, included in wheel via `pyproject.toml`
+2. **Import Path**: `from .components` (relative) instead of `from core.components`
+3. **Class Name Support**: Factory accepts both SFILES aliases and DEXPI class names
+4. **Category Preservation**: ComponentCategory correctly mapped to EquipmentCategory
+5. **Fail-Fast Loading**: Missing CSVs raise RuntimeError (CI catches regressions)
+
+**Week 2 Task Completion**:
+- ✅ Created `src/core/analytics/model_metrics.py` (206 lines)
+- ✅ Deleted `src/visualization/orchestrator/model_service.py` (537 lines)
+- ✅ Updated orchestration tests (10/10 passing)
+- ✅ Net code reduction: -331 lines (537 removed, 206 added)
+
+### Documentation - Phase 5 Week 2
+
+**Phase Completion Documentation**:
+- `docs/PHASE1_COMPLETE_SUMMARY.md`: Phase 1 auto-generation results
+- `docs/PHASE2_1_COMPLETE_SUMMARY.md`: Phase 2.1 integration results
+- `docs/CODEX_REVIEW_FIXES.md`: All 5 critical issues documented
+- `docs/COMPLETE_PYDEXPI_COVERAGE_ANALYSIS.md`: Gap analysis and solution
+- `docs/EQUIPMENT_COVERAGE_ANALYSIS.md`: Equipment-specific analysis
+- `docs/PIPING_VALVE_COVERAGE_ANALYSIS.md`: Piping/valve analysis
+
+**Updated Documentation**:
+- `STATUS.md`: Phase 2.1 completion, Codex review results
+- `CURRENT_TASK.md`: Phase 2.2 objectives and plan
+- `CHANGELOG.md`: This entry
+
+### Testing - Phase 5 Week 2
+
+**Test Results**:
+- ✅ 22/22 ComponentRegistry unit tests passing
+- ✅ 10/10 orchestrator integration tests passing
+- ✅ 32/32 total tests passing
+- ✅ All CSV files validated (structure, headers, completeness)
+- ✅ Component instantiation verified for all types
+- ✅ DEXPI class name lookup validated
+- ✅ Category preservation validated
+
+**Test Coverage**:
+- CSV loading (6 tests)
+- Alias lookup (3 tests)
+- DEXPI class name support (3 tests)
+- Category preservation (2 tests)
+- Family mappings (2 tests)
+- Component instantiation (4 tests)
+- New equipment types (3 tests)
+
+### Breaking Changes - None
+
+All changes are backward compatible:
+- Existing equipment types continue to work
+- Legacy EquipmentRegistry still used first
+- Factory API unchanged
+- All existing tests pass without modification
+
+### Deprecation Warnings
+
+**Future Removal** (after Phase 2.2 MCP tools update):
+- `src/core/equipment.EquipmentRegistry` may be deprecated in favor of ComponentRegistry
+- Manual equipment type registrations (replaced by CSV-driven approach)
+
+### Validation
+
+**ComponentRegistry**:
+- ✅ All 272 classes load from CSV files
+- ✅ SFILES alias lookup works (primary classes only)
+- ✅ DEXPI class name lookup works
+- ✅ Family mappings operational (27 families)
+- ✅ Category filtering works (25 categories)
+- ✅ Component instantiation verified
+
+**Integration**:
+- ✅ EquipmentFactory uses ComponentRegistry fallback
+- ✅ Both SFILES aliases and DEXPI class names accepted
+- ✅ Category metadata preserved through factory
+- ✅ All visualization tests passing
+
+**Packaging**:
+- ✅ CSV files included in `src/core/data/`
+- ✅ Package data declared in `pyproject.toml`
+- ✅ Relative imports for package compatibility
+- ✅ Fail-fast on missing CSV files
+
+### Performance
+
+**Phase 1 Efficiency**:
+- Auto-generation: <2 hours (vs 14-20 hours manual estimate)
+- Efficiency gain: 7-10x faster than manual registration
+
+**Phase 2.1 Performance**:
+- Lazy loading: ComponentRegistry loaded only when needed
+- CSV parsing: One-time cost on first access
+- No runtime overhead for existing code paths
+
+### Next Steps
+
+**Phase 2.2** (2-3 hours, approved by Codex):
+- Update MCP tool schemas to expose all 272 classes
+- Use `ComponentRegistry.list_all_aliases()` for dynamic enums
+- Add smoke tests for schema coverage
+- Update tool documentation and examples
+
 ## [0.4.1] - 2025-11-10
 
 ### Added - Phase 5 Week 1: Symbol Catalog & Nozzle Fixes

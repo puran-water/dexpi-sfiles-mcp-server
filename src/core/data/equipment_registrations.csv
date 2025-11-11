@@ -1,0 +1,160 @@
+class_name,sfiles_alias,is_primary,family,category,symbol_id,nozzle_count,display_name
+Agglomerator,agglomerator,False,,TREATMENT,PD837Z,2,Agglomerator
+Agitator,agitator,True,,REACTION,PP017A_Origo,4,Agitator
+AgitatorRotor,agitator_rotor,False,,ROTATING,PP614Z,2,Agitator Rotor
+AirCoolingSystem,air_cooling_system,False,,HEAT_TRANSFER,PE199Z,4,Air Cooling System
+AirEjector,air_ejector,False,,CUSTOM,PX204Z,2,Air Ejector
+AlternatingCurrentGenerator,generator_alternating_current_generator,False,generator,ROTATING,PP972Z,2,Alternating Current Generator
+AlternatingCurrentMotor,motor_alternating_current,False,motor,ROTATING,PP436Z,2,Alternating Current Motor
+AlternatingCurrentMotorAsComponent,alternating_current_motor_as_component,False,,ROTATING,PP048Z,2,Alternating Current Motor As Component
+AxialBlower,blower_axial,False,blower,ROTATING,PP146Z,2,Axial Blower
+AxialCompressor,compressor_axial,False,compressor,ROTATING,PP113Z,2,Axial Compressor
+AxialFan,fan_axial,False,fan,ROTATING,PP743Z,2,Axial Fan
+BatchWeigher,weigher_batch,False,weigher,TREATMENT,PD116Z,2,Batch Weigher
+Blower,blower,True,blower,ROTATING,PP007A_Origo,2,Blower
+Boiler,boiler,False,,HEAT_TRANSFER,PE736Z,4,Boiler
+BriquettingRoller,briquetting_roller,False,,TREATMENT,PD155Z,2,Briquetting Roller
+Burner,burner,False,,HEAT_TRANSFER,PE026A_Origo,4,Burner
+CentrifugalBlower,blower_centrifugal,False,blower,ROTATING,PP647Z,2,Centrifugal Blower
+CentrifugalCompressor,compressor_centrifugal,False,compressor,ROTATING,PP011A_Origo,2,Centrifugal Compressor
+CentrifugalPump,pump,True,pump,ROTATING,PP001A,2,Centrifugal Pump
+Centrifuge,centrifuge,True,centrifuge,SEPARATION,PE030A,2,Centrifuge
+Chamber,chamber,False,,STORAGE,PT133Z,4,Chamber
+ChamberOwner,chamber_owner,False,,STORAGE,PT709Z,4,Chamber Owner
+Chimney,chimney,False,,TREATMENT,PD117Z,2,Chimney
+ColumnInternalsArrangement,column_internals_arrangement,False,,SEPARATION,PS250Z,3,Column Internals Arrangement
+ColumnPackingsArrangement,column_packings_arrangement,False,,SEPARATION,PS772Z,3,Column Packings Arrangement
+ColumnSection,column_section,False,,SEPARATION,PS930Z,3,Column Section
+ColumnTraysArrangement,column_trays_arrangement,False,,SEPARATION,PS958Z,3,Column Trays Arrangement
+CombustionEngine,combustion_engine,False,,ROTATING,PP998Z,2,Combustion Engine
+CombustionEngineAsComponent,combustion_engine_as_component,False,,ROTATING,PP378Z,2,Combustion Engine As Component
+Compressor,compressor,True,compressor,ROTATING,PP074Z,2,Compressor
+ContinuousWeigher,weigher_continuous,False,weigher,TREATMENT,PD356Z,2,Continuous Weigher
+ConvectionDryer,dryer_convection,False,dryer,TREATMENT,PD217Z,2,Convection Dryer
+Conveyor,conveyor,False,,TRANSPORT,PM989Z,2,Conveyor
+CoolingTower,cooling_tower,False,cooling_tower,HEAT_TRANSFER,PE507Z,4,Cooling Tower
+CoolingTowerRotor,cooling_tower_rotor,False,,ROTATING,PP853Z,2,Cooling Tower Rotor
+Crusher,crusher,False,,TREATMENT,PE022A_Origo,2,Crusher
+CrusherElement,crusher_element,False,,TREATMENT,PD767Z,2,Crusher Element
+CustomAgglomerator,custom_agglomerator,False,,TREATMENT,PD821Z,2,Custom Agglomerator
+CustomBlower,blower_custom,False,blower,ROTATING,PP007A_Origo,2,Custom Blower
+CustomCentrifuge,centrifuge_custom,False,centrifuge,SEPARATION,PE030A_Origo,3,Custom Centrifuge
+CustomCompressor,compressor_custom,False,compressor,ROTATING,PP350Z,2,Custom Compressor
+CustomCoolingTower,cooling_tower_custom,False,cooling_tower,HEAT_TRANSFER,PE674Z,4,Custom Cooling Tower
+CustomDryer,dryer_custom,False,dryer,TREATMENT,PD283Z,2,Custom Dryer
+CustomElectricGenerator,generator_custom,False,generator,ROTATING,PP362Z,2,Custom Electric Generator
+CustomEquipment,custom_equipment,False,,CUSTOM,LZ009A_Detail,2,Custom Equipment
+CustomExtruder,custom_extruder,False,,TREATMENT,PD251Z,2,Custom Extruder
+CustomFan,fan_custom,False,fan,ROTATING,PP408Z,2,Custom Fan
+CustomFilter,filter_custom,False,filter,SEPARATION,PS014A_Origo,3,Custom Filter
+CustomHeatExchanger,heat_exchanger_custom,False,heat_exchanger,HEAT_TRANSFER,PE037A_Origo,4,Custom Heat Exchanger
+CustomHeater,heater_custom,False,heater,HEAT_TRANSFER,PE527Z,4,Custom Heater
+CustomMill,custom_mill,False,,TREATMENT,PD985Z,2,Custom Mill
+CustomMixer,custom_mixer,False,,REACTION,PE190Z,4,Custom Mixer
+CustomMobileTransportSystem,custom_mobile_transport_system,False,,TRANSPORT,PM551Z,2,Custom Mobile Transport System
+CustomMotor,motor_custom,False,motor,ROTATING,PP813Z,2,Custom Motor
+CustomPump,pump_custom,False,pump,ROTATING,PP737Z,2,Custom Pump
+CustomSeparator,separator_custom,False,separator,SEPARATION,PE012A_Option1,3,Custom Separator
+CustomSieve,sieve_custom,False,sieve,SEPARATION,PS743Z,3,Custom Sieve
+CustomStationaryTransportSystem,custom_stationary_transport_system,False,,TRANSPORT,PM803Z,2,Custom Stationary Transport System
+CustomTurbine,turbine_custom,False,turbine,ROTATING,PE021A_Origo,2,Custom Turbine
+CustomVessel,custom_vessel,False,,STORAGE,PT140Z,4,Custom Vessel
+CustomWasteGasEmitter,custom_waste_gas_emitter,False,,TREATMENT,PD999Z,2,Custom Waste Gas Emitter
+CustomWeigher,weigher_custom,False,weigher,TREATMENT,PD299Z,2,Custom Weigher
+DirectCurrentGenerator,generator_direct_current_generator,False,generator,ROTATING,PP646Z,2,Direct Current Generator
+DirectCurrentMotor,motor_direct_current,False,motor,ROTATING,PP481Z,2,Direct Current Motor
+DirectCurrentMotorAsComponent,direct_current_motor_as_component,False,,ROTATING,PP093Z,2,Direct Current Motor As Component
+Displacer,displacer,False,,CUSTOM,PX874Z,2,Displacer
+DryCoolingTower,cooling_tower_dry,False,cooling_tower,HEAT_TRANSFER,PE925Z,4,Dry Cooling Tower
+Dryer,dryer,True,dryer,TREATMENT,PD601Z,2,Dryer
+DryingChamber,drying_chamber,False,,STORAGE,PT871Z,4,Drying Chamber
+EjectorPump,pump_ejector,False,pump,ROTATING,PP839Z,2,Ejector Pump
+ElectricGenerator,generator,False,generator,ROTATING,PP898Z,2,Electric Generator
+ElectricHeater,heater_electric,False,heater,HEAT_TRANSFER,PE129Z,4,Electric Heater
+ElectricalSeparator,separator_electrical,False,separator,SEPARATION,PS994Z,3,Electrical Separator
+Equipment,equipment,False,,CUSTOM,PX162Z,2,Equipment
+Extruder,extruder,False,,TREATMENT,PD343Z,2,Extruder
+Fan,fan,True,fan,ROTATING,PP701Z,2,Fan
+Feeder,feeder,False,,TREATMENT,PD156Z,2,Feeder
+Filter,filter,True,filter,SEPARATION,PS014A,2,Filter
+FilterUnit,filter_unit,False,,SEPARATION,PS214Z,3,Filter Unit
+FilteringCentrifuge,centrifuge_filtering,False,centrifuge,SEPARATION,PS450Z,3,Filtering Centrifuge
+FilteringCentrifugeDrum,filtering_centrifuge_drum,False,,SEPARATION,PS211Z,3,Filtering Centrifuge Drum
+Flare,flare,False,,TREATMENT,PD986Z,2,Flare
+ForkliftTruck,forklift_truck,False,,TRANSPORT,PM093Z,2,Forklift Truck
+Furnace,furnace,True,,HEAT_TRANSFER,PE416Z,4,Furnace
+GasFilter,filter_gas,False,filter,SEPARATION,PS183Z,3,Gas Filter
+GasTurbine,turbine_gas,False,turbine,ROTATING,PP907Z,2,Gas Turbine
+GearBox,gear_box,False,,CUSTOM,PX924Z,2,Gear Box
+GravitationalSeparator,separator_gravitational,False,separator,SEPARATION,PS586Z,3,Gravitational Separator
+Grinder,grinder,False,,TREATMENT,PD528Z,2,Grinder
+GrindingElement,grinding_element,False,,CUSTOM,PX130Z,2,Grinding Element
+HeatExchanger,heat_exchanger,True,heat_exchanger,HEAT_TRANSFER,PE037A,4,Heat Exchanger
+HeatExchangerRotor,heat_exchanger_rotor,False,,ROTATING,PP645Z,2,Heat Exchanger Rotor
+HeatedSurfaceDryer,dryer_heated_surface,False,dryer,HEAT_TRANSFER,PE611Z,4,Heated Surface Dryer
+Heater,heater,True,heater,HEAT_TRANSFER,PE372Z,4,Heater
+Impeller,impeller,False,,CUSTOM,PX466Z,2,Impeller
+Kneader,kneader,False,,REACTION,PE267Z,4,Kneader
+Lift,lift,False,,TRANSPORT,PM155Z,2,Lift
+LiquidFilter,filter_liquid,False,filter,SEPARATION,PS949Z,3,Liquid Filter
+LoadingUnloadingSystem,loading_unloading_system,False,,TRANSPORT,PM172Z,2,Loading Unloading System
+MechanicalSeparator,separator_mechanical,False,separator,SEPARATION,PS536Z,3,Mechanical Separator
+Mill,mill,False,,TREATMENT,PD677Z,2,Mill
+Mixer,mixer,True,,REACTION,PE154Z,3,Mixer
+MixingElementAssembly,mixing_element_assembly,False,,CUSTOM,PX856Z,2,Mixing Element Assembly
+MobileTransportSystem,mobile_transport_system,False,,TRANSPORT,PM584Z,2,Mobile Transport System
+Motor,motor,False,motor,ROTATING,PP427Z,2,Motor
+MotorAsComponent,motor_as_component,False,,ROTATING,PP693Z,2,Motor As Component
+Nozzle,nozzle,False,,CUSTOM,PX640Z,2,Nozzle
+NozzleOwner,nozzle_owner,False,,CUSTOM,PX896Z,2,Nozzle Owner
+PackagingSystem,packaging_system,False,,TREATMENT,PD785Z,2,Packaging System
+PelletizerDisc,pelletizer_disc,False,,TREATMENT,PD952Z,2,Pelletizer Disc
+PlateHeatExchanger,heat_exchanger_plate,False,heat_exchanger,HEAT_TRANSFER,PE010A_Origo,4,Plate Heat Exchanger
+PressureVessel,pressure_vessel,False,,STORAGE,PT002A_Option1,4,Pressure Vessel
+ProcessColumn,column,True,,SEPARATION,PS146Z,6,Process Column
+Pump,pump,False,pump,ROTATING,PP001A,2,Pump
+RadialFan,fan_radial,False,fan,ROTATING,PP461Z,2,Radial Fan
+RailWaggon,rail_waggon,False,,TRANSPORT,PM629Z,2,Rail Waggon
+ReciprocatingCompressor,compressor_reciprocating,False,compressor,ROTATING,PP585Z,2,Reciprocating Compressor
+ReciprocatingExtruder,reciprocating_extruder,False,,TREATMENT,PD183Z,2,Reciprocating Extruder
+ReciprocatingPressureAgglomerator,reciprocating_pressure_agglomerator,False,,TREATMENT,PD912Z,2,Reciprocating Pressure Agglomerator
+ReciprocatingPump,pump_reciprocating,False,pump,ROTATING,PP010A,2,Reciprocating Pump
+RevolvingSieve,sieve_revolving,False,sieve,SEPARATION,PS786Z,3,Revolving Sieve
+RotaryCompressor,compressor_rotary,False,compressor,ROTATING,PP819Z,2,Rotary Compressor
+RotaryMixer,rotary_mixer,False,,REACTION,PE444Z,4,Rotary Mixer
+RotaryPump,pump_rotary,False,pump,ROTATING,PP610Z,2,Rotary Pump
+RotatingExtruder,rotating_extruder,False,,TREATMENT,PD346Z,2,Rotating Extruder
+RotatingGrowthAgglomerator,rotating_growth_agglomerator,False,,TREATMENT,PD761Z,2,Rotating Growth Agglomerator
+RotatingPressureAgglomerator,rotating_pressure_agglomerator,False,,TREATMENT,PD914Z,2,Rotating Pressure Agglomerator
+Screw,screw,False,,TRANSPORT,PM491Z,2,Screw
+ScrubbingSeparator,separator_scrubbing,False,separator,SEPARATION,PS595Z,3,Scrubbing Separator
+SedimentalCentrifuge,centrifuge_sedimental,False,centrifuge,SEPARATION,PS775Z,3,Sedimental Centrifuge
+SedimentalCentrifugeDrum,sedimental_centrifuge_drum,False,,SEPARATION,PS443Z,3,Sedimental Centrifuge Drum
+Separator,separator,True,separator,SEPARATION,PE012A,3,Separator
+Ship,ship,False,,TRANSPORT,PM626Z,2,Ship
+Sieve,sieve,False,sieve,SEPARATION,PS817Z,3,Sieve
+SieveElement,sieve_element,False,,SEPARATION,PS224Z,3,Sieve Element
+Silo,silo,False,,STORAGE,PT006A_Origo,4,Silo
+SpiralHeatExchanger,heat_exchanger_spiral,False,heat_exchanger,HEAT_TRANSFER,PE169Z,4,Spiral Heat Exchanger
+SprayCooler,spray_cooler,False,,HEAT_TRANSFER,PE254Z,4,Spray Cooler
+SprayNozzle,spray_nozzle,False,,CUSTOM,PX248Z,2,Spray Nozzle
+StaticMixer,static_mixer,False,,REACTION,PE003A_Origo,4,Static Mixer
+StationarySieve,sieve_stationary,False,sieve,SEPARATION,PS052Z,3,Stationary Sieve
+StationaryTransportSystem,stationary_transport_system,False,,TRANSPORT,PM712Z,2,Stationary Transport System
+SteamGenerator,steam_generator,False,,ROTATING,PP454Z,2,Steam Generator
+SteamTurbine,turbine_steam,False,turbine,ROTATING,PP662Z,2,Steam Turbine
+SubTaggedColumnSection,sub_tagged_column_section,False,,SEPARATION,PS234Z,3,Sub Tagged Column Section
+TaggedColumnSection,tagged_column_section,False,,SEPARATION,PS068Z,3,Tagged Column Section
+TaggedPlantItem,tagged_plant_item,False,,CUSTOM,PX272Z,2,Tagged Plant Item
+Tank,tank,True,,STORAGE,PE025A,4,Tank
+ThinFilmEvaporator,thin_film_evaporator,False,,TREATMENT,PD154Z,2,Thin Film Evaporator
+TransportableContainer,transportable_container,False,,STORAGE,PT933Z,4,Transportable Container
+Truck,truck,False,,TRANSPORT,PM422Z,2,Truck
+TubeBundle,tube_bundle,False,,CUSTOM,PX560Z,2,Tube Bundle
+TubularHeatExchanger,heat_exchanger_tubular,False,heat_exchanger,HEAT_TRANSFER,PE254Z,4,Tubular Heat Exchanger
+Turbine,turbine,True,turbine,ROTATING,PE021A_Origo,2,Turbine
+Vessel,vessel,True,,STORAGE,PT002A,4,Vessel
+VibratingSieve,sieve_vibrating,False,sieve,SEPARATION,PS548Z,3,Vibrating Sieve
+WasteGasEmitter,waste_gas_emitter,False,,TREATMENT,PD248Z,2,Waste Gas Emitter
+Weigher,weigher,False,weigher,TREATMENT,PD361Z,2,Weigher
+WetCoolingTower,cooling_tower_wet,False,cooling_tower,HEAT_TRANSFER,PE721Z,4,Wet Cooling Tower

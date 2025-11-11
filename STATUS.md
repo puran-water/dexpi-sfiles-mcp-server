@@ -18,10 +18,32 @@
 - [x] Nozzle defaults DEXPI-compliant in `src/core/equipment.py:477-551`
 - [x] Validation script regression guards live in `scripts/validate_symbol_catalog.py`
 
-### Week 2: Remove model_service.py 🚧 IN PROGRESS
-- [ ] Delete `src/visualization/orchestrator/model_service.py` (537 lines per `wc -l`)
-- [ ] Swap orchestration + callers to `core.conversion.get_engine().sfiles_to_dexpi` (`src/core/conversion.py:333-418`, `707-712`)
-- [ ] Update `tests/visualization/test_orchestrator_integration.py:15-205` (10 tests) to drop `ModelService`
+### Week 2: Remove model_service.py + Coverage Gap Resolution ✅ COMPLETE (Nov 11, 2025)
+- [x] Created `src/core/analytics/model_metrics.py` with metadata/validation/complexity functions
+- [x] Deleted `src/visualization/orchestrator/model_service.py` (537 lines removed)
+- [x] Swapped orchestration to use `core.conversion.get_engine().sfiles_to_dexpi`
+- [x] Updated `tests/visualization/test_orchestrator_integration.py` (10/10 tests passing)
+- [x] **CRITICAL FINDING**: 89% coverage gap discovered across ALL pyDEXPI categories
+- [x] **PHASE 1 COMPLETE**: Auto-generated registrations for ALL 272 pyDEXPI classes (<2 hours total)
+  - Equipment: 159/159 classes ✅
+  - Piping: 79/79 classes ✅
+  - Instrumentation: 34/34 classes ✅
+  - 27 families with 1:Many mappings
+- [x] **PHASE 2.1 COMPLETE**: Core Layer Integration (Nov 11, 2025)
+  - Created `src/core/components.py` with unified ComponentRegistry (519 lines)
+  - All 272 classes imported and registered
+  - Family mappings operational (27 families, 1:Many support)
+  - Category filtering working (25 categories across 3 types)
+  - Integrated with EquipmentFactory for backward compatibility
+  - All tests passing (10/10 orchestrator tests + integration tests)
+- [x] **CODEX REVIEW & FIXES** (Nov 11, 2025)
+  - Fixed CSV packaging (moved to src/core/data/, declared as package data)
+  - Fixed import path (relative import for get_registry)
+  - Added DEXPI class name support in EquipmentFactory
+  - Preserved category metadata (ComponentCategory → EquipmentCategory mapping)
+  - Made CSV loading fail-fast (RuntimeError if missing)
+  - Added 22 unit tests for ComponentRegistry (all passing)
+  - **Ready for Phase 2.2** ✅
 
 ### Week 3: Symbol Registry + Tool Refactor (Pending)
 - [ ] Retire `src/visualization/symbols/mapper.py` (283 lines duplicating `core/symbols.py`)
@@ -56,4 +78,12 @@
 ## Key Metrics
 - Symbol coverage: 308/805 (38.3%) from `scripts/validate_symbol_catalog.py`
 - Equipment coverage: 289/377 (76.7%) from the same validation run
+- **DEXPI class coverage: 272/272 (100%) - REGISTRATION DATA READY** ✅
+  - **Phase 1 complete**: ALL 272 pyDEXPI classes enumerated and registration data generated
+  - **Equipment**: 159/159 classes, 16 families, 8 categories (ROTATING: 41, SEPARATION: 30, etc.)
+  - **Piping**: 79/79 classes, 6 valve families, 8 categories (VALVE: 22, FLOW_MEASUREMENT: 10, etc.)
+  - **Instrumentation**: 34/34 classes, 5 families, 9 categories (SIGNAL: 13, ACTUATING: 9, etc.)
+  - **Total families**: 27 with 1:Many mappings defined
+  - **Symbols**: 26 real (equipment), rest placeholders (can be mapped in Phase 2)
+  - **Next**: Phase 2 integration into core layer (8-12 hours)
 - Validation script: `python3 scripts/validate_symbol_catalog.py` currently passes
