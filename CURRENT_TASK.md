@@ -419,7 +419,223 @@ Create comprehensive user-facing documentation for Phase 2 complete component co
 
 ---
 
-**Status**: Phase 2 COMPLETE ✅ (All subphases 2.1, 2.2, 2.4 done)
+**Status**: Phase 2 COMPLETE ✅ (All subphases 2.1, 2.2, 2.4 done + regressions fixed)
 **Last Updated**: November 11, 2025
-**Total Phase 2 Duration**: ~8 hours (2.1: 4h + 2.2: 3.5h + 2.4: 2h)
-**Next Phase**: Phase 3 (Symbol mapping) - deferred, not blocking functionality
+**Total Phase 2 Duration**: ~10.5 hours (2.1: 4h + 2.2: 3.5h + 2.4: 2h + fixes: 1h)
+**Next Phase**: Phase 3 (Symbol mapping) - APPROVED by Codex
+
+---
+
+## Regression Fixes (November 11, 2025)
+
+**Completion Date**: November 11, 2025
+**Duration**: ~1 hour
+**Commit**: 7cca828
+**Codex Review**: APPROVED ✅
+
+### Issues Identified by Codex
+
+3 blocking test failures preventing Phase 2 completion:
+
+1. **Equipment Factory Error Message** (tests/test_core_layer_errors.py:37,68)
+   - **Problem**: Error message changed to "Available types (legacy):" breaking tests
+   - **Fix**: Restored "Available types:" for backward compatibility
+   - **Enhancement**: Now includes ComponentRegistry types (175 total) with common types first
+   - **Code**: `src/core/equipment.py:528-557`
+
+2. **Instrumentation Backward Compatibility** (tests/test_improvements.py:115)
+   - **Problem**: Legacy names like "LevelTransmitter" rejected by ComponentRegistry
+   - **Fix**: Added legacy name mappings (7 mappings) + fallback to ProcessInstrumentationFunction
+   - **Result**: 100% backward compatibility while preferring pyDEXPI classes
+   - **Code**: `src/tools/dexpi_tools.py:599-631`
+
+3. **Simplified Instrumentation Implementation**
+   - **Problem**: Transmitter class doesn't support processSignalGeneratingFunctions
+   - **Fix**: Removed broken code, creates clean Transmitter instances
+   - **Code**: `src/tools/dexpi_tools.py:640-664`
+
+### Test Results
+
+**All tests passing**: 406 passed, 3 skipped (100% success rate)
+
+- ✅ 18/18 core layer error tests
+- ✅ 5/5 improvement tests
+- ✅ 22/22 ComponentRegistry tests
+- ✅ 12/12 tool schema tests
+- ✅ 349/349 other tests
+
+### Codex Final Approval
+
+> "Phase 2 looks solid now. The regression fixes line up with what we asked for...
+> Full suite is green at 406 / 406, so Phase 2 is back to production-ready.
+> Given that, I'm comfortable moving on to Phase 3."
+
+**Status**: Phase 2 PRODUCTION-READY ✅
+
+---
+
+# Phase 3: Symbol Mapping for Visualization
+
+**Status**: APPROVED by Codex - Ready to Start
+**Priority**: MEDIUM-HIGH (improves visualization quality, doesn't block functionality)
+**Estimated Duration**: 10-15 hours (5-7h Pass 1 + 5-8h Pass 2)
+
+## Background
+
+**Current State**:
+- All 272 pyDEXPI classes are functionally accessible via MCP tools
+- Many components use placeholder symbols in visualization (generic rectangles)
+- Symbol mapping exists for ~30 equipment types only (from legacy registry)
+
+**Phase 3 Goal**:
+- Map ISA/DEXPI symbols for all 272 components
+- Update visualization renderer to use proper symbols
+- Prioritize high-usage, high-visibility equipment first
+
+## Codex-Approved Two-Pass Approach
+
+### Pass 1: High-Visibility Components (5-7 hours)
+
+**Target**: Components users will actually notice in typical P&IDs
+
+**Categories**:
+1. **Rotating Equipment** (~15 types)
+   - Pumps (CentrifugalPump, ReciprocatingPump, RotaryPump, etc.)
+   - Compressors (CentrifugalCompressor, ReciprocatingCompressor, RotaryCompressor, etc.)
+   - Turbines (SteamTurbine, GasTurbine)
+   - Motors (AlternatingCurrentMotor, DirectCurrentMotor)
+
+2. **Valves** (22 types - all valve categories)
+   - BallValve, GateValve, GlobeValve, ButterflyValve
+   - CheckValve, SafetyValve, NeedleValve, PlugValve
+   - AngleValve, etc.
+
+3. **High-Visibility Instrumentation** (~10 types)
+   - Transmitter (covers Level, Pressure, Temperature, Flow)
+   - Positioner, ControlledActuator
+   - FlowDetector
+   - ProcessControlFunction, SignalConveyingFunction
+
+**Deliverables**:
+- Symbol mappings for ~47 high-priority components
+- Renderer tests showing proper ISA symbols
+- Visual validation with sample P&IDs
+
+**Success Criteria**:
+- Rotating equipment shows proper pump/compressor/turbine symbols
+- All 22 valve types render with correct ISA symbols
+- Transmitters and actuators use standard ISA symbols
+- Immediate visual improvement in typical P&IDs
+
+### Pass 2: Long Tail Coverage (5-8 hours)
+
+**Target**: Remaining equipment families + accessories
+
+**Categories**:
+1. **Remaining Equipment** (~112 types)
+   - Separation (Centrifuge, Filter, Separator families)
+   - Heat Transfer (Heater, Boiler, Cooler, HeatExchanger families)
+   - Treatment (Dryer, Mixer, Agitator families)
+   - Storage (Tank, Silo, Vessel families)
+   - Transport (Conveyor, Lift, MobileTransportSystem families)
+   - Reaction (Furnace, Reactor families)
+   - Custom equipment
+
+2. **Piping Accessories** (79 types)
+   - Flow meters (ElectromagneticFlowMeter, OrificeFlowMeter, etc.)
+   - Fittings (Flange, Reducer, Tee, Elbow, etc.)
+   - Basic Pipe and segments
+
+3. **Remaining Instrumentation** (~24 types)
+   - Signal generating functions
+   - Actuating functions
+   - Control functions
+   - Sensing locations
+
+**Deliverables**:
+- Symbol mappings for remaining ~215 components
+- Complete symbol catalog documentation
+- Renderer tests for all categories
+- Visual validation with comprehensive test suite
+
+**Success Criteria**:
+- All 272 components have symbol mappings
+- No placeholder rectangles for standard equipment
+- Complete visual fidelity in P&ID rendering
+- Symbol catalog documentation updated
+
+## Implementation Strategy
+
+### 1. Research Phase (1-2 hours)
+- Review ISA 5.1 standard symbol definitions
+- Review DEXPI/NOAKADEXPI symbol catalog
+- Identify existing symbol mappings in codebase
+- Document symbol naming conventions
+
+### 2. Symbol Mapping (Pass 1: 3-4 hours, Pass 2: 4-6 hours)
+- Create/update symbol mapping CSV or registry
+- Map pyDEXPI class names to ISA symbol IDs
+- Handle symbol variants (e.g., horizontal vs vertical pumps)
+- Document fallback strategies for missing symbols
+
+### 3. Renderer Integration (Pass 1: 1-2 hours, Pass 2: 1-2 hours)
+- Update visualization renderer to use new mappings
+- Handle symbol positioning and orientation
+- Implement symbol fallback logic
+- Add symbol metadata to rendered output
+
+### 4. Testing & Validation (Pass 1: 1 hour, Pass 2: 1 hour)
+- Create visual test suite for each category
+- Generate sample P&IDs with all symbol types
+- Verify symbol rendering quality
+- Document any remaining placeholder cases
+
+## Files to Modify
+
+**Phase 3 Pass 1**:
+- `src/core/symbols/symbol_registry.py` (or create new)
+- `src/visualization/renderer.py` (symbol lookup integration)
+- `data/symbols/high_visibility_mappings.csv` (new)
+- `tests/visualization/test_symbol_rendering.py` (new)
+
+**Phase 3 Pass 2**:
+- `data/symbols/complete_symbol_mappings.csv` (expanded)
+- `docs/SYMBOL_CATALOG.md` (new documentation)
+- Additional renderer tests
+
+## Risk Mitigation
+
+1. **Missing ISA Symbols**: Document which symbols need to be created/sourced
+2. **Symbol Licensing**: Verify ISA symbol usage rights
+3. **Renderer Complexity**: Keep symbol logic separate from layout logic
+4. **Performance**: Cache symbol lookups for frequently-used types
+
+## Success Metrics
+
+**Pass 1**:
+- [ ] 47 high-visibility components have symbol mappings
+- [ ] All 22 valve types render correctly
+- [ ] Rotating equipment shows proper symbols
+- [ ] Visual tests passing for high-priority categories
+- [ ] Immediate user-visible improvement
+
+**Pass 2**:
+- [ ] All 272 components have symbol mappings
+- [ ] Zero placeholder rectangles for standard equipment
+- [ ] Complete symbol catalog documentation
+- [ ] All visual tests passing
+- [ ] Symbol rendering performance acceptable
+
+## Codex Guidance
+
+> "I like the two-pass plan:
+> 1. **Pass 1** – target the symbols people will actually notice: rotating equipment (pumps/compressors/turbines), the valve families, and high-visibility instrumentation (transmitters, controllers, actuators). Ship those mappings with renderer/tests so users see an immediate visual payoff.
+> 2. **Pass 2** – fill in the long tail: remaining equipment families, piping accessories, instrumentation odds-and-ends. That can follow once the core catalog is in good shape.
+>
+> If you need a tiebreaker on priorities, I'd keep Phase 3 ahead of new feature work—the functionality gap is closed, so the next biggest pain point is the placeholder visuals. Go ahead and start Phase 3 with the two-pass approach above, and we'll review once Pass 1 lands."
+
+---
+
+**Status**: Phase 3 Ready to Start (Codex Approved)
+**Next Step**: Begin Pass 1 - High-Visibility Symbol Mapping
+**Last Updated**: November 11, 2025
