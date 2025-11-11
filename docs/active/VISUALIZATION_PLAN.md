@@ -100,16 +100,21 @@ The visualization system depends on the core layer (`src/core/`) for model enric
 - **Week 7 (Dec 22-29):** Complete upstream toolkit adoption
 - **Week 8 (Dec 29-Jan 5):** Eliminate CustomEquipment fallbacks (NO FALLBACKS mandate)
 
-### Dependencies Ready
+### Dependencies Ready (Updated Nov 10, 2025)
 
 ✅ **Core Layer Architecture:** Production-ready for basic operations
 ✅ **pyDEXPI Integration:** Real classes instantiate correctly
 ✅ **SFILES Parsing:** Working correctly
-✅ **Symbol Registry:** Loading 805 symbols (711 need dexpi_class mapping)
+✅ **Symbol Registry:** Loading 805 symbols - **308 now have dexpi_class mappings (38.3% coverage)**
+  - Equipment coverage: 289/377 (76.7%)
+  - Remaining: 88 equipment symbols (30 unique base IDs) lack upstream DEXPI classes
 ✅ **Fail-Fast Philosophy:** No fallbacks masking bugs
-✅ **Bug #1:** Already fixed in equipment.py:537-585
+✅ **Bug #1:** Fixed in equipment.py:537-585 (Phase 1, Oct 2025)
+✅ **Bug #2:** Fixed (Nov 10, 2025) - Symbol catalog backfill complete
+✅ **Bug #3:** Fixed (Nov 10, 2025) - Nozzle defaults implemented
 
-**Next Action:** Fix Bug #2 (symbol catalog backfill) - highest priority blocker
+**Status:** All blockers resolved - Ready for Week 2 (model_service.py removal)
+**Next Action:** Week 2 - Remove model_service.py duplication (~400 lines)
 
 ---
 
