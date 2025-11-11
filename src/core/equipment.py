@@ -527,21 +527,34 @@ class EquipmentFactory:
 
         if not definition:
             # FAIL LOUDLY - no silent fallbacks
-            available = sorted(set(
+            legacy_types = sorted(set(
                 list(self.registry._sfiles_map.keys()) +
                 list(self.registry._bfd_map.keys())
             ))
+
             if self.component_registry:
-                # Add hint about ComponentRegistry
+                # Include types from ComponentRegistry for better error messages
+                from src.core.components import ComponentType
+                registry_aliases = self.component_registry.list_all_aliases(ComponentType.EQUIPMENT)
+                all_types = sorted(set(legacy_types + registry_aliases))
+
+                # Show a sample including common types (pump, tank, etc.) for better UX
+                common_types = ['pump', 'tank', 'vessel', 'reactor', 'heat_exchanger', 'compressor', 'separator']
+                sample_types = [t for t in common_types if t in all_types]
+                # Add more types to reach ~20 total
+                for t in all_types:
+                    if t not in sample_types and len(sample_types) < 20:
+                        sample_types.append(t)
+
                 raise UnknownEquipmentTypeError(
                     f"Unknown equipment type: '{equipment_type}'. "
-                    f"Available types (legacy): {available[:20]}. "
-                    f"Hint: 272 additional types available via ComponentRegistry."
+                    f"Available types: {sorted(sample_types)}. "
+                    f"({len(all_types)} total types available)"
                 )
             else:
                 raise UnknownEquipmentTypeError(
                     f"Unknown equipment type: '{equipment_type}'. "
-                    f"Available types: {available}"
+                    f"Available types: {legacy_types}"
                 )
 
         # Prepare nozzles

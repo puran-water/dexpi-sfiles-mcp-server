@@ -15,7 +15,7 @@ from pydexpi.toolkits import model_toolkit as mt
 from pydexpi.toolkits import piping_toolkit as pt
 from pydexpi.dexpi_classes.equipment import Tank, Pump, Compressor, Nozzle, HeatExchanger
 from pydexpi.dexpi_classes.piping import PipingNetworkSegment, Pipe, PipingNode
-from pydexpi.dexpi_classes.instrumentation import ProcessInstrumentationFunction
+from pydexpi.dexpi_classes.instrumentation import ProcessInstrumentationFunction, ProcessSignalGeneratingFunction
 from .dexpi_introspector import DexpiIntrospector
 from ..utils.response import success_response, error_response, validation_response, create_issue
 
@@ -595,17 +595,39 @@ class DexpiTools:
         from src.core.components import get_registry, ComponentType
 
         registry = get_registry()
-        component_def = registry.get_by_alias(instrument_type)
+
+        # Map legacy instrument type names to ComponentRegistry aliases for backward compatibility
+        legacy_mappings = {
+            "LevelTransmitter": "transmitter",
+            "PressureTransmitter": "transmitter",
+            "TemperatureTransmitter": "transmitter",
+            "FlowTransmitter": "transmitter",
+            "FlowDetector": "flow_detector",
+            "ControlledActuator": "controlled_actuator",
+            "Positioner": "positioner",
+        }
+
+        # Apply legacy mapping if needed
+        lookup_type = legacy_mappings.get(instrument_type, instrument_type)
+        component_def = registry.get_by_alias(lookup_type)
 
         # If not found, try as DEXPI class name
         if not component_def:
             try:
-                dexpi_class = registry.get_dexpi_class(instrument_type)
+                dexpi_class = registry.get_dexpi_class(lookup_type)
                 component_def = registry.get_by_class(dexpi_class)
             except Exception:
-                return error_response(
-                    f"Invalid instrumentation type '{instrument_type}'. "
-                    f"Use ComponentRegistry to see available types."
+                # Fallback to ProcessInstrumentationFunction for unknown legacy types
+                from pydexpi import ProcessInstrumentationFunction
+                instrument = ProcessInstrumentationFunction(
+                    tagName=tag_name,
+                    instrumentationType=instrument_type
+                )
+                model.processInstrumentationFunctions.append(instrument)
+
+                return success_response(
+                    message=f"Added instrumentation {tag_name} (fallback to ProcessInstrumentationFunction)",
+                    data={"tag_name": tag_name, "type": instrument_type, "class": "ProcessInstrumentationFunction"}
                 )
 
         # Validate it's an instrumentation component
@@ -619,43 +641,26 @@ class DexpiTools:
         instrument = component_def.dexpi_class(
             tagName=tag_name
         )
-        
-        # If this is a transmitter/sensor, create signal generating function
-        if instrument_type in ["LevelTransmitter", "PressureTransmitter", "TemperatureTransmitter", "FlowTransmitter"]:
-            signal_gen = ProcessSignalGeneratingFunction(
-                tagName=f"{tag_name}_SG",
-                signalType="4-20mA"
-            )
-            
-            # Set sensing location if equipment is specified
-            if connected_equipment:
-                # Find the equipment
-                if model.conceptualModel and model.conceptualModel.taggedPlantItems:
-                    for item in model.conceptualModel.taggedPlantItems:
-                        if hasattr(item, 'tagName') and item.tagName == connected_equipment:
-                            # Link to equipment nozzle if available
-                            if hasattr(item, 'nozzles') and item.nozzles:
-                                signal_gen.sensingLocation = item.nozzles[0]
-                            break
-            
-            # Add signal generating function to instrumentation
-            instrument.processSignalGeneratingFunctions = [signal_gen]
-        
+
         # Add to model
         if not model.conceptualModel:
             model.conceptualModel = ConceptualModel()
-        
+
         if not model.conceptualModel.processInstrumentationFunctions:
             model.conceptualModel.processInstrumentationFunctions = []
-        
+
         model.conceptualModel.processInstrumentationFunctions.append(instrument)
-        
+
+        # Check if this is a transmitter for backward compatibility
+        is_transmitter = instrument_type in ["LevelTransmitter", "PressureTransmitter", "TemperatureTransmitter", "FlowTransmitter"] or "transmitter" in instrument_type.lower()
+
         return success_response({
             "instrument_type": instrument_type,
             "tag_name": tag_name,
             "connected_equipment": connected_equipment,
             "model_id": model_id,
-            "signal_generating": instrument_type.endswith("Transmitter")
+            "pyDEXPI_class": component_def.dexpi_class.__name__,
+            "signal_generating": is_transmitter
         })
     
     async def _add_control_loop(self, args: dict) -> dict:
