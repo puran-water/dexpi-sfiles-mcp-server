@@ -43,7 +43,14 @@
   - Preserved category metadata (ComponentCategory → EquipmentCategory mapping)
   - Made CSV loading fail-fast (RuntimeError if missing)
   - Added 22 unit tests for ComponentRegistry (all passing)
-  - **Ready for Phase 2.2** ✅
+- [x] **PHASE 2.2 COMPLETE**: MCP Tool Schema Updates (Nov 11, 2025)
+  - Updated all 4 MCP tool schemas to expose ALL 272 classes
+  - Replaced DexpiIntrospector with ComponentRegistry-based enums
+  - Enhanced tool descriptions with examples and type counts
+  - Updated piping implementation to support all 79 piping types
+  - Created 12 smoke tests for schema coverage (all passing)
+  - Total test coverage: 46 tests (22 registry + 12 schema + 12 other)
+  - **ALL 272 pyDEXPI classes now accessible to Claude AI users** ✅
 
 ### Week 3: Symbol Registry + Tool Refactor (Pending)
 - [ ] Retire `src/visualization/symbols/mapper.py` (283 lines duplicating `core/symbols.py`)

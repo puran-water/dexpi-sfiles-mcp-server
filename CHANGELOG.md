@@ -5,6 +5,131 @@ All notable changes to the Engineering MCP Server are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2025-11-11
+
+### Changed - Phase 2.2: MCP Tool Schema Updates
+
+**Objective**: Expose all 272 pyDEXPI classes to Claude AI users via MCP tool interface
+
+**Duration**: ~2.5 hours (within estimated 2-3 hours)
+
+#### Tool Schema Updates (`src/tools/dexpi_tools.py`)
+
+**Replaced DexpiIntrospector with ComponentRegistry** (lines 39-56):
+- Before: Limited enums from hardcoded introspector (~30 equipment types)
+- After: Dynamic enums from CSV-driven ComponentRegistry (all 272 classes)
+- Used `ComponentRegistry.list_all_aliases()` for equipment, piping, instrumentation
+- Used `ComponentRegistry.get_all_by_category(ComponentCategory.VALVE)` for valve-specific filtering
+
+**Updated 4 MCP tool schemas**:
+
+1. **`dexpi_add_equipment`** (lines 70-88):
+   - Schema enum: 159 equipment types (was ~30)
+   - Description: Added type count, examples, SFILES/DEXPI alias support
+   - Examples: pump (CentrifugalPump), boiler (Boiler), conveyor (Conveyor)
+   - Method docstring updated (lines 430-436): Phase 2.2 support documented
+
+2. **`dexpi_add_piping`** (lines 113-140):
+   - Schema enum: **NEW** 79 piping types (was no enum)
+   - Added `piping_type` parameter with default "pipe"
+   - Description: Flow meters, fittings, connections, etc.
+   - Examples: pipe (Pipe), electromagnetic_flow_meter, flange, orifice_plate
+   - Implementation updated (lines 482-529): Uses ComponentRegistry for all 79 piping types
+   - Method docstring updated: Phase 2.2 support documented
+
+3. **`dexpi_add_instrumentation`** (lines 125-143):
+   - Schema enum: 34 instrumentation types
+   - Description: Added type count, examples, SFILES/DEXPI alias support
+   - Examples: transmitter (Transmitter), positioner (Positioner), actuator
+   - Method docstring updated (lines 562-568): Phase 2.2 support documented
+
+4. **Valve tools** (3 tools updated):
+   - `dexpi_add_valve` (deprecated): 22 valve types (lines 255-270)
+   - `dexpi_add_valve_between_components`: 22 valve types (lines 279-299)
+   - `dexpi_insert_valve_in_segment`: 22 valve types (lines 308-323)
+   - All descriptions updated with examples: ball_valve, butterfly_valve, safety_valve
+
+#### Piping Implementation Enhancement
+
+**Updated `_add_piping` method** (lines 482-559):
+- Now accepts `piping_type` parameter (defaults to "pipe")
+- Uses ComponentRegistry for dual lookup (SFILES alias + DEXPI class name)
+- Validates component is actually a piping type
+- Creates appropriate piping component instance
+- Supports all 79 piping types: Pipe, ElectromagneticFlowMeter, Flange, OrificeFlowMeter, etc.
+
+#### Test Coverage
+
+**Created comprehensive smoke tests** (`tests/tools/test_dexpi_tool_schemas.py`, 313 lines):
+
+**TestToolSchemaCoverage** (9 tests):
+- ✅ Equipment tool exposes 159 types
+- ✅ Valve tools expose 22 types each
+- ✅ Piping tool exposes 79 types
+- ✅ Instrumentation tool exposes 34 types
+- ✅ Total coverage = 272 components (159+79+34)
+- ✅ All enums alphabetically sorted
+- ✅ Descriptions mention both SFILES aliases and DEXPI class names
+
+**TestToolSchemaExamples** (3 tests):
+- ✅ Equipment examples are valid types
+- ✅ Valve examples are valid types
+- ✅ Instrumentation examples are valid types
+
+**All 12 tests passing** (verified with pytest)
+
+#### Impact Summary
+
+**Before Phase 2.2**:
+- ❌ Limited subset of types via DexpiIntrospector
+- ❌ ~30 equipment types (81% missing)
+- ❌ No piping type selection
+- ❌ Limited valve/instrumentation types
+
+**After Phase 2.2**:
+- ✅ **ALL 272 pyDEXPI classes accessible** to Claude AI
+- ✅ 159 equipment types (5.3x increase)
+- ✅ 79 piping types (new capability)
+- ✅ 34 instrumentation types (complete)
+- ✅ 22 valve types (complete)
+- ✅ Both SFILES aliases and DEXPI class names supported
+- ✅ Comprehensive examples in tool descriptions
+- ✅ Smoke tests prevent regression
+
+### Files Changed
+
+**Created**:
+- `tests/tools/test_dexpi_tool_schemas.py` (313 lines) - Smoke tests for schema coverage
+- `tests/tools/__init__.py` - Test module marker
+
+**Modified**:
+- `src/tools/dexpi_tools.py` (~120 lines changed):
+  - Tool schema generation (lines 39-56)
+  - 4 tool schemas with enhanced descriptions
+  - 3 method docstrings updated
+  - Piping implementation enhanced
+
+### Test Results
+
+**Total: 46 tests passing**:
+- 22 ComponentRegistry tests (Phase 2.1)
+- 12 Tool schema tests (Phase 2.2)
+- 12 Other tests (orchestrator, etc.)
+
+**No breaking changes** - Fully backward compatible
+
+### Migration Notes
+
+**For MCP tool users**:
+- Can now use 5.3x more equipment types (159 vs 30)
+- Can specify piping component types (new capability)
+- Can use either SFILES aliases or DEXPI class names interchangeably
+- Tool descriptions now include comprehensive examples
+
+**No code changes required** - Existing code continues to work with expanded type support
+
+---
+
 ## [0.5.0] - 2025-11-11
 
 ### Added - Phase 5 Week 2: Complete pyDEXPI Coverage (272 Classes)

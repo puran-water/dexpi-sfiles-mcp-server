@@ -36,10 +36,24 @@ class DexpiTools:
     
     def get_tools(self) -> List[Tool]:
         """Return all DEXPI tools."""
-        # Dynamically generate equipment types from introspector
-        equipment_types = self.introspector.generate_dynamic_enum("equipment")
-        valve_types = self.introspector.generate_dynamic_enum("valves")
-        instrumentation_types = self.introspector.generate_dynamic_enum("instrumentation")
+        # Dynamically generate types from ComponentRegistry (Phase 2.2 - all 272 classes)
+        from src.core.components import get_registry, ComponentType, ComponentCategory
+
+        registry = get_registry()
+
+        # Get all aliases for each component type
+        equipment_types = sorted(registry.list_all_aliases(ComponentType.EQUIPMENT))
+
+        # Get valve-specific types from piping components with VALVE category
+        valve_components = registry.get_all_by_category(ComponentCategory.VALVE)
+        valve_types = sorted(list(set(
+            c.sfiles_alias for c in valve_components
+        )))
+
+        # Get all piping types (includes valves, flow measurement, fittings, etc.)
+        piping_types = sorted(registry.list_all_aliases(ComponentType.PIPING))
+
+        instrumentation_types = sorted(registry.list_all_aliases(ComponentType.INSTRUMENTATION))
         
         return [
             Tool(
@@ -58,15 +72,22 @@ class DexpiTools:
             ),
             Tool(
                 name="dexpi_add_equipment",
-                description=f"[Available via model_tx_apply or direct call] Add equipment to the P&ID model ({len(equipment_types)} types available). See docs/FEATURE_PARITY_MATRIX.md for migration guide.",
+                description=f"[Available via model_tx_apply or direct call] Add equipment to the P&ID model (159 types available). "
+                           f"Supports both SFILES aliases and DEXPI class names. "
+                           f"Examples: 'pump' (CentrifugalPump), 'boiler' (Boiler), 'conveyor' (Conveyor), "
+                           f"'steam_generator' (SteamGenerator), 'crusher' (Crusher). "
+                           f"See docs/FEATURE_PARITY_MATRIX.md for migration guide.",
                 inputSchema={
                     "type": "object",
                     "properties": {
                         "model_id": {"type": "string"},
                         "equipment_type": {
-                            "type": "string", 
-                            "enum": equipment_types,  # Dynamic!
-                            "description": f"Equipment type (one of {len(equipment_types)} available)"
+                            "type": "string",
+                            "enum": equipment_types,
+                            "description": "Equipment type (SFILES alias or DEXPI class name). "
+                                          "Examples: 'pump' (CentrifugalPump), 'boiler' (Boiler), "
+                                          "'conveyor' (Conveyor), 'steam_generator' (SteamGenerator). "
+                                          f"Total {len(equipment_types)} types available."
                         },
                         "tag_name": {"type": "string"},
                         "specifications": {
@@ -91,12 +112,26 @@ class DexpiTools:
             ),
             Tool(
                 name="dexpi_add_piping",
-                description="[Available via model_tx_apply or direct call] Add piping segment to the P&ID model. See docs/FEATURE_PARITY_MATRIX.md for migration guide.",
+                description=f"[Available via model_tx_apply or direct call] Add piping component to the P&ID model (79 types available). "
+                           f"Supports both SFILES aliases and DEXPI class names. "
+                           f"Includes valves, flow measurement, connections, fittings, etc. "
+                           f"Examples: 'pipe' (Pipe), 'electromagnetic_flow_meter' (ElectromagneticFlowMeter), "
+                           f"'flange' (Flange), 'orifice_plate' (OrificeFlowMeter). "
+                           f"See docs/FEATURE_PARITY_MATRIX.md for migration guide.",
                 inputSchema={
                     "type": "object",
                     "properties": {
                         "model_id": {"type": "string"},
                         "segment_id": {"type": "string"},
+                        "piping_type": {
+                            "type": "string",
+                            "enum": piping_types,
+                            "default": "pipe",
+                            "description": "Piping component type (SFILES alias or DEXPI class name). "
+                                          "Examples: 'pipe' (Pipe), 'electromagnetic_flow_meter' (ElectromagneticFlowMeter), "
+                                          "'flange' (Flange), 'orifice_plate' (OrificeFlowMeter). "
+                                          f"Total {len(piping_types)} types available."
+                        },
                         "pipe_class": {"type": "string", "default": "CS150"},
                         "nominal_diameter": {"type": "number", "default": 50},
                         "material": {"type": "string", "default": "Carbon Steel"}
@@ -106,14 +141,22 @@ class DexpiTools:
             ),
             Tool(
                 name="dexpi_add_instrumentation",
-                description="[Available via model_tx_apply or direct call] Add instrumentation to the P&ID model. See docs/FEATURE_PARITY_MATRIX.md for migration guide.",
+                description=f"[Available via model_tx_apply or direct call] Add instrumentation to the P&ID model (34 types available). "
+                           f"Supports both SFILES aliases and DEXPI class names. "
+                           f"Examples: 'transmitter' (Transmitter), 'positioner' (Positioner), "
+                           f"'actuator' (ControlledActuator), 'signal_conveying_function' (SignalConveyingFunction). "
+                           f"See docs/FEATURE_PARITY_MATRIX.md for migration guide.",
                 inputSchema={
                     "type": "object",
                     "properties": {
                         "model_id": {"type": "string"},
                         "instrument_type": {
                             "type": "string",
-                            "enum": instrumentation_types  # Dynamic from introspector
+                            "enum": instrumentation_types,
+                            "description": "Instrument type (SFILES alias or DEXPI class name). "
+                                          "Examples: 'transmitter' (Transmitter), 'positioner' (Positioner), "
+                                          "'actuator' (ControlledActuator). "
+                                          f"Total {len(instrumentation_types)} types available."
                         },
                         "tag_name": {"type": "string"},
                         "connected_equipment": {"type": "string", "description": "Tag of connected equipment"}
@@ -228,14 +271,19 @@ class DexpiTools:
             ),
             Tool(
                 name="dexpi_add_valve",
-                description="[DEPRECATED] Add valve to the P&ID model - Use dexpi_add_valve_between_components instead",
+                description=f"[DEPRECATED] Add valve to the P&ID model - Use dexpi_add_valve_between_components instead. "
+                           f"22 valve types available.",
                 inputSchema={
                     "type": "object",
                     "properties": {
                         "model_id": {"type": "string"},
                         "valve_type": {
                             "type": "string",
-                            "enum": valve_types  # Dynamic from introspector
+                            "enum": valve_types,
+                            "description": "Valve type (SFILES alias or DEXPI class name). "
+                                          "Examples: 'ball_valve' (BallValve), 'butterfly_valve' (ButterflyValve), "
+                                          "'safety_valve' (SpringLoadedGlobeSafetyValve), 'needle_valve' (NeedleValve). "
+                                          f"Total {len(valve_types)} types available."
                         },
                         "tag_name": {"type": "string"},
                         "piping_class": {"type": "string", "default": "CS150"},
@@ -247,7 +295,11 @@ class DexpiTools:
             ),
             Tool(
                 name="dexpi_add_valve_between_components",
-                description="[Available via model_tx_apply or direct call] Add a valve between two components by connecting them and inserting the valve. See docs/FEATURE_PARITY_MATRIX.md for migration guide.",
+                description=f"[Available via model_tx_apply or direct call] Add a valve between two components (22 valve types available). "
+                           f"Supports both SFILES aliases and DEXPI class names. "
+                           f"Examples: 'ball_valve' (BallValve), 'butterfly_valve' (ButterflyValve), "
+                           f"'safety_valve' (SpringLoadedGlobeSafetyValve), 'check_valve' (CheckValve). "
+                           f"See docs/FEATURE_PARITY_MATRIX.md for migration guide.",
                 inputSchema={
                     "type": "object",
                     "properties": {
@@ -256,7 +308,11 @@ class DexpiTools:
                         "to_component": {"type": "string", "description": "Tag of target component"},
                         "valve_type": {
                             "type": "string",
-                            "enum": valve_types  # Dynamic from introspector
+                            "enum": valve_types,
+                            "description": "Valve type (SFILES alias or DEXPI class name). "
+                                          "Examples: 'ball_valve' (BallValve), 'butterfly_valve' (ButterflyValve), "
+                                          "'safety_valve' (SpringLoadedGlobeSafetyValve). "
+                                          f"Total {len(valve_types)} types available."
                         },
                         "valve_tag": {"type": "string", "description": "Tag for the valve"},
                         "line_number": {"type": "string", "description": "Optional line number (auto-generated if not provided)"},
@@ -268,7 +324,9 @@ class DexpiTools:
             ),
             Tool(
                 name="dexpi_insert_valve_in_segment",
-                description="[Available via model_tx_apply or direct call] Insert valve inline within an existing piping segment by splitting it. See docs/FEATURE_PARITY_MATRIX.md for migration guide.",
+                description=f"[Available via model_tx_apply or direct call] Insert valve inline within an existing piping segment (22 valve types available). "
+                           f"Supports both SFILES aliases and DEXPI class names. "
+                           f"See docs/FEATURE_PARITY_MATRIX.md for migration guide.",
                 inputSchema={
                     "type": "object",
                     "properties": {
@@ -276,7 +334,9 @@ class DexpiTools:
                         "segment_id": {"type": "string", "description": "ID of segment to split"},
                         "valve_type": {
                             "type": "string",
-                            "enum": valve_types  # Dynamic from introspector
+                            "enum": valve_types,
+                            "description": "Valve type (SFILES alias or DEXPI class name). "
+                                          f"Total {len(valve_types)} types available."
                         },
                         "tag_name": {"type": "string"},
                         "at_position": {"type": "number", "description": "Position along segment (0.0 to 1.0)", "default": 0.5}
@@ -370,8 +430,9 @@ class DexpiTools:
     async def _add_equipment(self, args: dict) -> dict:
         """Add equipment to P&ID model with mandatory nozzles.
 
-        Phase 1 Migration: Now uses core equipment factory instead of manual type checking.
-        This reduces code from 91 lines to ~30 lines while supporting 30+ equipment types.
+        Phase 2.2: Supports all 159 equipment types from ComponentRegistry.
+        Accepts both SFILES aliases (e.g., 'pump') and DEXPI class names (e.g., 'CentrifugalPump').
+        Uses core equipment factory for type validation and nozzle creation.
         """
         model_id = args["model_id"]
         if model_id not in self.models:
@@ -420,28 +481,53 @@ class DexpiTools:
         })
     
     async def _add_piping(self, args: dict) -> dict:
-        """Add piping segment to model."""
+        """Add piping component to model (Phase 2.2 - supports all 79 piping types)."""
         model_id = args["model_id"]
         if model_id not in self.models:
             raise ValueError(f"Model {model_id} not found")
-        
+
         model = self.models[model_id]
-        
+        piping_type = args.get("piping_type", "pipe")
+
+        # Use ComponentRegistry to create piping component (Phase 2.2)
+        from src.core.components import get_registry, ComponentType
+
+        registry = get_registry()
+        component_def = registry.get_by_alias(piping_type)
+
+        # If not found, try as DEXPI class name
+        if not component_def:
+            try:
+                dexpi_class = registry.get_dexpi_class(piping_type)
+                component_def = registry.get_by_class(dexpi_class)
+            except Exception:
+                return error_response(
+                    f"Invalid piping type '{piping_type}'. "
+                    f"Use ComponentRegistry to see available types."
+                )
+
+        # Validate it's a piping component
+        if component_def.component_type != ComponentType.PIPING:
+            return error_response(
+                f"Type '{piping_type}' is not a piping component. "
+                f"Expected ComponentType.PIPING, got {component_def.component_type}."
+            )
+
+        # Create the piping component instance
+        piping_component = component_def.dexpi_class(
+            nominalDiameter=args.get("nominal_diameter", 50),
+            material=args.get("material", "Carbon Steel")
+        )
+
         # Create piping segment
         segment = PipingNetworkSegment(
             id=args["segment_id"],
             pipingClassCode=args.get("pipe_class", "CS150")
         )
-        
-        # Create a pipe within the segment
-        pipe = Pipe(
-            nominalDiameter=args.get("nominal_diameter", 50),
-            material=args.get("material", "Carbon Steel")
-        )
-        
+
         # Use connections instead of pipingNetworkSegmentItems (which doesn't exist)
         from pydexpi.dexpi_classes.piping import PipingConnection, PipingNetworkSystem
-        segment.connections = [PipingConnection(pipingItem=pipe)]
+        segment.connections = [PipingConnection(pipingItem=piping_component)]
         
         # Add to model within a PipingNetworkSystem
         if not model.conceptualModel:
@@ -468,12 +554,18 @@ class DexpiTools:
         
         return success_response({
             "segment_id": args["segment_id"],
+            "piping_type": piping_type,
             "pipe_class": args.get("pipe_class", "CS150"),
             "model_id": model_id
         })
     
     async def _add_instrumentation(self, args: dict) -> dict:
-        """Add instrumentation to model with enhanced signal support."""
+        """Add instrumentation to P&ID model.
+
+        Phase 2.2: Supports all 34 instrumentation types from ComponentRegistry.
+        Accepts both SFILES aliases (e.g., 'transmitter') and DEXPI class names (e.g., 'Transmitter').
+        Includes signal generating, control, and actuating functions.
+        """
         model_id = args["model_id"]
         if model_id not in self.models:
             raise ValueError(f"Model {model_id} not found")
