@@ -41,19 +41,34 @@ class DexpiTools:
 
         registry = get_registry()
 
-        # Get all aliases for each component type
-        equipment_types = sorted(registry.list_all_aliases(ComponentType.EQUIPMENT))
+        # Get all aliases AND class names for each component type (Codex fix)
+        # This allows both SFILES aliases ('pump') and DEXPI class names ('CentrifugalPump')
+        equipment_components = registry.get_all_by_type(ComponentType.EQUIPMENT)
+        equipment_types = sorted(list(set(
+            [c.sfiles_alias for c in equipment_components] +
+            [c.dexpi_class.__name__ for c in equipment_components]
+        )))
 
-        # Get valve-specific types from piping components with VALVE category
+        # Get valve-specific types (both aliases and class names)
         valve_components = registry.get_all_by_category(ComponentCategory.VALVE)
         valve_types = sorted(list(set(
-            c.sfiles_alias for c in valve_components
+            [c.sfiles_alias for c in valve_components] +
+            [c.dexpi_class.__name__ for c in valve_components]
         )))
 
         # Get all piping types (includes valves, flow measurement, fittings, etc.)
-        piping_types = sorted(registry.list_all_aliases(ComponentType.PIPING))
+        piping_components = registry.get_all_by_type(ComponentType.PIPING)
+        piping_types = sorted(list(set(
+            [c.sfiles_alias for c in piping_components] +
+            [c.dexpi_class.__name__ for c in piping_components]
+        )))
 
-        instrumentation_types = sorted(registry.list_all_aliases(ComponentType.INSTRUMENTATION))
+        # Get instrumentation types (both aliases and class names)
+        instrumentation_components = registry.get_all_by_type(ComponentType.INSTRUMENTATION)
+        instrumentation_types = sorted(list(set(
+            [c.sfiles_alias for c in instrumentation_components] +
+            [c.dexpi_class.__name__ for c in instrumentation_components]
+        )))
         
         return [
             Tool(
@@ -562,30 +577,47 @@ class DexpiTools:
     async def _add_instrumentation(self, args: dict) -> dict:
         """Add instrumentation to P&ID model.
 
-        Phase 2.2: Supports all 34 instrumentation types from ComponentRegistry.
+        Phase 2.2 FIX (Codex review): Now uses ComponentRegistry to instantiate actual pyDEXPI classes.
+        Supports all 34 instrumentation types from ComponentRegistry.
         Accepts both SFILES aliases (e.g., 'transmitter') and DEXPI class names (e.g., 'Transmitter').
         Includes signal generating, control, and actuating functions.
         """
         model_id = args["model_id"]
         if model_id not in self.models:
             raise ValueError(f"Model {model_id} not found")
-        
+
         model = self.models[model_id]
         instrument_type = args["instrument_type"]
         tag_name = args["tag_name"]
         connected_equipment = args.get("connected_equipment")
-        
-        # Import instrumentation classes
-        from pydexpi.dexpi_classes.instrumentation import (
-            ProcessInstrumentationFunction,
-            ProcessSignalGeneratingFunction,
-            ProcessSignalGeneratingSystem
-        )
-        
-        # Create instrumentation function
-        instrument = ProcessInstrumentationFunction(
-            tagName=tag_name,
-            instrumentationType=instrument_type
+
+        # Use ComponentRegistry to create instrumentation component (Codex fix)
+        from src.core.components import get_registry, ComponentType
+
+        registry = get_registry()
+        component_def = registry.get_by_alias(instrument_type)
+
+        # If not found, try as DEXPI class name
+        if not component_def:
+            try:
+                dexpi_class = registry.get_dexpi_class(instrument_type)
+                component_def = registry.get_by_class(dexpi_class)
+            except Exception:
+                return error_response(
+                    f"Invalid instrumentation type '{instrument_type}'. "
+                    f"Use ComponentRegistry to see available types."
+                )
+
+        # Validate it's an instrumentation component
+        if component_def.component_type != ComponentType.INSTRUMENTATION:
+            return error_response(
+                f"Type '{instrument_type}' is not an instrumentation component. "
+                f"Expected ComponentType.INSTRUMENTATION, got {component_def.component_type}."
+            )
+
+        # Create the actual pyDEXPI instrumentation instance
+        instrument = component_def.dexpi_class(
+            tagName=tag_name
         )
         
         # If this is a transmitter/sensor, create signal generating function
