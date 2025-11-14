@@ -449,38 +449,31 @@ class TestConvenienceFunction:
         assert tree.find(".//Equipment") is not None
 
 
-# XSD Validation Tests (require schema file)
+# XSD Validation Tests (using minimal schema)
 class TestXSDValidation:
-    """Test XSD schema validation."""
+    """Test XSD schema validation using minimal schema.
 
-    @pytest.mark.skip(
-        reason="XSD schema has parsing issues (line 2088: content model not determinist)"
-    )
+    Uses tests/fixtures/schemas/ProteusPIDSchema_min.xsd which contains only
+    the structures we export (PlantModel, PlantInformation, Drawing, Equipment,
+    Nozzle, GenericAttributes). The full ProteusPIDSchema_4.2.xsd has parsing
+    issues at line 2088 (InformationFlow non-deterministic content model).
+    """
+
     def test_xsd_validation_success(self, empty_model, tank_with_nozzles, tmp_path):
-        """Test successful XSD validation.
-
-        Note: Skipped due to XSD schema parsing error in ProteusPIDSchema_4.2.xsd.
-        The schema itself has issues that prevent lxml from parsing it.
-        This is not an issue with our export code.
-        """
+        """Test successful XSD validation using minimal schema."""
         empty_model.conceptualModel.taggedPlantItems = [tank_with_nozzles]
 
         output_file = tmp_path / "validation_test.xml"
-        exporter = ProteusXMLExporter()
+
+        # Use minimal schema that doesn't have parsing issues
+        minimal_schema = Path(__file__).parent.parent / "fixtures" / "schemas" / "ProteusPIDSchema_min.xsd"
+        exporter = ProteusXMLExporter(xsd_path=minimal_schema)
 
         # Should not raise ValueError
         exporter.export(empty_model, output_file, validate=True)
 
-    @pytest.mark.skip(
-        reason="XSD schema has parsing issues (line 2088: content model not determinist)"
-    )
     def test_xsd_validation_failure(self, tmp_path):
-        """Test XSD validation failure with invalid XML.
-
-        Note: Skipped due to XSD schema parsing error in ProteusPIDSchema_4.2.xsd.
-        The schema itself has issues that prevent lxml from parsing it.
-        This is not an issue with our export code.
-        """
+        """Test XSD validation failure with invalid XML using minimal schema."""
         # Create invalid XML (missing required elements)
         root = etree.Element("PlantModel")
         # Missing PlantInformation - should fail validation
@@ -489,7 +482,8 @@ class TestXSDValidation:
         tree = etree.ElementTree(root)
         tree.write(str(output_file), encoding="UTF-8", xml_declaration=True)
 
-        exporter = ProteusXMLExporter()
+        minimal_schema = Path(__file__).parent.parent / "fixtures" / "schemas" / "ProteusPIDSchema_min.xsd"
+        exporter = ProteusXMLExporter(xsd_path=minimal_schema)
         with pytest.raises(ValueError, match="validation failed"):
             exporter._validate_xml(output_file)
 

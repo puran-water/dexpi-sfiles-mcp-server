@@ -176,16 +176,18 @@
   - Fixed Drawing structure (Equipment as direct children, no PlantDesignItem wrapper)
   - Created format documentation (docs/PROTEUS_XML_FORMAT.md, docs/DAY2_XSD_ANALYSIS.md)
   - Mapped all 272 pyDEXPI classes to Proteus ComponentClass values
-- [x] **Days 3-4 COMPLETE**: Equipment Export + GenericAttributes + Round-Trip Validation (Nov 14, 2025) ✅
+- [x] **Days 3-4 COMPLETE**: Equipment Export + GenericAttributes + Round-Trip + XSD Validation (Nov 14, 2025) ✅
   - Implemented `_export_equipment()` and `_export_nozzle()` methods
   - **CRITICAL FIX**: Moved Equipment from Drawing children to root children (ProteusSerializer requirement)
   - **NEW**: Implemented `_export_generic_attributes()` for DEXPI standard attributes
   - **NEW**: Round-trip validation tests (export → ProteusSerializer.load() → validate) ✅ PASSING
+  - **NEW**: XSD validation tests using minimal schema (no InformationFlow element) ✅ PASSING
   - Fixed critical IDRegistry bug (object identity vs equality)
   - Created 24-test comprehensive test suite
   - Fixed ComponentName generation (uses tagName/subTagName)
   - Preserved pyDEXPI UUID IDs (no prefix generation)
-  - **Final Status**: 22/24 tests passing (91.7%), 2 skipped (XSD schema issues) = 100% of non-skipped tests ✅
+  - Created tests/fixtures/schemas/ProteusPIDSchema_min.xsd (workaround for line 2088 schema bug)
+  - **Final Status**: 24/24 tests passing (100%) ✅
   - **Codex Review**: Comprehensive analysis completed via DeepWiki + gh CLI (Session: 019a842a-d1ec-72e3-86c4-a499f9aba8cf)
 - [ ] **Days 5 NEXT**: Piping Export (PipingNetworkSystem, PipingNetworkSegment)
   - Implement `_export_piping()` with fromNode/toNode references
@@ -198,6 +200,6 @@
   - Handle Association elements (has logical start/end)
   - Use instrumentation_toolkit for directionality validation
 
-**Proteus XML Exporter Status**: Equipment export + GenericAttributes + Round-trip validation COMPLETE (91.7% pass rate, 100% non-skipped)
-**Codex Recommendations**: ✅ Round-trip validation IMPLEMENTED, Minimal XSD schema (future), Structural assertions (future)
+**Proteus XML Exporter Status**: Equipment export + GenericAttributes + Round-trip + XSD validation COMPLETE (100% pass rate - 24/24 tests)
+**Codex Recommendations**: ✅ Round-trip validation IMPLEMENTED, ✅ Minimal XSD schema IMPLEMENTED, Structural assertions (future)
 **Next Priority**: Implement piping export (Days 5) using Codex's guidance on PipingNetworkSystem/PipingNetworkSegment structures

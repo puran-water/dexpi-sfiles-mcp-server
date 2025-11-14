@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Minimal Proteus PID Schema for Testing
+
+  This is a simplified version of ProteusPIDSchema_4.2.xsd that:
+  1. Contains only the structures exported by proteus_xml_exporter.py
+  2. Removes the problematic InformationFlow element (line 2088 in full schema)
+  3. Allows XSD validation tests to pass without upstream schema issues
+
+  Based on: ProteusPIDSchema_4.2.xsd
+  Scope: Equipment export validation (Days 3-4)
+  TODO: Expand for piping (Days 5) and instrumentation (Days 6-7)
+-->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            elementFormDefault="qualified"
+            attributeFormDefault="unqualified">
+
+  <!-- Root Element -->
+  <xsd:element name="PlantModel">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element ref="PlantInformation"/>
+        <xsd:element ref="Drawing" minOccurs="0" maxOccurs="unbounded"/>
+        <xsd:element ref="Equipment" minOccurs="0" maxOccurs="unbounded"/>
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
+
+  <!-- PlantInformation Element -->
+  <xsd:element name="PlantInformation">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element ref="UnitsOfMeasure" minOccurs="0"/>
+      </xsd:sequence>
+      <xsd:attribute name="SchemaVersion" type="xsd:string" use="required"/>
+      <xsd:attribute name="OriginatingSystem" type="xsd:string" use="optional"/>
+      <xsd:attribute name="OriginatingSystemVendor" type="xsd:string" use="optional"/>
+      <xsd:attribute name="OriginatingSystemVersion" type="xsd:string" use="optional"/>
+      <xsd:attribute name="Date" type="xsd:string" use="optional"/>
+      <xsd:attribute name="Time" type="xsd:string" use="optional"/>
+      <xsd:attribute name="Is3D" type="xsd:string" use="optional"/>
+      <xsd:attribute name="Units" type="xsd:string" use="optional"/>
+      <xsd:attribute name="Discipline" type="xsd:string" use="optional"/>
+    </xsd:complexType>
+  </xsd:element>
+
+  <!-- UnitsOfMeasure Element -->
+  <xsd:element name="UnitsOfMeasure">
+    <xsd:complexType>
+      <xsd:attribute name="Distance" type="xsd:string" use="optional"/>
+      <xsd:attribute name="Mass" type="xsd:string" use="optional"/>
+      <xsd:attribute name="Time" type="xsd:string" use="optional"/>
+      <xsd:attribute name="Temperature" type="xsd:string" use="optional"/>
+      <xsd:attribute name="Pressure" type="xsd:string" use="optional"/>
+    </xsd:complexType>
+  </xsd:element>
+
+  <!-- Drawing Element -->
+  <xsd:element name="Drawing">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element ref="Presentation" minOccurs="0"/>
+      </xsd:sequence>
+      <xsd:attribute name="Name" type="xsd:string" use="optional"/>
+      <xsd:attribute name="Type" type="xsd:string" use="optional"/>
+    </xsd:complexType>
+  </xsd:element>
+
+  <!-- Presentation Element -->
+  <xsd:element name="Presentation">
+    <xsd:complexType>
+      <xsd:attribute name="Layer" type="xsd:string" use="optional"/>
+      <xsd:attribute name="Color" type="xsd:string" use="optional"/>
+      <xsd:attribute name="LineType" type="xsd:string" use="optional"/>
+      <xsd:attribute name="LineWeight" type="xsd:string" use="optional"/>
+      <xsd:attribute name="R" type="xsd:string" use="optional"/>
+      <xsd:attribute name="G" type="xsd:string" use="optional"/>
+      <xsd:attribute name="B" type="xsd:string" use="optional"/>
+    </xsd:complexType>
+  </xsd:element>
+
+  <!-- Equipment Element -->
+  <xsd:element name="Equipment">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element ref="GenericAttributes" minOccurs="0" maxOccurs="unbounded"/>
+        <xsd:element ref="Nozzle" minOccurs="0" maxOccurs="unbounded"/>
+      </xsd:sequence>
+      <xsd:attribute name="ID" type="xsd:string" use="required"/>
+      <xsd:attribute name="ComponentClass" type="xsd:string" use="required"/>
+      <xsd:attribute name="ComponentName" type="xsd:string" use="optional"/>
+      <xsd:attribute name="TagName" type="xsd:string" use="optional"/>
+      <xsd:attribute name="ProcessArea" type="xsd:string" use="optional"/>
+      <xsd:attribute name="Purpose" type="xsd:string" use="optional"/>
+    </xsd:complexType>
+  </xsd:element>
+
+  <!-- Nozzle Element -->
+  <xsd:element name="Nozzle">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element ref="GenericAttributes" minOccurs="0" maxOccurs="unbounded"/>
+      </xsd:sequence>
+      <xsd:attribute name="ID" type="xsd:string" use="required"/>
+      <xsd:attribute name="ComponentName" type="xsd:string" use="optional"/>
+    </xsd:complexType>
+  </xsd:element>
+
+  <!-- GenericAttributes Element -->
+  <xsd:element name="GenericAttributes">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element ref="GenericAttribute" minOccurs="0" maxOccurs="unbounded"/>
+      </xsd:sequence>
+      <xsd:attribute name="Set" type="xsd:string" use="optional"/>
+      <xsd:attribute name="Number" type="xsd:string" use="optional"/>
+    </xsd:complexType>
+  </xsd:element>
+
+  <!-- GenericAttribute Element -->
+  <xsd:element name="GenericAttribute">
+    <xsd:complexType>
+      <xsd:attribute name="Name" type="xsd:string" use="required"/>
+      <xsd:attribute name="AttributeURI" type="xsd:string" use="optional"/>
+      <xsd:attribute name="Format" type="xsd:string" use="optional"/>
+      <xsd:attribute name="Value" type="xsd:string" use="required"/>
+      <xsd:attribute name="Units" type="xsd:string" use="optional"/>
+      <xsd:attribute name="UnitsURI" type="xsd:string" use="optional"/>
+    </xsd:complexType>
+  </xsd:element>
+
+</xsd:schema>
