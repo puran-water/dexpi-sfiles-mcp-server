@@ -1,641 +1,275 @@
-# Current Task: Phase 2.2 - Update MCP Tools for All 272 Classes
+# Current Task: Phase 5 Week 4 COMPLETE - GraphicBuilder Integration
 
-**Week:** Phase 5 Week 2b (Nov 11, 2025)
+**Week:** Phase 5 Week 4 (Nov 13, 2025)
 **Priority:** HIGH
-**Impact:** Expose all 272 pyDEXPI classes to Claude AI users
-**Status:** APPROVED TO PROCEED (Codex review complete)
+**Last Updated:** November 13, 2025
+**Status:** COMPLETE ✅
 
-## Background
+---
 
-**Phase 1 (COMPLETE)**: Auto-generated registrations for ALL 272 pyDEXPI classes
-- Equipment: 159/159 classes ✅
-- Piping: 79/79 classes ✅
-- Instrumentation: 34/34 classes ✅
-- 27 families with 1:Many mappings
-- Duration: <2 hours
+## Phase 5 Week 4: GraphicBuilder Integration - COMPLETE ✅
 
-**Phase 2.1 (COMPLETE)**: Core Layer Integration
-- Created `src/core/components.py` with unified ComponentRegistry (519 lines)
-- All 272 classes imported and registered
-- Integrated with EquipmentFactory for backward compatibility
-- **CODEX REVIEW COMPLETE**: All 5 critical issues fixed
-  - CSV packaging fixed (moved to src/core/data/)
-  - Import paths corrected (relative imports)
-  - DEXPI class name support added
-  - Category metadata preserved
-  - Fail-fast CSV loading
-- Test coverage: 22 unit tests + 10 integration tests (32/32 passing)
-- Duration: ~4 hours (including Codex review fixes)
+**Completion Date**: November 13, 2025
+**Duration**: ~6 hours
+**Status**: All success criteria met, validated with official DEXPI examples
 
-## Current Task: Phase 2.2 - MCP Tool Schema Updates
+### User Request
 
-### Objective
-Update MCP tool schemas to expose all 272 classes to Claude AI users via the engineering-mcp-server interface.
+"Can we test with example XMLs (https://gitlab.com/dexpi/TrainingTestCases) to ensure the Graphics Builder is working?"
 
-### Scope
-Update 4 MCP tool schemas:
-1. `dexpi_add_equipment` - expose all 159 equipment types
-2. `dexpi_add_valve` - expose all 22 valve types
-3. `dexpi_add_piping` - expose all 79 piping types (or create new tool)
-4. `dexpi_add_instrumentation` - expose all 34 instrumentation types
+### Accomplishments
 
-### Implementation Plan
+**Files Created**:
+1. `src/visualization/graphicbuilder/Dockerfile` (57 lines) - Java 8 build with version pinning
+2. `src/visualization/graphicbuilder/README.md` (420 lines) - Comprehensive integration documentation
+3. `tests/test_graphicbuilder_integration.py` (419 lines) - Complete test suite
+4. `/tmp/test_graphicbuilder_live.py` (116 lines) - Live validation script
 
-#### Step 1: Update Equipment Tool (30-45 min)
-**File**: `src/tools/dexpi_tools.py` (method at line ~370)
+**Files Modified**:
+1. `src/visualization/graphicbuilder/graphicbuilder-service.py` (lines 50-140) - Fixed CLI integration
+2. `src/visualization/graphicbuilder/config.yaml` (lines 3-16) - Version documentation
+3. `tests/test_graphicbuilder_integration.py` (lines 25-35, 56-183) - Real Proteus XML fixtures
 
-**Changes**:
-- Use `ComponentRegistry.list_all_aliases(ComponentType.EQUIPMENT)` to build enum dynamically
-- Update tool schema description with examples
-- Include both SFILES aliases and DEXPI class names in documentation
-- Test with sample equipment types (pump, boiler, conveyor, crusher)
+**Key Discoveries**:
 
-**Example schema update**:
-```python
-from src.core.components import get_registry, ComponentType
+**1. GraphicBuilder CLI Limitations** 🔍
+- **CLI behavior**: Single argument only (input XML filename)
+- **Output**: Automatically creates `input.png` (hardcoded PNG format)
+- **No arguments exist**: `-i`, `-o`, `-f`, `-s`, `-d`, `--scale` not supported
+- **Known bug**: Exits with code 1 even on success (NullPointerException after rendering)
 
-# In tool schema definition:
-equipment_registry = get_registry()
-equipment_types = equipment_registry.list_all_aliases(ComponentType.EQUIPMENT)
+**2. Service Wrapper Solution** ✅
+- Ignore exit codes, check file existence instead
+- Return PNG regardless of requested format (with metadata warning)
+- Work around CLI limitations by:
+  - Using temp directory as working directory
+  - Parsing expected output filename pattern
+  - Logging Java stdout/stderr for diagnostics
 
-# Schema parameter:
-{
-    "name": "equipment_type",
-    "description": "Equipment type (SFILES alias or DEXPI class name). "
-                  "Examples: 'pump' (CentrifugalPump), 'boiler' (Boiler), "
-                  "'conveyor' (Conveyor), 'steam_generator' (SteamGenerator). "
-                  f"Available: {', '.join(sorted(equipment_types)[:20])}...",
-    "type": "string",
-    "enum": sorted(equipment_types)
-}
-```
+**3. Validation Results** ✅
+- Tested with official DEXPI TrainingTestCases (E03V01-AUD.EX01.xml)
+- Output quality: 6000x5276 pixels, 249KB PNG files
+- Service operational: Health checks passing
+- Docker integration: Mounts, volumes, and networking functional
 
-#### Step 2: Update Valve Tool (30-45 min)
-**File**: `src/tools/dexpi_tools.py` (method at line ~995)
-
-**Changes**:
-- Filter piping components by `category == ComponentCategory.VALVE`
-- OR use family-based filtering for valve families
-- Update examples (ball_valve, butterfly_valve, safety_valve, needle_valve)
-
-**Example**:
-```python
-from src.core.components import ComponentCategory
-
-valve_components = equipment_registry.get_all_by_category(ComponentCategory.VALVE)
-valve_types = [c.sfiles_alias for c in valve_components]
-```
-
-#### Step 3: Create/Update Piping Tool (30-45 min)
-**File**: `src/tools/dexpi_tools.py` (method at line ~422)
-
-**Changes**:
-- Expose all 79 piping types (not just valves)
-- Include flow measurement, connections, fittings, etc.
-- Update examples (electromagnetic_flow_meter, flange, orifice_plate)
-
-#### Step 4: Update Instrumentation Tool (30-45 min)
-**File**: `src/tools/dexpi_tools.py` (method at line ~475)
-
-**Changes**:
-- Use `ComponentRegistry.list_all_aliases(ComponentType.INSTRUMENTATION)`
-- Update examples (transmitter, positioner, actuator, signal_conveying_function)
-
-#### Step 5: Add Smoke Test (15-30 min)
-**File**: `tests/tools/test_dexpi_tool_schemas.py` (new)
-
-**Create test to verify**:
-- Equipment tool schema has 159 types
-- Valve tool schema has 22 types
-- Piping tool schema has 79 types
-- Instrumentation tool schema has 34 types
-
-```python
-def test_equipment_tool_schema_coverage():
-    """Verify dexpi_add_equipment exposes all 159 equipment types."""
-    from src.tools.dexpi_tools import DexpiTools
-    from src.core.components import get_registry, ComponentType
-
-    tools = DexpiTools({}, {})
-    schema = tools.get_tools()  # Get tool schemas
-
-    equipment_tool = next(t for t in schema if t['name'] == 'dexpi_add_equipment')
-    enum_values = equipment_tool['inputSchema']['properties']['equipment_type']['enum']
-
-    registry = get_registry()
-    expected_count = len(registry.get_all_by_type(ComponentType.EQUIPMENT))
-
-    assert len(enum_values) == expected_count, \
-        f"Expected {expected_count} equipment types, got {len(enum_values)}"
-```
-
-#### Step 6: Update Tool Documentation (15-30 min)
-**Files**:
-- Tool docstrings in `src/tools/dexpi_tools.py`
-- MCP server tool descriptions
-
-**Add to each tool**:
-- Count of available types
-- Examples with both aliases and class names
-- Link to component registry documentation
-
-### Files to Modify
-
-1. **`src/tools/dexpi_tools.py`** (~200 lines of changes)
-   - Update 4 tool method schemas
-   - Add dynamic enum generation from ComponentRegistry
-   - Update docstrings and examples
-
-2. **`tests/tools/test_dexpi_tool_schemas.py`** (NEW, ~100 lines)
-   - Add smoke tests for schema coverage
-   - Verify 159/79/34 counts
-
-3. **Tool descriptions** (inline in dexpi_tools.py)
-   - Update with current type counts
-   - Add usage examples
-
-### Success Criteria
-
-- [x] ComponentRegistry integration complete (Phase 2.1)
-- [x] All critical issues fixed (Codex review)
-- [x] 22 unit tests + 10 integration tests passing
-- [x] `dexpi_add_equipment` schema has 159 equipment types
-- [x] `dexpi_add_valve` schema has 22 valve types
-- [x] `dexpi_add_piping` schema has 79 piping types
-- [x] `dexpi_add_instrumentation` schema has 34 instrumentation types
-- [x] Smoke tests verify schema coverage (12 tests passing)
-- [x] Tool documentation updated with examples
-- [x] All tests passing (46 total: 22 registry + 12 schema + 12 other)
-
-### Testing Strategy
+### Test Results
 
 ```bash
-# 1. Run ComponentRegistry tests
-source .venv/bin/activate
-python -m pytest tests/core/test_component_registry.py -v
+TestGraphicBuilderSmoke: 5/5 passed (55s)
+├── test_service_health_check ✓
+├── test_render_svg (returns PNG) ✓
+├── test_render_png ✓
+├── test_render_pdf (returns PNG) ✓
+└── test_save_to_file ✓
 
-# 2. Run tool schema tests
-python -m pytest tests/tools/test_dexpi_tool_schemas.py -v
+TestBase64DecodingRegression: 3/3 passed (35s)
+├── test_base64_roundtrip_png ✓
+├── test_base64_no_padding_issues ✓
+└── test_svg_not_base64 (updated) ✓
 
-# 3. Test creating equipment with new types
-python -c "
-from src.core.equipment import get_factory
-factory = get_factory()
-boiler = factory.create('boiler', 'B-001')
-print(f'Created: {boiler.__class__.__name__}')
-"
+TestRendererRouterFallback: 2/2 passed
+TestFullPipeline: 2/2 skipped (Proteus export pending)
+TestRenderOptions: 3/3 passed
+TestCaching: 2/2 passed
 
-# 4. Integration tests
-python -m pytest tests/visualization/test_orchestrator_integration.py -v
+Total: 17 tests (15 passed, 2 skipped)
 ```
 
-### Timeline
+### Architecture
 
-- **Estimated effort**: 2-3 hours
-- **Priority**: HIGH
-- **Dependencies**: Phase 2.1 complete ✅
-- **Blockers**: None (Codex approved)
+**GraphicBuilder Stack**:
+1. **GraphicBuilder JAR** (Java 8)
+   - Source: GitLab master branch (commit 5e1e3ed)
+   - Build: Multi-module Maven (XML → imaging modules)
+   - JAR path: `/app/GraphicBuilder/org.dexpi.pid.imaging/target/GraphicBuilder-1.0-jar-with-dependencies.jar`
 
-### Codex Recommendations
+2. **Flask Service** (`graphicbuilder-service.py`)
+   - HTTP endpoints: `/health`, `/render`, `/validate`, `/symbols`
+   - CLI wrapper with error recovery
+   - Base64 encoding for binary formats
+   - Temp file management
 
-From Codex review:
-> "Proceeding to Phase 2.2 to wire the MCP schemas directly to `ComponentRegistry.list_all_aliases()` is the right next move. Make sure each tool description surfaces both the alias and (when different) the pyDEXPI class name so users understand what to supply."
+3. **Python Client** (`wrapper.py`)
+   - Async/await HTTP client
+   - Type-safe RenderOptions
+   - Client-side caching
+   - Automatic base64 decoding
 
-Additional recommendation:
-> "Consider adding a lightweight smoke test that ensures `dexpi_tools.DexpiTools.get_tools()` reflects the 159/79/34 counts once the schemas are dynamic."
+4. **Docker Compose Integration**
+   - Port: 8080
+   - Volumes: symbols (read-only), cache, logs
+   - Environment: `JAVA_OPTS=-Xmx2G`, `SYMBOL_PATH=/app/symbols/NOAKADEXPI`
+   - Health check: 30s interval, 3 retries
 
-### Notes
+### Documentation Delivered
 
-- **All critical issues fixed**: CSV packaging, imports, class name support, category preservation, fail-fast loading
-- **Test coverage**: 32/32 tests passing (22 unit + 10 integration)
-- **Codex approval**: Green light to proceed with Phase 2.2
-- **Documentation**: Complete with CODEX_REVIEW_FIXES.md
+**README.md Sections** (420 lines):
+- Overview and Quick Start
+- Version Information (GitLab source, Java 8 requirement, CLI limitations)
+- License Status (no LICENSE file found in upstream)
+- Architecture (4 components with details)
+- API Reference (health, render, validate, symbols)
+- Testing guide (pytest commands)
+- Configuration (config.yaml structure)
+- Troubleshooting (service errors, Java heap, symbols)
+- Performance benchmarks
+- Integration with MCP Server
+- Development guide
+- Future improvements
 
-### Next Steps After Phase 2.2
+**Key Limitations Documented**:
+- ✅ CLI only supports PNG output
+- ✅ SVG/PDF require direct Java API integration (planned)
+- ✅ Exit code 1 bug documented
+- ✅ Simple DEXPI XML won't render (needs proper Proteus format)
 
-**Phase 2.3**: Comprehensive regression test suite (if needed beyond 22 existing tests)
-**Phase 2.4**: Update user-facing documentation
-- Equipment catalog
-- User migration guide
-- MCP tool usage examples
-- CHANGELOG update
+### Git Integration
 
-**Phase 3**: Symbol mapping for placeholders (133 equipment, all piping/instrumentation)
-- Can be deferred - doesn't block functionality
-- Prioritize high-usage equipment types first
+**Week 4 Scope Assessment**:
+- Original estimate: 10-14 hours (3 tasks)
+- Actual discovery: 85% pre-implemented
+  - Dockerfile existed (needed version pinning)
+  - Flask service operational (285 lines)
+  - Python client complete (326 lines)
+  - Router wired
+  - 701 symbols present
+- Actual work: ~6 hours
+  - GitLab version pinning
+  - CLI behavior research
+  - Service wrapper fixes
+  - Test suite creation
+  - Documentation
 
----
+### Success Criteria ✅
 
-## Phase 2.2 COMPLETE ✅ (WITH CODEX FIXES)
+**Original Tasks**:
+- [x] Add Dockerfile pinned to GitLab source (ARG-based, Java 8)
+- [x] Wire renderer_router.py (pre-existing, verified functional)
+- [x] Import NOAKADEXPI symbols (pre-existing, 701 symbols mounted)
 
-**Completion Date**: November 11, 2025
-**Duration**: ~2.5 hours initial + ~1 hour Codex fixes = ~3.5 hours total
+**Additional Achievements**:
+- [x] Fixed service wrapper to work with actual CLI behavior
+- [x] Validated with official DEXPI TrainingTestCases
+- [x] Created comprehensive test suite (17 tests)
+- [x] Documented CLI limitations and future work
+- [x] All tests passing with real Proteus XML
 
-### Accomplishments
-
-1. **Updated all 4 MCP tool schemas** (`src/tools/dexpi_tools.py`):
-   - `dexpi_add_equipment`: Now exposes 159 equipment types (was ~30)
-   - `dexpi_add_valve_between_components`: Now exposes 22 valve types
-   - `dexpi_add_piping`: Now exposes 79 piping types (new parameter)
-   - `dexpi_add_instrumentation`: Now exposes 34 instrumentation types
-   - **Codex Fix**: Enums now include BOTH aliases AND class names (e.g., both 'pump' and 'CentrifugalPump')
-
-2. **Replaced DexpiIntrospector with ComponentRegistry**:
-   - All tool schemas now use `ComponentRegistry.list_all_aliases()`
-   - Dynamic enum generation from CSV-driven registry
-   - Full coverage of all 272 pyDEXPI classes
-
-3. **Enhanced tool descriptions**:
-   - Added type counts (159, 79, 34, 22)
-   - Included examples with both SFILES aliases and DEXPI class names
-   - Updated method docstrings for all 4 tools
-
-4. **Updated piping implementation**:
-   - Added `piping_type` parameter to `_add_piping` method
-   - Uses ComponentRegistry for component creation
-   - Supports all 79 piping types (not just basic Pipe)
-
-5. **Fixed instrumentation implementation** (Codex review):
-   - `_add_instrumentation` now uses ComponentRegistry to instantiate actual pyDEXPI classes
-   - Before: Always created generic `ProcessInstrumentationFunction`
-   - After: Creates specific classes (Transmitter, Positioner, ControlledActuator, etc.)
-   - All 34 instrumentation types now actually work
-
-6. **Created comprehensive smoke tests** (`tests/tools/test_dexpi_tool_schemas.py`):
-   - 12 tests verifying schema coverage
-   - Tests for all 4 tool types
-   - Validates examples are real component types
-   - Ensures enums are sorted and descriptions are accurate
-   - **Codex Fix**: Tests updated to expect both aliases AND class names in enums
-
-### Test Results
-
-**All tests passing (34 total)**:
-- ✅ 22 ComponentRegistry tests (Phase 2.1)
-- ✅ 12 Tool schema tests (Phase 2.2, updated for Codex fixes)
-- All Codex-identified issues resolved
-
-### Files Modified
-
-**Created**:
-- `tests/tools/test_dexpi_tool_schemas.py` (313 lines)
-- `tests/tools/__init__.py`
-
-**Modified**:
-- `src/tools/dexpi_tools.py`:
-  - Lines 44-71: **Codex Fix** - Enums now include both aliases AND class names
-  - Lines 577-621: **Codex Fix** - Instrumentation implementation uses ComponentRegistry
-  - Lines 70-88: Updated equipment tool schema
-  - Lines 113-140: Updated piping tool schema (added piping_type)
-  - Lines 125-143: Updated instrumentation tool schema
-  - Lines 255-270, 279-299, 308-323: Updated valve tool schemas
-  - Lines 430-436: Updated `_add_equipment` docstring
-  - Lines 482-529: Updated `_add_piping` implementation
-- `tests/tools/test_dexpi_tool_schemas.py`:
-  - **Codex Fix**: Updated all 6 coverage tests to expect aliases + class names
-
-### Impact
-
-**Before Phase 2.2**:
-- MCP tools exposed limited subset via DexpiIntrospector
-- ~30 equipment types, limited valves/instrumentation
-- No piping type selection
-
-**After Phase 2.2 + Codex Fixes**:
-- ✅ **ALL 272 pyDEXPI classes** now accessible to Claude AI users
-- ✅ Both SFILES aliases and DEXPI class names supported (schema enums + dual lookup)
-- ✅ All 34 instrumentation types actually instantiate correct classes
-- ✅ Comprehensive documentation with examples
-- ✅ Smoke tests prevent regression
+**Quality Gates**:
+- [x] Health check operational
+- [x] PNG rendering validated (6000x5276 output)
+- [x] Base64 encoding/decoding correct
+- [x] File saving works
+- [x] Docker Compose integration functional
+- [x] No breaking changes to existing code
+- [x] License status clarified
 
 ---
 
-### Codex Review & Critical Fixes (November 11, 2025)
+## Critical Findings
 
-**2 Critical Issues Identified**:
+### GraphicBuilder CLI Discovery
 
-1. **HIGH**: Schema enums only contained SFILES aliases, not class names
-   - **Problem**: Class names like `CentrifugalPump` rejected by schema validation
-   - **Fix**: Enums now include both aliases AND class names
-   - **Lines**: `src/tools/dexpi_tools.py:44-71`
+**Investigation Process**:
+1. Initial test failures with simple DEXPI XML
+2. Direct JAR execution revealed CLI accepts single argument only
+3. Source code review (`StandAloneTester.java` lines 135-145)
+4. Identified hardcoded PNG output behavior
+5. Found NullPointerException bug at line 348
 
-2. **MEDIUM**: Instrumentation implementation didn't use ComponentRegistry
-   - **Problem**: Always created generic `ProcessInstrumentationFunction`, never specific classes
-   - **Fix**: Now uses ComponentRegistry to instantiate actual pyDEXPI classes
-   - **Lines**: `src/tools/dexpi_tools.py:577-621`
+**Impact**:
+- Original service wrapper used non-existent arguments
+- Format selection (SVG/PDF) not available via CLI
+- Exit code checking was unreliable
+- Required complete rewrite of service wrapper
 
-**Result**: All issues fixed, 34/34 tests passing ✅
+**Solution Implemented**:
+```python
+# Before (non-functional):
+cmd = ["java", "-jar", jar_path, "-i", input_file, "-o", output_file, "-f", format]
 
----
+# After (functional):
+cmd = ["java", "-jar", jar_path, str(input_file)]
+expected_output = input_file.with_suffix('.png')
+# Check file existence, ignore exit code
+```
 
-**Status**: Phase 2.2 COMPLETE ✅ (WITH CODEX FIXES) - Ready for Phase 2.4
-**Last Updated**: November 11, 2025
-**Reviewed By**: Codex MCP (2 critical issues identified and fixed)
+### Future Work Identified
 
----
+**SVG/PDF Support** (Week 5+):
+- Requires direct Java API integration
+- Code exists in `ImageFactory_SVG.java` and PDF transcoding
+- CLI (`StandAloneTester`) doesn't expose these formats
+- Options:
+  1. Create new Java wrapper bypassing CLI
+  2. Use Jython/JPype to call Java API directly
+  3. Extract SVG factory logic to separate service
 
-## Phase 2.4 COMPLETE ✅ - User-Facing Documentation
-
-**Completion Date**: November 11, 2025
-**Duration**: ~2 hours
-**Commit**: 28d63d9
-
-### Objective
-
-Create comprehensive user-facing documentation for Phase 2 complete component coverage (272 pyDEXPI classes).
-
-### Accomplishments
-
-1. **Created EQUIPMENT_CATALOG.md** (comprehensive)
-   - Complete reference for all 159 equipment types
-   - Organized by 8 categories (ROTATING, SEPARATION, TREATMENT, HEAT_TRANSFER, STORAGE, TRANSPORT, REACTION, CUSTOM)
-   - Shows both SFILES aliases and DEXPI class names for each type
-   - Includes alphabetical index and usage examples
-   - Helps users discover newly-available equipment types
-
-2. **Created USER_MIGRATION_GUIDE.md** (comprehensive)
-   - Explains Phase 2 capabilities and zero breaking changes
-   - Details 4 new capabilities:
-     * 5.3x more equipment types (30 → 159)
-     * DEXPI class name support (dual naming)
-     * Piping type selection (79 types)
-     * Complete instrumentation (34 types)
-   - Provides migration examples for power generation, material handling
-   - Includes best practices, FAQ, and troubleshooting
-   - Cross-references EQUIPMENT_CATALOG.md and MCP_TOOL_EXAMPLES.md
-
-3. **Created MCP_TOOL_EXAMPLES.md** (comprehensive)
-   - Detailed examples for all 4 MCP tools (equipment, piping, instrumentation, valves)
-   - Complete system examples (power generation, material handling)
-   - Common patterns (pump isolation, heat exchanger control, flow measurement)
-   - Demonstrates both SFILES alias and DEXPI class name usage
-   - Shows piping_type parameter usage for inline components
-
-4. **Updated README.md**
-   - Added Phase 2 to "Current Capabilities" section
-     * Highlights all 272 pyDEXPI classes now accessible
-     * Notes dual naming support (aliases + class names)
-     * Links to new documentation files
-   - Added Phase 2 to "Roadmap & Completed Work" section
-     * 5.3x equipment expansion
-     * Dual naming support
-     * Complete piping and instrumentation coverage
-     * 46/46 tests passing
-     * Zero breaking changes
-     * Links to 3 new documentation files
-
-### Files Created
-
-- `docs/EQUIPMENT_CATALOG.md` (comprehensive, 500+ lines)
-- `docs/USER_MIGRATION_GUIDE.md` (comprehensive, 400+ lines)
-- `docs/MCP_TOOL_EXAMPLES.md` (comprehensive, 600+ lines)
-
-### Files Modified
-
-- `README.md` (added Phase 2 section, linked to new docs)
-
-### Impact
-
-**Before Phase 2.4**:
-- No comprehensive equipment reference
-- Users didn't know about newly-available equipment types
-- No migration guidance for Phase 2 capabilities
-- No practical usage examples for new features
-
-**After Phase 2.4**:
-- ✅ Complete equipment catalog with 159 types organized by category
-- ✅ Comprehensive migration guide with zero-breaking-change guarantee
-- ✅ Practical examples for all 4 MCP tools
-- ✅ README updated to highlight Phase 2 capabilities
-- ✅ Users can easily discover and use all 272 pyDEXPI classes
-
-### Success Metrics
-
-- [x] Equipment catalog complete with all 159 types
-- [x] User migration guide addresses all 4 new capabilities
-- [x] MCP tool examples cover all 4 tools plus system patterns
-- [x] README updated with Phase 2 highlights and links
-- [x] All documentation committed and pushed (commit 28d63d9)
+**Proteus XML Export** (Blocked):
+- pyDEXPI models need Proteus XML export capability
+- Currently no export function in pyDEXPI
+- Prevents full pipeline testing (SFILES → DEXPI → Proteus → GraphicBuilder)
+- Workaround: Use DEXPI TrainingTestCases for validation
 
 ---
 
-**Status**: Phase 2 COMPLETE ✅ (All subphases 2.1, 2.2, 2.4 done + regressions fixed)
-**Last Updated**: November 11, 2025
-**Total Phase 2 Duration**: ~10.5 hours (2.1: 4h + 2.2: 3.5h + 2.4: 2h + fixes: 1h)
-**Next Phase**: Phase 3 (Symbol mapping) - APPROVED by Codex
+## Phase 5 Week 4 Completion Summary
 
----
-
-## Regression Fixes (November 11, 2025)
-
-**Completion Date**: November 11, 2025
-**Duration**: ~1 hour
-**Commit**: 7cca828
-**Codex Review**: APPROVED ✅
-
-### Issues Identified by Codex
-
-3 blocking test failures preventing Phase 2 completion:
-
-1. **Equipment Factory Error Message** (tests/test_core_layer_errors.py:37,68)
-   - **Problem**: Error message changed to "Available types (legacy):" breaking tests
-   - **Fix**: Restored "Available types:" for backward compatibility
-   - **Enhancement**: Now includes ComponentRegistry types (175 total) with common types first
-   - **Code**: `src/core/equipment.py:528-557`
-
-2. **Instrumentation Backward Compatibility** (tests/test_improvements.py:115)
-   - **Problem**: Legacy names like "LevelTransmitter" rejected by ComponentRegistry
-   - **Fix**: Added legacy name mappings (7 mappings) + fallback to ProcessInstrumentationFunction
-   - **Result**: 100% backward compatibility while preferring pyDEXPI classes
-   - **Code**: `src/tools/dexpi_tools.py:599-631`
-
-3. **Simplified Instrumentation Implementation**
-   - **Problem**: Transmitter class doesn't support processSignalGeneratingFunctions
-   - **Fix**: Removed broken code, creates clean Transmitter instances
-   - **Code**: `src/tools/dexpi_tools.py:640-664`
-
-### Test Results
-
-**All tests passing**: 406 passed, 3 skipped (100% success rate)
-
-- ✅ 18/18 core layer error tests
-- ✅ 5/5 improvement tests
-- ✅ 22/22 ComponentRegistry tests
-- ✅ 12/12 tool schema tests
-- ✅ 349/349 other tests
-
-### Codex Final Approval
-
-> "Phase 2 looks solid now. The regression fixes line up with what we asked for...
-> Full suite is green at 406 / 406, so Phase 2 is back to production-ready.
-> Given that, I'm comfortable moving on to Phase 3."
-
-**Status**: Phase 2 PRODUCTION-READY ✅
-
----
-
-# Phase 3: Symbol Mapping for Visualization
-
-**Status**: APPROVED by Codex - Ready to Start
-**Priority**: MEDIUM-HIGH (improves visualization quality, doesn't block functionality)
-**Estimated Duration**: 10-15 hours (5-7h Pass 1 + 5-8h Pass 2)
-
-## Background
-
-**Current State**:
-- All 272 pyDEXPI classes are functionally accessible via MCP tools
-- Many components use placeholder symbols in visualization (generic rectangles)
-- Symbol mapping exists for ~30 equipment types only (from legacy registry)
-
-**Phase 3 Goal**:
-- Map ISA/DEXPI symbols for all 272 components
-- Update visualization renderer to use proper symbols
-- Prioritize high-usage, high-visibility equipment first
-
-## Codex-Approved Two-Pass Approach
-
-### Pass 1: High-Visibility Components (5-7 hours)
-
-**Target**: Components users will actually notice in typical P&IDs
-
-**Categories**:
-1. **Rotating Equipment** (~15 types)
-   - Pumps (CentrifugalPump, ReciprocatingPump, RotaryPump, etc.)
-   - Compressors (CentrifugalCompressor, ReciprocatingCompressor, RotaryCompressor, etc.)
-   - Turbines (SteamTurbine, GasTurbine)
-   - Motors (AlternatingCurrentMotor, DirectCurrentMotor)
-
-2. **Valves** (22 types - all valve categories)
-   - BallValve, GateValve, GlobeValve, ButterflyValve
-   - CheckValve, SafetyValve, NeedleValve, PlugValve
-   - AngleValve, etc.
-
-3. **High-Visibility Instrumentation** (~10 types)
-   - Transmitter (covers Level, Pressure, Temperature, Flow)
-   - Positioner, ControlledActuator
-   - FlowDetector
-   - ProcessControlFunction, SignalConveyingFunction
+**Total Duration**: ~6 hours (under 10-14h estimate)
 
 **Deliverables**:
-- Symbol mappings for ~47 high-priority components
-- Renderer tests showing proper ISA symbols
-- Visual validation with sample P&IDs
+1. ✅ Dockerfile with GitLab source pinning (Java 8, ARG-based)
+2. ✅ Fixed service wrapper (CLI-compatible)
+3. ✅ Comprehensive README (420 lines, limitations documented)
+4. ✅ Test suite (17 tests, 15 passing with real examples)
+5. ✅ Validation with DEXPI TrainingTestCases
 
-**Success Criteria**:
-- Rotating equipment shows proper pump/compressor/turbine symbols
-- All 22 valve types render with correct ISA symbols
-- Transmitters and actuators use standard ISA symbols
-- Immediate visual improvement in typical P&IDs
+**Files Modified**: 4 files
+**Files Created**: 4 files
+**Tests Added**: 17 tests (15 passing, 2 skipped pending Proteus export)
+**Documentation**: 420+ lines
 
-### Pass 2: Long Tail Coverage (5-8 hours)
+**Key Achievements**:
+- ✅ GraphicBuilder functional for PNG rendering
+- ✅ Validated with official DEXPI examples (6000x5276 output)
+- ✅ CLI limitations documented with future roadmap
+- ✅ License status clarified (no LICENSE file upstream)
+- ✅ All infrastructure operational (Docker, health checks, caching)
 
-**Target**: Remaining equipment families + accessories
-
-**Categories**:
-1. **Remaining Equipment** (~112 types)
-   - Separation (Centrifuge, Filter, Separator families)
-   - Heat Transfer (Heater, Boiler, Cooler, HeatExchanger families)
-   - Treatment (Dryer, Mixer, Agitator families)
-   - Storage (Tank, Silo, Vessel families)
-   - Transport (Conveyor, Lift, MobileTransportSystem families)
-   - Reaction (Furnace, Reactor families)
-   - Custom equipment
-
-2. **Piping Accessories** (79 types)
-   - Flow meters (ElectromagneticFlowMeter, OrificeFlowMeter, etc.)
-   - Fittings (Flange, Reducer, Tee, Elbow, etc.)
-   - Basic Pipe and segments
-
-3. **Remaining Instrumentation** (~24 types)
-   - Signal generating functions
-   - Actuating functions
-   - Control functions
-   - Sensing locations
-
-**Deliverables**:
-- Symbol mappings for remaining ~215 components
-- Complete symbol catalog documentation
-- Renderer tests for all categories
-- Visual validation with comprehensive test suite
-
-**Success Criteria**:
-- All 272 components have symbol mappings
-- No placeholder rectangles for standard equipment
-- Complete visual fidelity in P&ID rendering
-- Symbol catalog documentation updated
-
-## Implementation Strategy
-
-### 1. Research Phase (1-2 hours)
-- Review ISA 5.1 standard symbol definitions
-- Review DEXPI/NOAKADEXPI symbol catalog
-- Identify existing symbol mappings in codebase
-- Document symbol naming conventions
-
-### 2. Symbol Mapping (Pass 1: 3-4 hours, Pass 2: 4-6 hours)
-- Create/update symbol mapping CSV or registry
-- Map pyDEXPI class names to ISA symbol IDs
-- Handle symbol variants (e.g., horizontal vs vertical pumps)
-- Document fallback strategies for missing symbols
-
-### 3. Renderer Integration (Pass 1: 1-2 hours, Pass 2: 1-2 hours)
-- Update visualization renderer to use new mappings
-- Handle symbol positioning and orientation
-- Implement symbol fallback logic
-- Add symbol metadata to rendered output
-
-### 4. Testing & Validation (Pass 1: 1 hour, Pass 2: 1 hour)
-- Create visual test suite for each category
-- Generate sample P&IDs with all symbol types
-- Verify symbol rendering quality
-- Document any remaining placeholder cases
-
-## Files to Modify
-
-**Phase 3 Pass 1**:
-- `src/core/symbols/symbol_registry.py` (or create new)
-- `src/visualization/renderer.py` (symbol lookup integration)
-- `data/symbols/high_visibility_mappings.csv` (new)
-- `tests/visualization/test_symbol_rendering.py` (new)
-
-**Phase 3 Pass 2**:
-- `data/symbols/complete_symbol_mappings.csv` (expanded)
-- `docs/SYMBOL_CATALOG.md` (new documentation)
-- Additional renderer tests
-
-## Risk Mitigation
-
-1. **Missing ISA Symbols**: Document which symbols need to be created/sourced
-2. **Symbol Licensing**: Verify ISA symbol usage rights
-3. **Renderer Complexity**: Keep symbol logic separate from layout logic
-4. **Performance**: Cache symbol lookups for frequently-used types
-
-## Success Metrics
-
-**Pass 1**:
-- [ ] 47 high-visibility components have symbol mappings
-- [ ] All 22 valve types render correctly
-- [ ] Rotating equipment shows proper symbols
-- [ ] Visual tests passing for high-priority categories
-- [ ] Immediate user-visible improvement
-
-**Pass 2**:
-- [ ] All 272 components have symbol mappings
-- [ ] Zero placeholder rectangles for standard equipment
-- [ ] Complete symbol catalog documentation
-- [ ] All visual tests passing
-- [ ] Symbol rendering performance acceptable
-
-## Codex Guidance
-
-> "I like the two-pass plan:
-> 1. **Pass 1** – target the symbols people will actually notice: rotating equipment (pumps/compressors/turbines), the valve families, and high-visibility instrumentation (transmitters, controllers, actuators). Ship those mappings with renderer/tests so users see an immediate visual payoff.
-> 2. **Pass 2** – fill in the long tail: remaining equipment families, piping accessories, instrumentation odds-and-ends. That can follow once the core catalog is in good shape.
->
-> If you need a tiebreaker on priorities, I'd keep Phase 3 ahead of new feature work—the functionality gap is closed, so the next biggest pain point is the placeholder visuals. Go ahead and start Phase 3 with the two-pass approach above, and we'll review once Pass 1 lands."
+**Research Findings**:
+1. **GraphicBuilder CLI**: Single-argument only, PNG hardcoded, exit code bug
+2. **Symbol Library**: 701 NOAKADEXPI symbols pre-existing and mounted
+3. **Router Integration**: Pre-existing, functional, fallback tested
+4. **Service Wrapper**: Required complete rewrite for CLI compatibility
 
 ---
 
-**Status**: Phase 3 Ready to Start (Codex Approved)
-**Next Step**: Begin Pass 1 - High-Visibility Symbol Mapping
-**Last Updated**: November 11, 2025
+## Next Phase: Phase 5 Week 5 - ProteusXMLDrawing Integration
+
+**Recommended Priority**: HIGH
+
+**Rationale**:
+- Maintains visualization momentum
+- Complements GraphicBuilder (lighter-weight alternative)
+- No external dependencies
+- Python-native (easier to extend)
+
+**Estimated Duration**: 8-10 hours
+
+**Key Tasks**:
+1. Fork `src/visualization/proteus-viewer/` backend
+2. Add text/spline rendering fixes
+3. WebSocket/live update path
+4. Regression tests
+5. Expose through MCP visualize tools
+
+**Dependencies**:
+- ✅ GraphicBuilder integration complete
+- ✅ Symbol library available
+- ✅ Renderer router operational
+- ⏸️ Proteus XML export from pyDEXPI (can work with TrainingTestCases)
+
+---
+
+**Last Updated**: November 13, 2025
+**Validated By**: Official DEXPI TrainingTestCases (E03V01-AUD.EX01.xml)
+**Status**: Production-ready for PNG rendering, SVG/PDF pending Java API integration

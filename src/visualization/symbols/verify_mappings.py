@@ -14,7 +14,8 @@ import sys
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
 from visualization.symbols.catalog import SymbolCatalog
-from visualization.symbols.mapper import DexpiSymbolMapper
+# UPDATED: Use new SymbolResolver instead of deprecated DexpiSymbolMapper
+from src.core.symbol_resolver import SymbolResolver
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -84,7 +85,8 @@ class SymbolMappingVerifier:
             catalog_path = Path(__file__).parent / "assets"
 
         self.catalog = SymbolCatalog(catalog_path)
-        self.mapper = DexpiSymbolMapper()
+        # UPDATED: Use SymbolResolver instead of deprecated DexpiSymbolMapper
+        self.resolver = SymbolResolver()
 
     def verify_all_mappings(self) -> Dict[str, any]:
         """
@@ -270,9 +272,9 @@ def main():
     updated = verifier.update_catalog_mappings()
     print(f"Updated {updated} mappings")
 
-    # Verify mapper class
-    print("\nVerifying DexpiSymbolMapper...")
-    mapper = DexpiSymbolMapper()
+    # Verify resolver class
+    print("\nVerifying SymbolResolver...")
+    resolver = SymbolResolver()
 
     test_classes = [
         "CentrifugalPump",
@@ -283,7 +285,9 @@ def main():
     ]
 
     for dexpi_class in test_classes:
-        symbol_id = mapper.get_symbol_for_dexpi_class(dexpi_class)
+        # UPDATED: Use new SymbolResolver API
+        symbol = resolver.get_by_dexpi_class(dexpi_class)
+        symbol_id = symbol.symbol_id if symbol else None
         print(f"  {dexpi_class} -> {symbol_id}")
 
 

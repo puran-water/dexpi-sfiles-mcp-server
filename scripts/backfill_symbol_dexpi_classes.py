@@ -1,14 +1,22 @@
 #!/usr/bin/env python3
 """
-Backfill dexpi_class fields in merged_catalog.json using mapper.py mappings
+DEPRECATED: Backfill dexpi_class fields in merged_catalog.json using mapper.py mappings
 
-This script populates the missing dexpi_class fields in the symbol catalog
-by reverse-mapping from the SYMBOL_MAPPINGS in mapper.py.
+WARNING: This script is deprecated and will be removed in v2.0.
+
+The catalog enrichment is now handled automatically by the ComponentRegistry
+and SymbolRegistry systems. Manual backfilling is no longer needed and creates
+circular dependencies (registry loads catalog → script mutates catalog → registry reload).
+
+The merged_catalog.json is already sufficiently enriched (308/805 symbols have dexpi_class).
+Additional mappings should be added through the symbol generation pipeline, not manual enrichment.
+
+This script is kept for reference only and may not work correctly with the new architecture.
 
 Usage:
-    python scripts/backfill_symbol_dexpi_classes.py
+    python scripts/backfill_symbol_dexpi_classes.py  # DEPRECATED - DO NOT RUN
 
-Fixes Bug #2: Symbol Catalog Missing DEXPI Mappings
+Fixes Bug #2: Symbol Catalog Missing DEXPI Mappings (ALREADY FIXED)
 """
 
 import json
@@ -23,6 +31,14 @@ from src.visualization.symbols.mapper import DexpiSymbolMapper
 
 def main():
     """Backfill dexpi_class fields in merged_catalog.json"""
+
+    import warnings
+    warnings.warn(
+        "backfill_symbol_dexpi_classes.py is deprecated and will be removed in v2.0. "
+        "Catalog backfilling creates circular dependencies. "
+        "Use the symbol generation pipeline instead.",
+        DeprecationWarning
+    )
 
     # Path to catalog
     repo_root = Path(__file__).parent.parent

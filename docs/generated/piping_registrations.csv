@@ -1,80 +1,80 @@
 class_name,sfiles_alias,is_primary,family,category,symbol_id,connection_count,display_name
-AngleBallValve,angle_ball_valve,False,ball_valve,VALVE,PL642Z,2,Angle Ball Valve
-AngleGlobeValve,angle_globe_valve,False,globe_valve,VALVE,PL661Z,2,Angle Globe Valve
-AnglePlugValve,angle_plug_valve,False,plug_valve,VALVE,PL861Z,2,Angle Plug Valve
-AngleValve,angle_valve,False,,VALVE,PL304Z,2,Angle Valve
-BallValve,ball_valve,True,ball_valve,VALVE,PL433Z,2,Ball Valve
-BlindFlange,blind_flange,False,,CONNECTION,PL215Z,2,Blind Flange
-BreatherValve,breather_valve,False,,VALVE,PL493Z,2,Breather Valve
-ButterflyValve,butterfly_valve,False,,VALVE,PL416Z,2,Butterfly Valve
-CheckValve,check_valve,True,check_valve,VALVE,PL111Z,2,Check Valve
-ClampedFlangeCoupling,clamped_flange_coupling,False,,CONNECTION,PL616Z,2,Clamped Flange Coupling
-Compensator,compensator,False,,OTHER_PIPING,PL109Z,2,Compensator
-ConicalStrainer,conical_strainer,False,,FILTRATION,PL338Z,2,Conical Strainer
-CustomCheckValve,custom_check_valve,False,check_valve,VALVE,PL356Z,2,Custom Check Valve
-CustomInlinePrimaryElement,custom_inline_primary_element,False,,OTHER_PIPING,PL168Z,2,Custom Inline Primary Element
-CustomOperatedValve,custom_operated_valve,False,operated_valve,VALVE,PL876Z,2,Custom Operated Valve
-CustomPipeFitting,custom_pipe_fitting,False,,PIPE,PL543Z,2,Custom Pipe Fitting
-CustomPipingComponent,custom_piping_component,False,,OTHER_PIPING,PL134Z,2,Custom Piping Component
-CustomSafetyValveOrFitting,custom_safety_valve_or_fitting,False,safety_valve,VALVE,PL391Z,2,Custom Safety Valve Or Fitting
-DirectPipingConnection,direct_piping_connection,False,,CONNECTION,PL033Z,2,Direct Piping Connection
-ElectromagneticFlowMeter,electromagnetic_flow_meter,False,,FLOW_MEASUREMENT,PL228Z,2,Electromagnetic Flow Meter
-FlameArrestor,flame_arrestor,False,,SAFETY,PL027Z,2,Flame Arrestor
-Flange,flange,False,,CONNECTION,PL733Z,2,Flange
-FlangedConnection,flanged_connection,False,,CONNECTION,PL930Z,2,Flanged Connection
-FlowInPipeOffPageConnector,flow_in_pipe_off_page_connector,False,,PIPE,PL882Z,2,Flow In Pipe Off Page Connector
-FlowMeasuringElement,flow_measuring_element,False,,FLOW_MEASUREMENT,PL047Z,2,Flow Measuring Element
-FlowNozzle,flow_nozzle,False,,FLOW_MEASUREMENT,PL128Z,2,Flow Nozzle
-FlowOutPipeOffPageConnector,flow_out_pipe_off_page_connector,False,,PIPE,PL220Z,2,Flow Out Pipe Off Page Connector
-Funnel,funnel,False,,OTHER_PIPING,PL751Z,2,Funnel
-GateValve,gate_valve,False,,VALVE,PL849Z,2,Gate Valve
-GlobeCheckValve,globe_check_valve,False,globe_valve,VALVE,PL514Z,2,Globe Check Valve
-GlobeValve,globe_valve,True,globe_valve,VALVE,PL365Z,2,Globe Valve
-Hose,hose,False,,OTHER_PIPING,PL995Z,2,Hose
-IlluminatedSightGlass,illuminated_sight_glass,False,,OTHER_PIPING,PL760Z,2,Illuminated Sight Glass
-InLineMixer,in_line_mixer,False,,OTHER_PIPING,PL456Z,2,In Line Mixer
-InlinePrimaryElement,inline_primary_element,False,,OTHER_PIPING,PL202Z,2,Inline Primary Element
-LineBlind,line_blind,False,,OTHER_PIPING,PL920Z,2,Line Blind
-MassFlowMeasuringElement,mass_flow_measuring_element,False,,FLOW_MEASUREMENT,PL836Z,2,Mass Flow Measuring Element
-NeedleValve,needle_valve,False,,VALVE,PL023Z,2,Needle Valve
-OperatedValve,operated_valve,True,operated_valve,VALVE,PL693Z,2,Operated Valve
-Penetration,penetration,False,,OTHER_PIPING,PL386Z,2,Penetration
-Pipe,pipe,False,,PIPE,PL384Z,2,Pipe
-PipeCoupling,pipe_coupling,False,,PIPE,PL073Z,2,Pipe Coupling
-PipeFitting,pipe_fitting,False,,PIPE,PL041Z,2,Pipe Fitting
-PipeFlangeSpacer,pipe_flange_spacer,False,,PIPE,PL796Z,2,Pipe Flange Spacer
-PipeFlangeSpade,pipe_flange_spade,False,,PIPE,PL578Z,2,Pipe Flange Spade
-PipeOffPageConnector,pipe_off_page_connector,False,,PIPE,PL618Z,2,Pipe Off Page Connector
-PipeOffPageConnectorObjectReference,pipe_off_page_connector_object_reference,False,,PIPE,PL672Z,2,Pipe Off Page Connector Object Reference
-PipeOffPageConnectorReference,pipe_off_page_connector_reference,False,,PIPE,PL710Z,2,Pipe Off Page Connector Reference
-PipeOffPageConnectorReferenceByNumber,pipe_off_page_connector_reference_by_number,False,,PIPE,PL820Z,2,Pipe Off Page Connector Reference By Number
-PipeReducer,pipe_reducer,False,,PIPE,PL767Z,2,Pipe Reducer
-PipeTee,pipe_tee,False,,PIPE,PL789Z,2,Pipe Tee
-PipingComponent,piping_component,False,,OTHER_PIPING,PL227Z,2,Piping Component
-PipingConnection,piping_connection,False,,CONNECTION,PL331Z,2,Piping Connection
-PipingNetworkSegment,piping_network_segment,False,,STRUCTURE,PL297Z,0,Piping Network Segment
-PipingNetworkSegmentItem,piping_network_segment_item,False,,STRUCTURE,PL828Z,0,Piping Network Segment Item
-PipingNetworkSystem,piping_network_system,False,,STRUCTURE,PL170Z,0,Piping Network System
-PipingNode,piping_node,False,,OTHER_PIPING,PL339Z,2,Piping Node
-PipingNodeOwner,piping_node_owner,False,,OTHER_PIPING,PL612Z,2,Piping Node Owner
-PipingSourceItem,piping_source_item,False,,OTHER_PIPING,PL215Z,2,Piping Source Item
-PipingTargetItem,piping_target_item,False,,OTHER_PIPING,PL936Z,2,Piping Target Item
-PlugValve,plug_valve,True,plug_valve,VALVE,PL280Z,2,Plug Valve
-PositiveDisplacementFlowMeter,positive_displacement_flow_meter,False,,FLOW_MEASUREMENT,PL934Z,2,Positive Displacement Flow Meter
-PropertyBreak,property_break,False,,OTHER_PIPING,PL344Z,2,Property Break
-RestrictionOrifice,restriction_orifice,False,,FLOW_MEASUREMENT,PL256Z,2,Restriction Orifice
-RuptureDisc,rupture_disc,False,,SAFETY,PL978Z,2,Rupture Disc
-SafetyValveOrFitting,safety_valve,True,safety_valve,VALVE,PL439Z,2,Safety Valve Or Fitting
-SightGlass,sight_glass,False,,OTHER_PIPING,PL437Z,2,Sight Glass
-Silencer,silencer,False,,OTHER_PIPING,PL102Z,2,Silencer
-SpringLoadedAngleGlobeSafetyValve,spring_loaded_angle_globe_safety_valve,False,safety_valve,VALVE,PL180Z,2,Spring Loaded Angle Globe Safety Valve
-SpringLoadedGlobeSafetyValve,spring_loaded_globe_safety_valve,False,safety_valve,VALVE,PL916Z,2,Spring Loaded Globe Safety Valve
-SteamTrap,steam_trap,False,,OTHER_PIPING,PL395Z,2,Steam Trap
-StraightwayValve,straightway_valve,False,,VALVE,PL593Z,2,Straightway Valve
-Strainer,strainer,False,,FILTRATION,PL703Z,2,Strainer
-SwingCheckValve,swing_check_valve,False,check_valve,VALVE,PL575Z,2,Swing Check Valve
-TurbineFlowMeter,turbine_flow_meter,False,,FLOW_MEASUREMENT,PL358Z,2,Turbine Flow Meter
-VariableAreaFlowMeter,variable_area_flow_meter,False,,FLOW_MEASUREMENT,PL643Z,2,Variable Area Flow Meter
-VentilationDevice,ventilation_device,False,,OTHER_PIPING,PL390Z,2,Ventilation Device
-VenturiTube,venturi_tube,False,,FLOW_MEASUREMENT,PL459Z,2,Venturi Tube
-VolumeFlowMeasuringElement,volume_flow_measuring_element,False,,FLOW_MEASUREMENT,PL197Z,2,Volume Flow Measuring Element
+AngleBallValve,angle_ball_valve,False,ball_valve,VALVE,PV019A,2,Angle Ball Valve
+AngleGlobeValve,angle_globe_valve,False,globe_valve,VALVE,PV007A_Origo,2,Angle Globe Valve
+AnglePlugValve,angle_plug_valve,False,plug_valve,VALVE,PV023A_Origo,2,Angle Plug Valve
+AngleValve,angle_valve,False,,VALVE,PV008A,2,Angle Valve
+BallValve,ball_valve,True,ball_valve,VALVE,PV019A,2,Ball Valve
+BlindFlange,blind_flange,False,,CONNECTION,PV002A,2,Blind Flange
+BreatherValve,breather_valve,False,,VALVE,PV011A,2,Breather Valve
+ButterflyValve,butterfly_valve,False,,VALVE,PV018A,2,Butterfly Valve
+CheckValve,check_valve,True,check_valve,VALVE,PV013A_Detail,2,Check Valve
+ClampedFlangeCoupling,clamped_flange_coupling,False,,CONNECTION,PC023A,2,Clamped Flange Coupling
+Compensator,compensator,False,,OTHER_PIPING,PC023A,2,Compensator
+ConicalStrainer,conical_strainer,False,,FILTRATION,PS014A,2,Conical Strainer
+CustomCheckValve,custom_check_valve,False,check_valve,VALVE,PV013A_Detail,2,Custom Check Valve
+CustomInlinePrimaryElement,custom_inline_primary_element,False,,OTHER_PIPING,PF002A,2,Custom Inline Primary Element
+CustomOperatedValve,custom_operated_valve,False,operated_valve,VALVE,PV021A,2,Custom Operated Valve
+CustomPipeFitting,custom_pipe_fitting,False,,PIPE,PC023A,2,Custom Pipe Fitting
+CustomPipingComponent,custom_piping_component,False,,OTHER_PIPING,PC023A,2,Custom Piping Component
+CustomSafetyValveOrFitting,custom_safety_valve_or_fitting,False,safety_valve,VALVE,PV012A_Origo,2,Custom Safety Valve Or Fitting
+DirectPipingConnection,direct_piping_connection,False,,CONNECTION,PC023A,2,Direct Piping Connection
+ElectromagneticFlowMeter,electromagnetic_flow_meter,False,,FLOW_MEASUREMENT,PF002A,2,Electromagnetic Flow Meter
+FlameArrestor,flame_arrestor,False,,SAFETY,PS014A,2,Flame Arrestor
+Flange,flange,False,,CONNECTION,PV001A_Origo,2,Flange
+FlangedConnection,flanged_connection,False,,CONNECTION,PC023A,2,Flanged Connection
+FlowInPipeOffPageConnector,flow_in_pipe_off_page_connector,False,,PIPE,PC023A,2,Flow In Pipe Off Page Connector
+FlowMeasuringElement,flow_measuring_element,False,,FLOW_MEASUREMENT,PF002A,2,Flow Measuring Element
+FlowNozzle,flow_nozzle,False,,FLOW_MEASUREMENT,PF002A,2,Flow Nozzle
+FlowOutPipeOffPageConnector,flow_out_pipe_off_page_connector,False,,PIPE,PC023A,2,Flow Out Pipe Off Page Connector
+Funnel,funnel,False,,OTHER_PIPING,PE025A,2,Funnel
+GateValve,gate_valve,False,,VALVE,PV005A_Option1,2,Gate Valve
+GlobeCheckValve,globe_check_valve,False,globe_valve,VALVE,PV013A_Detail,2,Globe Check Valve
+GlobeValve,globe_valve,True,globe_valve,VALVE,PV007A_Origo,2,Globe Valve
+Hose,hose,False,,OTHER_PIPING,PP001A,2,Hose
+IlluminatedSightGlass,illuminated_sight_glass,False,,OTHER_PIPING,PL881Z,2,Illuminated Sight Glass
+InLineMixer,in_line_mixer,False,,OTHER_PIPING,PP017A_Origo,2,In Line Mixer
+InlinePrimaryElement,inline_primary_element,False,,OTHER_PIPING,PF002A,2,Inline Primary Element
+LineBlind,line_blind,False,,OTHER_PIPING,PV002A,2,Line Blind
+MassFlowMeasuringElement,mass_flow_measuring_element,False,,FLOW_MEASUREMENT,PF002A,2,Mass Flow Measuring Element
+NeedleValve,needle_valve,False,,VALVE,PV016A_Origo,2,Needle Valve
+OperatedValve,operated_valve,True,operated_valve,VALVE,PV021A,2,Operated Valve
+Penetration,penetration,False,,OTHER_PIPING,PC023A,2,Penetration
+Pipe,pipe,False,,PIPE,PC023A,2,Pipe
+PipeCoupling,pipe_coupling,False,,PIPE,PC023A,2,Pipe Coupling
+PipeFitting,pipe_fitting,False,,PIPE,PC023A,2,Pipe Fitting
+PipeFlangeSpacer,pipe_flange_spacer,False,,PIPE,PC023A,2,Pipe Flange Spacer
+PipeFlangeSpade,pipe_flange_spade,False,,PIPE,PV002A,2,Pipe Flange Spade
+PipeOffPageConnector,pipe_off_page_connector,False,,PIPE,PC023A,2,Pipe Off Page Connector
+PipeOffPageConnectorObjectReference,pipe_off_page_connector_object_reference,False,,PIPE,PC023A,2,Pipe Off Page Connector Object Reference
+PipeOffPageConnectorReference,pipe_off_page_connector_reference,False,,PIPE,PC023A,2,Pipe Off Page Connector Reference
+PipeOffPageConnectorReferenceByNumber,pipe_off_page_connector_reference_by_number,False,,PIPE,PC023A,2,Pipe Off Page Connector Reference By Number
+PipeReducer,pipe_reducer,False,,PIPE,PC023A,2,Pipe Reducer
+PipeTee,pipe_tee,False,,PIPE,PC023A,2,Pipe Tee
+PipingComponent,piping_component,False,,OTHER_PIPING,PL891Z,2,Piping Component
+PipingConnection,piping_connection,False,,CONNECTION,PC023A,2,Piping Connection
+PipingNetworkSegment,piping_network_segment,False,,STRUCTURE,PN956Z,0,Piping Network Segment
+PipingNetworkSegmentItem,piping_network_segment_item,False,,STRUCTURE,PN148Z,0,Piping Network Segment Item
+PipingNetworkSystem,piping_network_system,False,,STRUCTURE,PN145Z,0,Piping Network System
+PipingNode,piping_node,False,,OTHER_PIPING,PL398Z,2,Piping Node
+PipingNodeOwner,piping_node_owner,False,,OTHER_PIPING,PL252Z,2,Piping Node Owner
+PipingSourceItem,piping_source_item,False,,OTHER_PIPING,PL323Z,2,Piping Source Item
+PipingTargetItem,piping_target_item,False,,OTHER_PIPING,PL302Z,2,Piping Target Item
+PlugValve,plug_valve,True,plug_valve,VALVE,PV023A_Origo,2,Plug Valve
+PositiveDisplacementFlowMeter,positive_displacement_flow_meter,False,,FLOW_MEASUREMENT,PF002A,2,Positive Displacement Flow Meter
+PropertyBreak,property_break,False,,OTHER_PIPING,PL126Z,2,Property Break
+RestrictionOrifice,restriction_orifice,False,,FLOW_MEASUREMENT,PF002A,2,Restriction Orifice
+RuptureDisc,rupture_disc,False,,SAFETY,PV002A,2,Rupture Disc
+SafetyValveOrFitting,safety_valve,True,safety_valve,VALVE,PV002A,2,Safety Valve Or Fitting
+SightGlass,sight_glass,False,,OTHER_PIPING,PE037A,2,Sight Glass
+Silencer,silencer,False,,OTHER_PIPING,PE037A,2,Silencer
+SpringLoadedAngleGlobeSafetyValve,spring_loaded_angle_globe_safety_valve,False,safety_valve,VALVE,PV008B,2,Spring Loaded Angle Globe Safety Valve
+SpringLoadedGlobeSafetyValve,spring_loaded_globe_safety_valve,False,safety_valve,VALVE,PV008B,2,Spring Loaded Globe Safety Valve
+SteamTrap,steam_trap,False,,OTHER_PIPING,PV013A_Detail,2,Steam Trap
+StraightwayValve,straightway_valve,False,,VALVE,PV648Z,2,Straightway Valve
+Strainer,strainer,False,,FILTRATION,PS014A,2,Strainer
+SwingCheckValve,swing_check_valve,False,check_valve,VALVE,PV013A_Detail,2,Swing Check Valve
+TurbineFlowMeter,turbine_flow_meter,False,,FLOW_MEASUREMENT,PF002A,2,Turbine Flow Meter
+VariableAreaFlowMeter,variable_area_flow_meter,False,,FLOW_MEASUREMENT,PF002A,2,Variable Area Flow Meter
+VentilationDevice,ventilation_device,False,,OTHER_PIPING,PL035Z,2,Ventilation Device
+VenturiTube,venturi_tube,False,,FLOW_MEASUREMENT,PF002A,2,Venturi Tube
+VolumeFlowMeasuringElement,volume_flow_measuring_element,False,,FLOW_MEASUREMENT,PF002A,2,Volume Flow Measuring Element

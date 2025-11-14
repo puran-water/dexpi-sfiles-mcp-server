@@ -195,14 +195,17 @@ def generate_all_registrations():
     from generate_equipment_registrations import generate_registration_data
     all_registrations['equipment'] = generate_registration_data()
 
+    # Instantiate SymbolMapper for piping and instrumentation (Phase 3 Pass 1)
+    symbol_mapper = SymbolMapper()
+
     # Piping
     piping_classes = available['piping']
     for class_name in sorted(piping_classes):
         category = PipingCategorizer.categorize(class_name)
         alias, is_primary, family = PipingAliasGenerator.generate_alias(class_name, category)
 
-        # Symbol (placeholder for now)
-        symbol_id = f"PL{abs(hash(class_name)) % 1000:03d}Z"  # PL = Piping/Line
+        # Symbol mapping using SymbolMapper (Phase 3 Pass 1)
+        symbol_id = symbol_mapper.map_symbol(class_name, category, 'piping')
 
         # Connection defaults
         if category == 'VALVE':
@@ -237,8 +240,8 @@ def generate_all_registrations():
         category = InstrumentationCategorizer.categorize(class_name)
         alias, is_primary, family = InstrumentationAliasGenerator.generate_alias(class_name)
 
-        # Symbol (placeholder)
-        symbol_id = f"IN{abs(hash(class_name)) % 1000:03d}Z"  # IN = Instrumentation
+        # Symbol mapping using SymbolMapper (Phase 3 Pass 1)
+        symbol_id = symbol_mapper.map_symbol(class_name, category, 'instrumentation')
 
         # Connection defaults
         if category in ['ACTUATING', 'CONTROL']:

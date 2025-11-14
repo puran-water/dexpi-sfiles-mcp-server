@@ -1,0 +1,141 @@
+{
+  "pass1_targets": {
+    "ActuatingFunction": [
+      {
+        "symbol_id": "IM005B_Option1",
+        "symbol_name": "IM005B_Option1",
+        "similarity": 0.35294117647058826,
+        "category": "Instrumentation"
+      }
+    ],
+    "AnglePlugValve": [
+      {
+        "symbol_id": "PV021A",
+        "symbol_name": "PV021A",
+        "similarity": 0.3333333333333333,
+        "category": "Valves"
+      },
+      {
+        "symbol_id": "PV008A",
+        "symbol_name": "PV008A",
+        "similarity": 0.3333333333333333,
+        "category": "Valves"
+      },
+      {
+        "symbol_id": "PV011A",
+        "symbol_name": "PV011A",
+        "similarity": 0.3333333333333333,
+        "category": "Valves"
+      },
+      {
+        "symbol_id": "PV008A_Detail",
+        "symbol_name": "PV008A_Detail",
+        "similarity": 0.3225806451612903,
+        "category": "Detail"
+      },
+      {
+        "symbol_id": "PV011A_Detail",
+        "symbol_name": "PV011A_Detail",
+        "similarity": 0.3225806451612903,
+        "category": "Detail"
+      }
+    ],
+    "AngleValve": [
+      {
+        "symbol_id": "PV021A",
+        "symbol_name": "PV021A",
+        "similarity": 0.3157894736842105,
+        "category": "Valves"
+      },
+      {
+        "symbol_id": "PV008A",
+        "symbol_name": "PV008A",
+        "similarity": 0.3157894736842105,
+        "category": "Valves"
+      },
+      {
+        "symbol_id": "PV011A",
+        "symbol_name": "PV011A",
+        "similarity": 0.3157894736842105,
+        "category": "Valves"
+      },
+      {
+        "symbol_id": "PV008A_Detail",
+        "symbol_name": "PV008A_Detail",
+        "similarity": 0.3076923076923077,
+        "category": "Detail"
+      },
+      {
+        "symbol_id": "PV011A_Detail",
+        "symbol_name": "PV011A_Detail",
+        "similarity": 0.3076923076923077,
+        "category": "Detail"
+      }
+    ],
+    "GasTurbine": [
+      {
+        "symbol_id": "PP013A_Detail",
+        "symbol_name": "PP013A_Detail",
+        "similarity": 0.3076923076923077,
+        "category": "Detail"
+      }
+    ],
+    "OperatedValve": [
+      {
+        "symbol_id": "PV021A",
+        "symbol_name": "PV021A",
+        "similarity": 0.36363636363636365,
+        "category": "Valves"
+      },
+      {
+        "symbol_id": "PV008A",
+        "symbol_name": "PV008A",
+        "similarity": 0.36363636363636365,
+        "category": "Valves"
+      },
+      {
+        "symbol_id": "PV011A",
+        "symbol_name": "PV011A",
+        "similarity": 0.36363636363636365,
+        "category": "Valves"
+      },
+      {
+        "symbol_id": "PV008A_Detail",
+        "symbol_name": "PV008A_Detail",
+        "similarity": 0.3448275862068966,
+        "category": "Detail"
+      },
+      {
+        "symbol_id": "PV011A_Detail",
+        "symbol_name": "PV011A_Detail",
+        "similarity": 0.3448275862068966,
+        "category": "Detail"
+      }
+    ],
+    "Positioner": [
+      {
+        "symbol_id": "IM005B_Option1",
+        "symbol_name": "IM005B_Option1",
+        "similarity": 0.38461538461538464,
+        "category": "Instrumentation"
+      }
+    ],
+    "RadialFan": [
+      {
+        "symbol_id": "PP013A_Detail",
+        "symbol_name": "PP013A_Detail",
+        "similarity": 0.32,
+        "category": "Detail"
+      }
+    ],
+    "SensingLocation": [
+      {
+        "symbol_id": "IM005B_Option1",
+        "symbol_name": "IM005B_Option1",
+        "similarity": 0.4375,
+        "category": "Instrumentation"
+      }
+    ]
+  },
+  "all_placeholders": {}
+}

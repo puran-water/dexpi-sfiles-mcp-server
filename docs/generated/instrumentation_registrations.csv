@@ -1,35 +1,35 @@
 class_name,sfiles_alias,is_primary,family,category,symbol_id,connection_count,display_name
-ActuatingElectricalFunction,actuator_electric,True,actuator_electric,ACTUATING,IN629Z,1,Actuating Electrical Function
-ActuatingElectricalLocation,actuating_electrical_location,False,actuator_electric,ACTUATING,IN289Z,1,Actuating Electrical Location
-ActuatingElectricalSystem,actuating_electrical_system,False,actuator_electric,ACTUATING,IN732Z,1,Actuating Electrical System
-ActuatingFunction,actuator,True,actuator,ACTUATING,IN994Z,1,Actuating Function
-ActuatingSystem,actuating_system,False,actuator,ACTUATING,IN907Z,1,Actuating System
-ControlledActuator,controlled_actuator,False,actuator,ACTUATING,IN732Z,1,Controlled Actuator
-CustomActuatingElectricalSystemComponent,custom_actuating_electrical_system_component,False,,ACTUATING,IN459Z,1,Custom Actuating Electrical System Component
-CustomActuatingSystemComponent,custom_actuating_system_component,False,,ACTUATING,IN583Z,1,Custom Actuating System Component
-CustomProcessSignalGeneratingSystemComponent,custom_process_signal_generating_system_component,False,,SIGNAL,IN434Z,2,Custom Process Signal Generating System Component
-ElectronicFrequencyConverter,electronic_frequency_converter,False,,CONVERTER,IN845Z,1,Electronic Frequency Converter
-FlowDetector,flow_detector,False,transmitter,DETECTOR,IN427Z,1,Flow Detector
-FlowInSignalOffPageConnector,flow_signal_connector,True,flow_signal_connector,SIGNAL,IN000Z,2,Flow In Signal Off Page Connector
-FlowOutSignalOffPageConnector,flow_out_signal_off_page_connector,False,flow_signal_connector,SIGNAL,IN307Z,2,Flow Out Signal Off Page Connector
-InlinePrimaryElementReference,inline_primary_element_reference,False,,MEASUREMENT,IN863Z,2,Inline Primary Element Reference
-InstrumentationLoopFunction,instrumentation_loop_function,False,,CONTROL_LOOP,IN534Z,1,Instrumentation Loop Function
-MeasuringLineFunction,measuring_line_function,False,,MEASUREMENT,IN645Z,2,Measuring Line Function
-OfflinePrimaryElement,offline_primary_element,False,,MEASUREMENT,IN744Z,2,Offline Primary Element
-OperatedValveReference,operated_valve_reference,False,,OTHER_INSTRUMENTATION,IN662Z,1,Operated Valve Reference
-Positioner,positioner,False,,ACTUATING,IN774Z,1,Positioner
-PrimaryElement,primary_element,False,,MEASUREMENT,IN366Z,2,Primary Element
-ProcessControlFunction,process_control_function,False,,CONTROL,IN562Z,1,Process Control Function
-ProcessInstrumentationFunction,process_instrumentation_function,False,,OTHER_INSTRUMENTATION,IN378Z,1,Process Instrumentation Function
-ProcessSignalGeneratingFunction,process_signal_generating_function,False,,SIGNAL,IN072Z,2,Process Signal Generating Function
-ProcessSignalGeneratingSystem,process_signal_generating_system,False,,SIGNAL,IN443Z,2,Process Signal Generating System
-SensingLocation,sensing_location,False,,SENSING,IN842Z,2,Sensing Location
-SignalConveyingFunction,signal_conveying_function,False,,SIGNAL,IN597Z,2,Signal Conveying Function
-SignalConveyingFunctionSource,signal_conveying_function_source,False,,SIGNAL,IN698Z,2,Signal Conveying Function Source
-SignalConveyingFunctionTarget,signal_conveying_function_target,False,,SIGNAL,IN055Z,2,Signal Conveying Function Target
-SignalLineFunction,signal_line_function,False,,SIGNAL,IN652Z,2,Signal Line Function
-SignalOffPageConnector,signal_connector,True,signal_connector,SIGNAL,IN990Z,2,Signal Off Page Connector
-SignalOffPageConnectorObjectReference,signal_off_page_connector_object_reference,False,signal_connector,SIGNAL,IN255Z,2,Signal Off Page Connector Object Reference
-SignalOffPageConnectorReference,signal_off_page_connector_reference,False,signal_connector,SIGNAL,IN917Z,2,Signal Off Page Connector Reference
-SignalOffPageConnectorReferenceByNumber,signal_off_page_connector_reference_by_number,False,signal_connector,SIGNAL,IN584Z,2,Signal Off Page Connector Reference By Number
-Transmitter,transmitter,True,transmitter,TRANSMITTER,IN803Z,1,Transmitter
+ActuatingElectricalFunction,actuator_electric,True,actuator_electric,ACTUATING,IM005B_Option1,1,Actuating Electrical Function
+ActuatingElectricalLocation,actuating_electrical_location,False,actuator_electric,ACTUATING,IM005B_Option1,1,Actuating Electrical Location
+ActuatingElectricalSystem,actuating_electrical_system,False,actuator_electric,ACTUATING,IM005B_Option1,1,Actuating Electrical System
+ActuatingFunction,actuator,True,actuator,ACTUATING,IM005B_Option1,1,Actuating Function
+ActuatingSystem,actuating_system,False,actuator,ACTUATING,IM005B_Option1,1,Actuating System
+ControlledActuator,controlled_actuator,False,actuator,ACTUATING,IM005B_Option1,1,Controlled Actuator
+CustomActuatingElectricalSystemComponent,custom_actuating_electrical_system_component,False,,ACTUATING,IM005B_Option1,1,Custom Actuating Electrical System Component
+CustomActuatingSystemComponent,custom_actuating_system_component,False,,ACTUATING,IM005B_Option1,1,Custom Actuating System Component
+CustomProcessSignalGeneratingSystemComponent,custom_process_signal_generating_system_component,False,,SIGNAL,PF002A,2,Custom Process Signal Generating System Component
+ElectronicFrequencyConverter,electronic_frequency_converter,False,,CONVERTER,IM017A,1,Electronic Frequency Converter
+FlowDetector,flow_detector,False,transmitter,DETECTOR,PF002A,1,Flow Detector
+FlowInSignalOffPageConnector,flow_signal_connector,True,flow_signal_connector,SIGNAL,ND0006,2,Flow In Signal Off Page Connector
+FlowOutSignalOffPageConnector,flow_out_signal_off_page_connector,False,flow_signal_connector,SIGNAL,ND0006,2,Flow Out Signal Off Page Connector
+InlinePrimaryElementReference,inline_primary_element_reference,False,,MEASUREMENT,PF002A,2,Inline Primary Element Reference
+InstrumentationLoopFunction,instrumentation_loop_function,False,,CONTROL_LOOP,ND0006,1,Instrumentation Loop Function
+MeasuringLineFunction,measuring_line_function,False,,MEASUREMENT,PF002A,2,Measuring Line Function
+OfflinePrimaryElement,offline_primary_element,False,,MEASUREMENT,PF002A,2,Offline Primary Element
+OperatedValveReference,operated_valve_reference,False,,OTHER_INSTRUMENTATION,PV021A,1,Operated Valve Reference
+Positioner,positioner,False,,ACTUATING,IM017A,1,Positioner
+PrimaryElement,primary_element,False,,MEASUREMENT,PF002A,2,Primary Element
+ProcessControlFunction,process_control_function,False,,CONTROL,ND0006,1,Process Control Function
+ProcessInstrumentationFunction,process_instrumentation_function,False,,OTHER_INSTRUMENTATION,ND0006,1,Process Instrumentation Function
+ProcessSignalGeneratingFunction,process_signal_generating_function,False,,SIGNAL,PF002A,2,Process Signal Generating Function
+ProcessSignalGeneratingSystem,process_signal_generating_system,False,,SIGNAL,IM005A,2,Process Signal Generating System
+SensingLocation,sensing_location,False,,SENSING,IM017C,2,Sensing Location
+SignalConveyingFunction,signal_conveying_function,False,,SIGNAL,ND0006,2,Signal Conveying Function
+SignalConveyingFunctionSource,signal_conveying_function_source,False,,SIGNAL,ND0006,2,Signal Conveying Function Source
+SignalConveyingFunctionTarget,signal_conveying_function_target,False,,SIGNAL,ND0006,2,Signal Conveying Function Target
+SignalLineFunction,signal_line_function,False,,SIGNAL,ND0006,2,Signal Line Function
+SignalOffPageConnector,signal_connector,True,signal_connector,SIGNAL,ND0006,2,Signal Off Page Connector
+SignalOffPageConnectorObjectReference,signal_off_page_connector_object_reference,False,signal_connector,SIGNAL,ND0006,2,Signal Off Page Connector Object Reference
+SignalOffPageConnectorReference,signal_off_page_connector_reference,False,signal_connector,SIGNAL,ND0006,2,Signal Off Page Connector Reference
+SignalOffPageConnectorReferenceByNumber,signal_off_page_connector_reference_by_number,False,signal_connector,SIGNAL,ND0006,2,Signal Off Page Connector Reference By Number
+Transmitter,transmitter,True,transmitter,TRANSMITTER,IM017B,1,Transmitter

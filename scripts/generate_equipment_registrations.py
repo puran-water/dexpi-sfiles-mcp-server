@@ -209,10 +209,14 @@ class SFILESAliasGenerator:
 
 
 class SymbolMapper:
-    """Map equipment classes to NOAKADEXPI symbols."""
+    """Map component classes to NOAKADEXPI symbols.
 
-    # Known symbol mappings from validation script
+    Phase 3 Pass 1: Extended to support equipment, piping, and instrumentation.
+    """
+
+    # Known symbol mappings from validation script and Phase 3 Pass 1
     KNOWN_MAPPINGS = {
+        # Equipment (existing)
         'CentrifugalPump': 'PP001A',
         'Pump': 'PP001A',  # Generic pump
         'ReciprocatingPump': 'PP010A',
@@ -222,7 +226,204 @@ class SymbolMapper:
         'Separator': 'PE012A',
         'Centrifuge': 'PE030A',
         'Filter': 'PS014A',
-        # Add more from symbol catalog...
+
+        # Phase 3 Pass 1: Rotating Equipment
+        'Turbine': 'PE021A_Origo',
+        'CentrifugalCompressor': 'PP011A_Origo',
+        'Agitator': 'PP017A_Origo',
+
+        # Phase 3 Pass 1: Valves
+        'BallValve': 'PV019A',
+        'GateValve': 'PV005A_Option1',
+        'GlobeValve': 'PV007A_Origo',
+        'ButterflyValve': 'PV018A',
+        'CheckValve': 'PV013A_Detail',
+        'NeedleValve': 'PV016A_Origo',
+        'PlugValve': 'PV023A_Origo',
+
+        # Phase 3 Pass 1: Instrumentation
+        'FlowDetector': 'PF002A',
+        'ProcessControlFunction': 'ND0006',
+
+        # Phase 3 Pass 2: Remaining Pass 1 targets (valves)
+        'AngleBallValve': 'PV019A',  # Use BallValve symbol (same base type)
+        'AngleGlobeValve': 'PV007A_Origo',  # Use GlobeValve symbol (same base type)
+        'AnglePlugValve': 'PV023A_Origo',  # Use PlugValve symbol (same base type)
+        'AngleValve': 'PV008A',  # Generic angle valve
+        'BreatherValve': 'PV011A',  # Generic valve
+        'GlobeCheckValve': 'PV013A_Detail',  # Use CheckValve symbol (check valve variant)
+        'OperatedValve': 'PV021A',  # Generic operated valve
+        'SafetyValveOrFitting': 'PV002A',  # Blind flange (safety fitting)
+        'SpringLoadedGlobeSafetyValve': 'PV008B',  # Generic safety valve
+        'SpringLoadedAngleGlobeSafetyValve': 'PV008B',  # Generic safety valve
+        'SwingCheckValve': 'PV013A_Detail',  # Use CheckValve symbol (check valve variant)
+
+        # Phase 3 Pass 2: Remaining Pass 1 targets (rotating equipment)
+        'AlternatingCurrentMotor': 'PP013A',  # Generic motor
+        'DirectCurrentMotor': 'PP013A',  # Generic motor
+        'AxialCompressor': 'PP011A_Origo',  # Use CentrifugalCompressor (compressor family)
+        'ReciprocatingCompressor': 'PP011A_Origo',  # Use CentrifugalCompressor (compressor family)
+        'RotaryCompressor': 'PP011A_Origo',  # Use CentrifugalCompressor (compressor family)
+        'AxialBlower': 'PP013A_Detail',  # Generic blower/fan
+        'CentrifugalBlower': 'PP013A_Detail',  # Generic blower/fan
+        'AxialFan': 'PP013A_Detail',  # Generic blower/fan
+        'CentrifugalFan': 'PP013A_Detail',  # Generic blower/fan
+        'RadialFan': 'PP013A_Detail',  # Generic blower/fan
+        'GasTurbine': 'PE021A_Origo',  # Use Turbine symbol (turbine family)
+        'SteamTurbine': 'PE021A_Origo',  # Use Turbine symbol (turbine family)
+
+        # Phase 3 Pass 2: Remaining Pass 1 targets (instrumentation)
+        'ActuatingFunction': 'IM005B_Option1',  # Actuating device
+        'ActuatingSystem': 'IM005B_Option1',  # Actuating device
+        'ControlledActuator': 'IM005B_Option1',  # Actuating device
+        'Positioner': 'IM017A',  # Instrument component
+        'Transmitter': 'IM017B',  # Transmitter device
+        'SensingLocation': 'IM017C',  # Sensor/detector
+
+        # Phase 3 Pass 2: Common equipment (long tail)
+        'Heater': 'PE037A',  # Use HeatExchanger symbol
+        'ElectricHeater': 'PE037A',  # Use HeatExchanger symbol
+        'Boiler': 'PE037A',  # Use HeatExchanger symbol
+        'SteamGenerator': 'PE037A',  # Use HeatExchanger symbol
+        'Furnace': 'PE037A',  # Use HeatExchanger symbol
+        'Dryer': 'PE037A',  # Heat treatment equipment
+        'ConvectionDryer': 'PE037A',  # Heat treatment equipment
+        'Mixer': 'PP017A_Origo',  # Use Agitator symbol (mixing equipment)
+        'RotaryMixer': 'PP017A_Origo',  # Use Agitator symbol
+        'InLineMixer': 'PP017A_Origo',  # Use Agitator symbol
+        'StaticMixer': 'PP017A_Origo',  # Use Agitator symbol
+        'LiquidFilter': 'PS014A',  # Use Filter symbol
+        'GasFilter': 'PS014A',  # Use Filter symbol
+        'Silo': 'PE025A',  # Use Tank symbol
+        'Blower': 'PP013A_Detail',  # Generic blower
+        'Compressor': 'PP011A_Origo',  # Generic compressor
+        'Fan': 'PP013A_Detail',  # Generic fan
+        'Motor': 'PP013A',  # Generic motor
+        'Pump': 'PP001A',  # Generic pump (already exists)
+        'RotaryPump': 'PP001A',  # Use generic pump
+        'EjectorPump': 'PP001A',  # Use generic pump
+        'Crusher': 'PS014A',  # Mechanical processing
+        'Grinder': 'PS014A',  # Mechanical processing
+        'Mill': 'PS014A',  # Mechanical processing
+        'Sieve': 'PS014A',  # Separation equipment
+        'Conveyor': 'PC023A',  # Transport equipment
+        'Feeder': 'PC023A',  # Transport equipment
+        'Weigher': 'PC023A',  # Transport/measurement
+        'Extruder': 'PC023A',  # Transport/forming
+        'ProcessColumn': 'PT002A',  # Use Vessel symbol
+        'PressureVessel': 'PT002A',  # Use Vessel symbol
+        'Vessel': 'PT002A',  # Already mapped
+
+        # Phase 3 Pass 2: Custom* variants (use base class symbols)
+        'CustomPump': 'PP001A',  # Use Pump symbol
+        'CustomCompressor': 'PP011A_Origo',  # Use Compressor symbol
+        'CustomMotor': 'PP013A',  # Use Motor symbol
+        'CustomFan': 'PP013A_Detail',  # Use Fan symbol
+        'CustomHeatExchanger': 'PE037A',  # Use HeatExchanger symbol
+        'CustomHeater': 'PE037A',  # Use HeatExchanger symbol
+        'CustomDryer': 'PE037A',  # Use HeatExchanger symbol
+        'CustomMixer': 'PP017A_Origo',  # Use Agitator symbol
+        'CustomFilter': 'PS014A',  # Use Filter symbol
+        'CustomCentrifuge': 'PE030A',  # Use Centrifuge symbol
+        'CustomSeparator': 'PE012A',  # Use Separator symbol
+        'CustomSieve': 'PS014A',  # Use Filter symbol
+        'CustomVessel': 'PT002A',  # Use Vessel symbol
+        'CustomEquipment': 'PE037A',  # Generic equipment
+
+        # Phase 3 Pass 2: Common piping components
+        'Hose': 'PP001A',  # Flexible piping (use pump symbol as generic)
+        'Strainer': 'PS014A',  # Use Filter symbol
+        'ConicalStrainer': 'PS014A',  # Use Filter symbol
+        'Silencer': 'PE037A',  # Process equipment
+        'SteamTrap': 'PV013A_Detail',  # Valve-like device
+        'RuptureDisc': 'PV002A',  # Safety device (use blind flange)
+        'FlameArrestor': 'PS014A',  # Safety/filtration device
+        'SightGlass': 'PE037A',  # Observation device
+        'Compensator': 'PC023A',  # Piping component
+        'PipeReducer': 'PC023A',  # Piping fitting
+        'PipeTee': 'PC023A',  # Piping fitting
+        'PipeFitting': 'PC023A',  # Generic fitting
+        'FlangedConnection': 'PC023A',  # Connection
+        'PipingConnection': 'PC023A',  # Connection
+        'Funnel': 'PE025A',  # Use Tank symbol (tank-like)
+
+        # Phase 3 Pass 2: Additional instrumentation
+        'InlinePrimaryElement': 'PF002A',  # Use FlowDetector symbol
+        'OfflinePrimaryElement': 'PF002A',  # Use FlowDetector symbol
+        'PrimaryElement': 'PF002A',  # Use FlowDetector symbol
+        'SignalLineFunction': 'ND0006',  # Signal/control
+        'MeasuringLineFunction': 'PF002A',  # Measurement
+        'InstrumentationLoopFunction': 'ND0006',  # Control loop
+        'ProcessInstrumentationFunction': 'ND0006',  # Generic instrumentation
+        'ProcessSignalGeneratingFunction': 'PF002A',  # Signal generation
+        'SignalConveyingFunction': 'ND0006',  # Signal transmission
+        'ActuatingElectricalFunction': 'IM005B_Option1',  # Electrical actuator
+        'ActuatingElectricalSystem': 'IM005B_Option1',  # Electrical actuator system
+        'ActuatingElectricalLocation': 'IM005B_Option1',  # Electrical actuator location
+        'SignalOffPageConnector': 'ND0006',  # Signal connector
+        'SignalOffPageConnectorReference': 'ND0006',  # Signal connector reference
+        'SignalOffPageConnectorObjectReference': 'ND0006',  # Signal object reference
+        'SignalOffPageConnectorReferenceByNumber': 'ND0006',  # Signal number reference
+        'SignalConveyingFunctionSource': 'ND0006',  # Signal source
+        'SignalConveyingFunctionTarget': 'ND0006',  # Signal target
+        'FlowInSignalOffPageConnector': 'ND0006',  # Flow signal in
+        'FlowOutSignalOffPageConnector': 'ND0006',  # Flow signal out
+        'InlinePrimaryElementReference': 'PF002A',  # Inline element reference
+        'OperatedValveReference': 'PV021A',  # Valve reference (use OperatedValve)
+        'ElectronicFrequencyConverter': 'IM017A',  # Electronic converter
+
+        # Phase 3 Pass 2: Remaining Custom* variants
+        'CustomAgglomerator': 'PS014A',  # Use Filter/processing symbol
+        'CustomCoolingTower': 'PE037A',  # Use HeatExchanger symbol
+        'CustomElectricGenerator': 'PP013A',  # Use Motor symbol
+        'CustomExtruder': 'PC023A',  # Use Extruder/Conveyor symbol
+        'CustomMill': 'PS014A',  # Use Mill/Crusher symbol
+        'CustomMobileTransportSystem': 'PC023A',  # Use transport symbol
+        'CustomStationaryTransportSystem': 'PC023A',  # Use transport symbol
+        'CustomWasteGasEmitter': 'PE037A',  # Process equipment
+        'CustomWeigher': 'PC023A',  # Use Weigher/Transport symbol
+        'CustomPipingComponent': 'PC023A',  # Generic piping
+        'CustomPipeFitting': 'PC023A',  # Piping fitting
+        'CustomOperatedValve': 'PV021A',  # Use OperatedValve symbol
+        'CustomInlinePrimaryElement': 'PF002A',  # Flow measurement
+        'CustomActuatingSystemComponent': 'IM005B_Option1',  # Actuator
+        'CustomActuatingElectricalSystemComponent': 'IM005B_Option1',  # Electrical actuator
+        'CustomProcessSignalGeneratingSystemComponent': 'PF002A',  # Signal generation
+
+        # Phase 3 Pass 2: Cooling equipment
+        'CoolingTower': 'PE037A',  # Heat transfer equipment
+        'CoolingTowerRotor': 'PE037A',  # Cooling tower component
+        'AirCoolingSystem': 'PE037A',  # Cooling system
+        'DryCoolingTower': 'PE037A',  # Cooling tower variant
+        'WetCoolingTower': 'PE037A',  # Cooling tower variant
+
+        # Phase 3 Pass 2: Basic piping components
+        'Pipe': 'PC023A',  # Basic pipe
+        'PipeCoupling': 'PC023A',  # Pipe coupling
+        'PipeOffPageConnector': 'PC023A',  # Off-page connector
+        'PipeOffPageConnectorReference': 'PC023A',  # Connector reference
+        'PipeOffPageConnectorObjectReference': 'PC023A',  # Object reference
+        'PipeOffPageConnectorReferenceByNumber': 'PC023A',  # Number reference
+        'FlowInPipeOffPageConnector': 'PC023A',  # Flow in connector
+        'FlowOutPipeOffPageConnector': 'PC023A',  # Flow out connector
+        'DirectPipingConnection': 'PC023A',  # Direct connection
+        'LineBlind': 'PV002A',  # Use blind flange
+        'PipeFlangeSpacer': 'PC023A',  # Flange spacer
+        'PipeFlangeSpade': 'PV002A',  # Flange spade (blind)
+        'ClampedFlangeCoupling': 'PC023A',  # Flange coupling
+        'Penetration': 'PC023A',  # Pipe penetration
+
+        # Phase 3 Pass 2: Flow measurement
+        'FlowMeasuringElement': 'PF002A',  # Flow measurement
+        'FlowNozzle': 'PF002A',  # Flow nozzle
+        'MassFlowMeasuringElement': 'PF002A',  # Mass flow meter
+        'ElectromagneticFlowMeter': 'PF002A',  # EM flow meter
+        'PositiveDisplacementFlowMeter': 'PF002A',  # PD flow meter
+        'TurbineFlowMeter': 'PF002A',  # Turbine flow meter
+        'VariableAreaFlowMeter': 'PF002A',  # Variable area meter
+        'VenturiTube': 'PF002A',  # Venturi meter
+        'RestrictionOrifice': 'PF002A',  # Orifice plate
+        'VolumeFlowMeasuringElement': 'PF002A',  # Volume flow meter
     }
 
     def __init__(self):
@@ -233,11 +434,17 @@ class SymbolMapper:
             print(f"Warning: Could not load symbol registry: {e}")
             self.symbol_registry = None
 
-    def map_symbol(self, class_name: str, category: str) -> str:
+    def map_symbol(self, class_name: str, category: str, component_type: str = 'equipment') -> str:
         """
-        Map equipment class to symbol ID.
+        Map component class to symbol ID.
 
-        Returns symbol ID or placeholder.
+        Args:
+            class_name: DEXPI class name (e.g., 'CentrifugalPump')
+            category: Component category (e.g., 'ROTATING', 'VALVE')
+            component_type: Type of component ('equipment', 'piping', 'instrumentation')
+
+        Returns:
+            Symbol ID or placeholder (with 'Z' suffix if no real symbol found)
         """
         # Check known mappings first
         if class_name in self.KNOWN_MAPPINGS:
@@ -252,19 +459,46 @@ class SymbolMapper:
             except:
                 pass
 
-        # Generate placeholder based on category
-        prefix_map = {
-            'ROTATING': 'PP',  # Pumps/Prime movers
-            'HEAT_TRANSFER': 'PE',  # Process equipment
-            'SEPARATION': 'PS',  # Separation
-            'STORAGE': 'PT',  # Tanks/Vessels
-            'TREATMENT': 'PD',  # Dryers/Treatment
-            'REACTION': 'PE',  # Process equipment
-            'TRANSPORT': 'PM',  # Material handling
-            'CUSTOM': 'PX',  # Custom
-        }
+        # Generate placeholder based on component type and category
+        if component_type == 'equipment':
+            prefix_map = {
+                'ROTATING': 'PP',  # Pumps/Prime movers
+                'HEAT_TRANSFER': 'PE',  # Process equipment
+                'SEPARATION': 'PS',  # Separation
+                'STORAGE': 'PT',  # Tanks/Vessels
+                'TREATMENT': 'PD',  # Dryers/Treatment
+                'REACTION': 'PE',  # Process equipment
+                'TRANSPORT': 'PM',  # Material handling
+                'CUSTOM': 'PX',  # Custom
+            }
+            prefix = prefix_map.get(category, 'PX')
+        elif component_type == 'piping':
+            prefix_map = {
+                'VALVE': 'PV',  # Valves
+                'PIPE': 'PP',  # Pipes
+                'CONNECTION': 'PC',  # Connections/Flanges
+                'FLOW_MEASUREMENT': 'PF',  # Flow meters
+                'FILTRATION': 'PS',  # Strainers/Filters
+                'SAFETY': 'PV',  # Safety devices
+                'STRUCTURE': 'PN',  # Network/Structure
+                'OTHER_PIPING': 'PL',  # Other piping
+            }
+            prefix = prefix_map.get(category, 'PL')
+        elif component_type == 'instrumentation':
+            prefix_map = {
+                'ACTUATING': 'IM',  # Actuators
+                'TRANSMITTER': 'IM',  # Transmitters
+                'SIGNAL': 'IM',  # Signal functions
+                'SENSING': 'IM',  # Sensors
+                'DETECTOR': 'IM',  # Detectors
+                'CONTROL': 'IM',  # Control functions
+                'MEASUREMENT': 'IM',  # Measurement
+                'CONTROL_LOOP': 'IM',  # Control loops
+            }
+            prefix = prefix_map.get(category, 'IN')
+        else:
+            prefix = 'PX'  # Unknown
 
-        prefix = prefix_map.get(category, 'PX')
         # Generate placeholder with class name hash
         hash_suffix = str(abs(hash(class_name)) % 1000).zfill(3)
         return f"{prefix}{hash_suffix}Z"  # Z suffix indicates placeholder

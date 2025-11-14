@@ -711,19 +711,18 @@ class DexpiTools:
             actuatorType="ControlValve"
         )
         
-        # Create signal connections using object references (as per pyDEXPI design)
+        # Create signal connections using instrumentation_toolkit
+        # This provides automatic validation and consistency checks
+        from pydexpi.toolkits import instrumentation_toolkit as it
+
         # Measuring line from sensor to controller
         measuring_line = MeasuringLineFunction(
-            id=f"measuring_line_{sensor_tag}_to_{controller_tag}",
-            source=signal_gen,
-            target=controller
+            id=f"measuring_line_{sensor_tag}_to_{controller_tag}"
         )
-        
+
         # Signal line from controller to valve
         signal_line = SignalLineFunction(
-            id=f"signal_line_{controller_tag}_to_{control_valve_tag}",
-            source=controller,
-            target=actuator
+            id=f"signal_line_{controller_tag}_to_{control_valve_tag}"
         )
         
         # Add to model
@@ -735,24 +734,25 @@ class DexpiTools:
             model.conceptualModel.processInstrumentationFunctions = []
         
         # Create main instrumentation function for the loop
-        # All control components are contained within this function
+        # Note: Components and signal lines are added by toolkit calls below
+        # The toolkit adds them to the appropriate collections AND sets source/target
+        # Use ID with loop_tag for identification (ProcessInstrumentationFunction has no tagName field)
         loop_function = ProcessInstrumentationFunction(
-            tagName=loop_tag,
-            instrumentationType="ControlLoop",
-            processSignalGeneratingFunctions=[signal_gen],
-            processControlFunctions=[controller],
-            actuatingFunctions=[actuator],
-            signalConveyingFunctions=[measuring_line, signal_line]
+            id=loop_tag,
+            processControlFunctions=[controller]  # Only controller goes in constructor
         )
-        
+
+        # Use toolkit to establish validated signal connections
+        # This adds proper source/target references AND adds lines to loop.signalConveyingFunctions
+        # CRITICAL: Pass loop_function (ProcessInstrumentationFunction), not controller
+        it.add_signal_generating_function_to_instrumentation_function(
+            loop_function, signal_gen, measuring_line
+        )
+        it.add_actuating_function_to_instrumentation_function(
+            loop_function, actuator, signal_line
+        )
+
         model.conceptualModel.processInstrumentationFunctions.append(loop_function)
-        
-        # Also add individual functions for visibility
-        model.conceptualModel.processInstrumentationFunctions.extend([
-            ProcessInstrumentationFunction(tagName=sensor_tag, instrumentationType=f"{controlled_variable}Transmitter"),
-            ProcessInstrumentationFunction(tagName=controller_tag, instrumentationType=f"{controlled_variable}Controller"),
-            ProcessInstrumentationFunction(tagName=control_valve_tag, instrumentationType="ControlValve")
-        ])
         
         return success_response({
             "loop_tag": loop_tag,
@@ -781,38 +781,36 @@ class DexpiTools:
         line_number = args.get("line_number", f"{from_component}_to_{to_component}")
         pipe_class = args.get("pipe_class", "CS150")
         
-        # Import piping toolkit and classes
-        from pydexpi.toolkits import piping_toolkit
+        # Import piping toolkit and model toolkit for component lookup
+        from pydexpi.toolkits import piping_toolkit, model_toolkit as mt
         from pydexpi.dexpi_classes.piping import (
             PipingNetworkSegment,
-            PipingNetworkSystem, 
+            PipingNetworkSystem,
             PipingConnection,
             Pipe,
             PipingNode
         )
-        
+
         # Helper function to find any component (equipment or valve) by tag name
+        # Uses model_toolkit for more robust attribute-based search
         def _find_component_by_tag(tag_name: str):
-            """Search for a component in both equipment and piping systems."""
-            # First search in taggedPlantItems (equipment)
-            if model.conceptualModel and model.conceptualModel.taggedPlantItems:
-                for item in model.conceptualModel.taggedPlantItems:
-                    if hasattr(item, 'tagName') and item.tagName == tag_name:
-                        return item
-            
-            # Then search in pipingNetworkSystems for valves and other piping components
-            if model.conceptualModel and model.conceptualModel.pipingNetworkSystems:
-                for system in model.conceptualModel.pipingNetworkSystems:
-                    if hasattr(system, 'segments'):
-                        for segment in system.segments:
-                            if hasattr(segment, 'items'):
-                                for item in segment.items:
-                                    # Check both tagName and pipingComponentName
-                                    if (hasattr(item, 'tagName') and item.tagName == tag_name) or \
-                                       (hasattr(item, 'pipingComponentName') and item.pipingComponentName == tag_name):
-                                        return item
-            
-            return None
+            """Search for a component using model_toolkit attribute search."""
+            # First search by tagName attribute
+            matches = mt.get_instances_with_attribute(
+                model,
+                attribute_name="tagName",
+                target_value=tag_name
+            )
+            if matches:
+                return matches[0]
+
+            # Fallback: search by pipingComponentName (for piping components)
+            matches = mt.get_instances_with_attribute(
+                model,
+                attribute_name="pipingComponentName",
+                target_value=tag_name
+            )
+            return matches[0] if matches else None
         
         # Find components (equipment or valves) by tag name
         from_equipment = _find_component_by_tag(from_component)

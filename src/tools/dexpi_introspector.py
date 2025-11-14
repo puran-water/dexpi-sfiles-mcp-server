@@ -1,4 +1,70 @@
-"""Dynamic introspection and schema generation for pyDEXPI classes."""
+"""
+Dynamic introspection and schema generation for pyDEXPI classes.
+
+MODULE-LEVEL INTROSPECTION
+==========================
+
+This module provides MODULE-level introspection capabilities for pyDEXPI classes:
+- Class discovery across equipment, piping, and instrumentation modules
+- Dynamic schema generation for MCP tool parameters
+- Filtered queries (e.g., get all valves, get equipment with nozzles)
+- Type enumeration for tool schemas
+
+RELATIONSHIP WITH base_model_utils
+===================================
+
+This module is COMPLEMENTARY to base_model_utils, NOT duplicative:
+
+┌─────────────────────────────────────────────────────────────────┐
+│ dexpi_introspector (THIS MODULE)                                │
+│ - MODULE-level introspection                                     │
+│ - Class discovery: _discover_all_classes()                      │
+│ - Schema generation: generate_tool_schema()                     │
+│ - Type queries: get_available_types(), get_valves()             │
+│ - MCP integration: Used by tools/dexpi_tools.py for enums       │
+└─────────────────────────────────────────────────────────────────┘
+                              ↕ (complementary)
+┌─────────────────────────────────────────────────────────────────┐
+│ base_model_utils (pydexpi.toolkits.base_model_utils)            │
+│ - INSTANCE-level introspection                                  │
+│ - Attribute inspection: get_composition_attributes()            │
+│ - Reference traversal: get_reference_attributes()               │
+│ - Data extraction: get_data_attributes()                        │
+│ - Runtime queries: Used on actual model instances               │
+└─────────────────────────────────────────────────────────────────┘
+
+INTEGRATION
+===========
+
+This module already uses base_model_utils internally (see lines 72-78):
+- Uses bmt.get_composition_attributes() for nozzle detection
+- Delegates instance-level queries to base_model_utils
+- Provides module-level layer on top of instance-level utilities
+
+WHEN TO USE EACH
+================
+
+Use dexpi_introspector when:
+- Generating MCP tool schemas with class enumerations
+- Discovering available types for UI dropdowns
+- Filtering classes by category (e.g., all valves)
+- Building type registries for code generation
+
+Use base_model_utils when:
+- Inspecting attributes of a model instance
+- Traversing object references at runtime
+- Extracting data from populated models
+- Validating instance structure
+
+STATUS
+======
+
+This module is ACTIVE and NOT deprecated. It provides unique functionality
+that has no equivalent in base_model_utils or other toolkits.
+
+Version: 1.0
+Last Updated: 2025-11-12 (Phase 5 Week 3 Step 4)
+"""
 
 import inspect
 import logging

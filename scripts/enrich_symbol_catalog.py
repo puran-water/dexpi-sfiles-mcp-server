@@ -1,9 +1,17 @@
 #!/usr/bin/env python3
 """
-Enrich merged_catalog.json with dexpi_class mappings from mapper.py
+DEPRECATED: Enrich merged_catalog.json with dexpi_class mappings from mapper.py
 
-This script fixes Bug #2 by populating the dexpi_class field for all
-805 symbols in the merged catalog.
+WARNING: This script is deprecated and will be removed in v2.0.
+
+The catalog enrichment is now handled automatically by the ComponentRegistry
+and SymbolRegistry systems. Manual enrichment is no longer needed and creates
+circular dependencies (registry loads catalog → script mutates catalog → registry reload).
+
+The merged_catalog.json is already sufficiently enriched (308/805 symbols have dexpi_class).
+Additional mappings should be added through the symbol generation pipeline, not manual enrichment.
+
+This script is kept for reference only and may not work correctly with the new architecture.
 """
 
 import json
@@ -19,6 +27,14 @@ from src.visualization.symbols.mapper import DexpiSymbolMapper
 
 def enrich_catalog():
     """Enrich catalog with DEXPI class mappings."""
+
+    import warnings
+    warnings.warn(
+        "enrich_symbol_catalog.py is deprecated and will be removed in v2.0. "
+        "Catalog enrichment creates circular dependencies. "
+        "Use the symbol generation pipeline instead.",
+        DeprecationWarning
+    )
 
     # Paths
     catalog_path = Path(__file__).parent.parent / "src" / "visualization" / "symbols" / "assets" / "merged_catalog.json"

@@ -1,6 +1,16 @@
 # GraphicBuilder Service Configuration
+
+# Version Information
+# GraphicBuilder uses master branch (tags not Java 17 compatible)
+version:
+  graphicbuilder_branch: "master"  # GitLab branch
+  graphicbuilder_note: "Using master branch as legacy tags (1.0-1.2) require Java 8 and have JAXB issues"
+  repository: "https://gitlab.com/dexpi/GraphicBuilder"
+  pinned_date: "2025-11-12"
+  # To use a different version, rebuild with: docker build --build-arg GB_REF=<ref>
+
 graphicbuilder:
-  jar_path: /app/GraphicBuilder/target/GraphicBuilder.jar
+  jar_path: /app/GraphicBuilder/org.dexpi.pid.imaging/target/GraphicBuilder-1.0-jar-with-dependencies.jar
   symbol_path: /app/symbols
   temp_dir: /tmp/graphicbuilder
   java_opts: "-Xmx2G -Djava.awt.headless=true"

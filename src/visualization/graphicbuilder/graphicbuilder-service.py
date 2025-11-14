@@ -55,41 +55,42 @@ def run_graphicbuilder(
     """
     Execute GraphicBuilder with input XML and return rendered output.
 
+    NOTE: GraphicBuilder CLI only accepts a single argument (input filename).
+    It automatically generates PNG output by replacing .xml with .png.
+    We work around this limitation by:
+    1. Running GraphicBuilder to create PNG
+    2. For SVG: We need to extract SVG from GraphicBuilder's internal processing
+    3. For PDF: Convert PNG to PDF using external tools
+
     Args:
         input_xml: Proteus/DEXPI XML content
-        output_format: Output format (SVG, PNG, PDF)
-        options: Additional rendering options
+        output_format: Output format (PNG only for now, SVG/PDF TODO)
+        options: Additional rendering options (currently ignored)
 
     Returns:
         Dictionary with rendered content and metadata
     """
     temp_dir = Path(config["graphicbuilder"]["temp_dir"])
 
-    # Create temporary files
+    # GraphicBuilder requires input file to end with .xml
+    # and automatically creates output as input.png
     input_file = temp_dir / f"input_{os.getpid()}.xml"
-    output_file = temp_dir / f"output_{os.getpid()}.{output_format.lower()}"
+    expected_output = input_file.with_suffix('.png')
 
     try:
         # Write input XML
         input_file.write_text(input_xml, encoding='utf-8')
 
         # Build GraphicBuilder command
+        # NOTE: GraphicBuilder only accepts ONE argument - the input file
+        # All other arguments (-i, -o, -f, -s, etc.) do NOT exist
         cmd = [
             "java",
+            *config["graphicbuilder"].get("java_opts", "-Xmx2G").split(),
             "-jar",
             config["graphicbuilder"]["jar_path"],
-            "-i", str(input_file),
-            "-o", str(output_file),
-            "-f", output_format.upper(),
-            "-s", config["graphicbuilder"]["symbol_path"]
+            str(input_file)  # Single argument - input filename
         ]
-
-        # Add additional options if provided
-        if options:
-            if options.get("dpi"):
-                cmd.extend(["-d", str(options["dpi"])])
-            if options.get("scale"):
-                cmd.extend(["-scale", str(options["scale"])])
 
         # Execute GraphicBuilder
         logger.info(f"Running GraphicBuilder: {' '.join(cmd)}")
@@ -97,61 +98,46 @@ def run_graphicbuilder(
             cmd,
             capture_output=True,
             text=True,
-            timeout=60  # 60 second timeout
+            timeout=120,  # Increased timeout
+            cwd=str(temp_dir)  # Run in temp dir so output file is created there
         )
 
-        if result.returncode != 0:
-            logger.error(f"GraphicBuilder error: {result.stderr}")
-            raise RuntimeError(f"GraphicBuilder failed: {result.stderr}")
+        # GraphicBuilder has a bug - it exits with code 1 even on success
+        # Check if output file was created instead of relying on returncode
+        if not expected_output.exists():
+            logger.error(f"GraphicBuilder stdout: {result.stdout}")
+            logger.error(f"GraphicBuilder stderr: {result.stderr}")
+            raise FileNotFoundError(
+                f"GraphicBuilder did not create output file. "
+                f"Expected: {expected_output}. "
+                f"Exit code: {result.returncode}"
+            )
 
-        # Read output file
-        if not output_file.exists():
-            raise FileNotFoundError(f"Output file not generated: {output_file}")
+        logger.info(f"GraphicBuilder created: {expected_output} ({expected_output.stat().st_size} bytes)")
 
-        # Read content based on format
-        if output_format.upper() == "SVG":
-            content = output_file.read_text(encoding='utf-8')
-            encoded = False
-        else:
-            content = base64.b64encode(output_file.read_bytes()).decode('ascii')
-            encoded = True
+        # For now, we only support PNG (GraphicBuilder's native format)
+        if output_format.upper() != "PNG":
+            logger.warning(f"Format {output_format} requested but GraphicBuilder only produces PNG. Returning PNG.")
 
-        # Parse metadata from SVG if available
-        metadata = {}
-        if output_format.upper() == "SVG":
-            # Extract basic SVG metadata
-            import xml.etree.ElementTree as ET
-            try:
-                root = ET.fromstring(content)
-                metadata["width"] = root.get("width", "unknown")
-                metadata["height"] = root.get("height", "unknown")
-                metadata["viewBox"] = root.get("viewBox", "unknown")
-            except ET.ParseError as e:
-                raise ValueError(
-                    f"Failed to parse SVG output from GraphicBuilder. "
-                    f"The generated SVG is malformed. "
-                    f"Parse error: {e}"
-                ) from e
-            except (AttributeError, TypeError) as e:
-                raise ValueError(
-                    f"Failed to extract metadata from SVG. "
-                    f"Unexpected SVG structure. "
-                    f"Error: {e}"
-                ) from e
+        # Read PNG content
+        content = base64.b64encode(expected_output.read_bytes()).decode('ascii')
 
         return {
             "content": content,
-            "format": output_format.upper(),
-            "encoded": encoded,
-            "metadata": metadata
+            "format": "PNG",  # Always PNG for now
+            "encoded": True,
+            "metadata": {
+                "file_size": expected_output.stat().st_size,
+                "note": "GraphicBuilder CLI only supports PNG output"
+            }
         }
 
     finally:
         # Clean up temporary files
         if input_file.exists():
             input_file.unlink()
-        if output_file.exists():
-            output_file.unlink()
+        if expected_output.exists():
+            expected_output.unlink()
 
 
 @app.route('/health', methods=['GET'])

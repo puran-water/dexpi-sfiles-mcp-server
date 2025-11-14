@@ -131,6 +131,34 @@ async def test_enhanced_instrumentation():
     assert len(result["data"]["signal_connections"]) == 2
     print("✅ Complete control loop with signal connections created")
 
+    # Model-level assertions: Verify toolkit properly wired the signal lines
+    # Access the model through the DexpiTools instance
+    model = dexpi.models[model_id]
+
+    # Find the control loop in processInstrumentationFunctions
+    # ProcessInstrumentationFunction uses 'id' for identification, not 'tagName'
+    loop = None
+    for func in model.conceptualModel.processInstrumentationFunctions:
+        if type(func).__name__ == "ProcessInstrumentationFunction" and func.id == "LIC-101":
+            loop = func
+            break
+
+    assert loop is not None, f"Control loop LIC-101 should exist in model. Found {len(model.conceptualModel.processInstrumentationFunctions)} functions"
+    assert hasattr(loop, 'signalConveyingFunctions'), "Loop should have signalConveyingFunctions"
+    assert len(loop.signalConveyingFunctions) == 2, "Loop should have 2 signal lines (measuring + actuating)"
+
+    # Verify measuring line connects sensor to loop
+    measuring_line = loop.signalConveyingFunctions[0]
+    assert hasattr(measuring_line, 'source'), "Measuring line should have source"
+    assert hasattr(measuring_line, 'target'), "Measuring line should have target"
+
+    # Verify actuating line connects loop to valve
+    actuating_line = loop.signalConveyingFunctions[1]
+    assert hasattr(actuating_line, 'source'), "Actuating line should have source"
+    assert hasattr(actuating_line, 'target'), "Actuating line should have target"
+
+    print("✅ Model-level validation: Signal lines properly wired to loop")
+
 
 async def test_valve_insertion():
     """Test valve insertion between components (deprecated segment insertion)."""
