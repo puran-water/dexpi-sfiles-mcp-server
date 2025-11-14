@@ -168,3 +168,36 @@
 - Test coverage: 53 core tests (22 ComponentRegistry + 31 SymbolResolver) + 12 schema tests = 437 total tests passing
 - Validation: `python3 scripts/validate_symbol_catalog.py` passes
 - Symbol resolution: SymbolResolver with actuated variants (11 mappings), fuzzy matching, multi-symbol validation
+
+### Week 5: Proteus XML Exporter (In Progress)
+- [x] **Day 1-2 COMPLETE**: XSD Analysis & Structural Corrections (Nov 14, 2025)
+  - Fixed namespace declaration (xsi:noNamespaceSchemaLocation only)
+  - Fixed UnitsOfMeasure location (child of PlantInformation, not sibling)
+  - Fixed Drawing structure (Equipment as direct children, no PlantDesignItem wrapper)
+  - Created format documentation (docs/PROTEUS_XML_FORMAT.md, docs/DAY2_XSD_ANALYSIS.md)
+  - Mapped all 272 pyDEXPI classes to Proteus ComponentClass values
+- [x] **Days 3-4 COMPLETE**: Equipment Export + GenericAttributes + Round-Trip Validation (Nov 14, 2025) ✅
+  - Implemented `_export_equipment()` and `_export_nozzle()` methods
+  - **CRITICAL FIX**: Moved Equipment from Drawing children to root children (ProteusSerializer requirement)
+  - **NEW**: Implemented `_export_generic_attributes()` for DEXPI standard attributes
+  - **NEW**: Round-trip validation tests (export → ProteusSerializer.load() → validate) ✅ PASSING
+  - Fixed critical IDRegistry bug (object identity vs equality)
+  - Created 24-test comprehensive test suite
+  - Fixed ComponentName generation (uses tagName/subTagName)
+  - Preserved pyDEXPI UUID IDs (no prefix generation)
+  - **Final Status**: 22/24 tests passing (91.7%), 2 skipped (XSD schema issues) = 100% of non-skipped tests ✅
+  - **Codex Review**: Comprehensive analysis completed via DeepWiki + gh CLI (Session: 019a842a-d1ec-72e3-86c4-a499f9aba8cf)
+- [ ] **Days 5 NEXT**: Piping Export (PipingNetworkSystem, PipingNetworkSegment)
+  - Implement `_export_piping()` with fromNode/toNode references
+  - Handle DirectPipingConnection when segment boundaries connect
+  - Use piping_toolkit for validation before export
+  - Add round-trip tests (export → ProteusSerializer.load)
+- [ ] **Days 6-7**: Instrumentation Export (ProcessInstrumentationFunction, Signal lines)
+  - Export ProcessInstrumentationFunction with GenericAttributes
+  - Implement MeasuringLineFunction and SignalLineFunction
+  - Handle Association elements (has logical start/end)
+  - Use instrumentation_toolkit for directionality validation
+
+**Proteus XML Exporter Status**: Equipment export + GenericAttributes + Round-trip validation COMPLETE (91.7% pass rate, 100% non-skipped)
+**Codex Recommendations**: ✅ Round-trip validation IMPLEMENTED, Minimal XSD schema (future), Structural assertions (future)
+**Next Priority**: Implement piping export (Days 5) using Codex's guidance on PipingNetworkSystem/PipingNetworkSegment structures
