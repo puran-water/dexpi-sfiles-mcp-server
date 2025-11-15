@@ -8,8 +8,8 @@
   3. Allows XSD validation tests to pass without upstream schema issues
 
   Based on: ProteusPIDSchema_4.2.xsd
-  Scope: Equipment export validation (Days 3-4)
-  TODO: Expand for piping (Days 5) and instrumentation (Days 6-7)
+  Scope: Equipment export validation (Days 3-4) + Piping export (Days 5) + Instrumentation export (Days 6-7)
+  Status: Complete P&ID export capability
 -->
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
             elementFormDefault="qualified"
@@ -22,6 +22,8 @@
         <xsd:element ref="PlantInformation"/>
         <xsd:element ref="Drawing" minOccurs="0" maxOccurs="unbounded"/>
         <xsd:element ref="Equipment" minOccurs="0" maxOccurs="unbounded"/>
+        <xsd:element ref="PipingNetworkSystem" minOccurs="0" maxOccurs="unbounded"/>
+        <xsd:element ref="ProcessInstrumentationFunction" minOccurs="0" maxOccurs="unbounded"/>
       </xsd:sequence>
     </xsd:complexType>
   </xsd:element>
@@ -84,6 +86,7 @@
     <xsd:complexType>
       <xsd:sequence>
         <xsd:element ref="GenericAttributes" minOccurs="0" maxOccurs="unbounded"/>
+        <xsd:element ref="ConnectionPoints" minOccurs="0" maxOccurs="unbounded"/>
         <xsd:element ref="Nozzle" minOccurs="0" maxOccurs="unbounded"/>
       </xsd:sequence>
       <xsd:attribute name="ID" type="xsd:string" use="required"/>
@@ -100,6 +103,7 @@
     <xsd:complexType>
       <xsd:sequence>
         <xsd:element ref="GenericAttributes" minOccurs="0" maxOccurs="unbounded"/>
+        <xsd:element ref="ConnectionPoints" minOccurs="0"/>
       </xsd:sequence>
       <xsd:attribute name="ID" type="xsd:string" use="required"/>
       <xsd:attribute name="ComponentName" type="xsd:string" use="optional"/>
@@ -126,6 +130,179 @@
       <xsd:attribute name="Value" type="xsd:string" use="required"/>
       <xsd:attribute name="Units" type="xsd:string" use="optional"/>
       <xsd:attribute name="UnitsURI" type="xsd:string" use="optional"/>
+      <xsd:attribute name="Language" type="xsd:string" use="optional"/>
+    </xsd:complexType>
+  </xsd:element>
+
+  <!-- PipingNetworkSystem Element -->
+  <xsd:element name="PipingNetworkSystem">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element ref="GenericAttributes" minOccurs="0" maxOccurs="unbounded"/>
+        <xsd:element ref="PipingNetworkSegment" minOccurs="0" maxOccurs="unbounded"/>
+      </xsd:sequence>
+      <xsd:attribute name="ID" type="xsd:string" use="required"/>
+      <xsd:attribute name="ComponentClass" type="xsd:string" use="required"/>
+      <xsd:attribute name="ComponentClassURI" type="xsd:string" use="optional"/>
+    </xsd:complexType>
+  </xsd:element>
+
+  <!-- PipingNetworkSegment Element -->
+  <xsd:element name="PipingNetworkSegment">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element ref="GenericAttributes" minOccurs="0" maxOccurs="unbounded"/>
+        <xsd:element ref="PipingComponent" minOccurs="0" maxOccurs="unbounded"/>
+        <xsd:element ref="Connection" minOccurs="0" maxOccurs="unbounded"/>
+      </xsd:sequence>
+      <xsd:attribute name="ID" type="xsd:string" use="required"/>
+      <xsd:attribute name="ComponentClass" type="xsd:string" use="required"/>
+      <xsd:attribute name="ComponentClassURI" type="xsd:string" use="optional"/>
+    </xsd:complexType>
+  </xsd:element>
+
+  <!-- PipingComponent Element (base for all piping items) -->
+  <xsd:element name="PipingComponent">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element ref="GenericAttributes" minOccurs="0" maxOccurs="unbounded"/>
+        <xsd:element ref="ConnectionPoints" minOccurs="0"/>
+      </xsd:sequence>
+      <xsd:attribute name="ID" type="xsd:string" use="required"/>
+      <xsd:attribute name="ComponentClass" type="xsd:string" use="required"/>
+      <xsd:attribute name="ComponentClassURI" type="xsd:string" use="optional"/>
+      <xsd:attribute name="ComponentName" type="xsd:string" use="optional"/>
+    </xsd:complexType>
+  </xsd:element>
+
+  <!-- Valve Elements (all valves have same structure as PipingComponent) -->
+  <xsd:element name="BallValve" substitutionGroup="PipingComponent"/>
+  <xsd:element name="GateValve" substitutionGroup="PipingComponent"/>
+  <xsd:element name="GlobeValve" substitutionGroup="PipingComponent"/>
+  <xsd:element name="CheckValve" substitutionGroup="PipingComponent"/>
+  <xsd:element name="ButterflyValve" substitutionGroup="PipingComponent"/>
+  <xsd:element name="NeedleValve" substitutionGroup="PipingComponent"/>
+  <xsd:element name="PlugValve" substitutionGroup="PipingComponent"/>
+
+  <!-- ConnectionPoints Element -->
+  <xsd:element name="ConnectionPoints">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element ref="Node" minOccurs="0" maxOccurs="unbounded"/>
+      </xsd:sequence>
+      <xsd:attribute name="NumPoints" type="xsd:string" use="optional"/>
+      <xsd:attribute name="FlowIn" type="xsd:string" use="optional"/>
+      <xsd:attribute name="FlowOut" type="xsd:string" use="optional"/>
+    </xsd:complexType>
+  </xsd:element>
+
+  <!-- Node Element -->
+  <xsd:element name="Node">
+    <xsd:complexType>
+      <xsd:attribute name="ID" type="xsd:string" use="required"/>
+      <xsd:attribute name="Type" type="xsd:string" use="optional"/>
+    </xsd:complexType>
+  </xsd:element>
+
+  <!-- Connection Element -->
+  <xsd:element name="Connection">
+    <xsd:complexType>
+      <xsd:attribute name="FromID" type="xsd:string" use="optional"/>
+      <xsd:attribute name="FromNode" type="xsd:string" use="optional"/>
+      <xsd:attribute name="ToID" type="xsd:string" use="optional"/>
+      <xsd:attribute name="ToNode" type="xsd:string" use="optional"/>
+    </xsd:complexType>
+  </xsd:element>
+
+  <!-- ProcessInstrumentationFunction Element -->
+  <xsd:element name="ProcessInstrumentationFunction">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element ref="GenericAttributes" minOccurs="0" maxOccurs="unbounded"/>
+        <xsd:element ref="ConnectionPoints" minOccurs="0"/>
+        <xsd:element ref="Association" minOccurs="0" maxOccurs="unbounded"/>
+        <xsd:element ref="ActuatingFunction" minOccurs="0" maxOccurs="unbounded"/>
+        <xsd:element ref="ActuatingElectricalFunction" minOccurs="0" maxOccurs="unbounded"/>
+        <xsd:element ref="ProcessSignalGeneratingFunction" minOccurs="0" maxOccurs="unbounded"/>
+        <xsd:element ref="InformationFlow" minOccurs="0" maxOccurs="unbounded"/>
+        <xsd:element ref="SignalOffPageConnector" minOccurs="0" maxOccurs="unbounded"/>
+      </xsd:sequence>
+      <xsd:attribute name="ID" type="xsd:string" use="required"/>
+      <xsd:attribute name="ComponentClass" type="xsd:string" use="required"/>
+      <xsd:attribute name="ComponentClassURI" type="xsd:string" use="optional"/>
+      <xsd:attribute name="ComponentName" type="xsd:string" use="optional"/>
+    </xsd:complexType>
+  </xsd:element>
+
+  <!-- ProcessSignalGeneratingFunction Element -->
+  <xsd:element name="ProcessSignalGeneratingFunction">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element ref="GenericAttributes" minOccurs="0" maxOccurs="unbounded"/>
+        <xsd:element ref="Association" minOccurs="0" maxOccurs="unbounded"/>
+      </xsd:sequence>
+      <xsd:attribute name="ID" type="xsd:string" use="required"/>
+      <xsd:attribute name="ComponentClass" type="xsd:string" use="required"/>
+      <xsd:attribute name="ComponentClassURI" type="xsd:string" use="optional"/>
+    </xsd:complexType>
+  </xsd:element>
+
+  <!-- InformationFlow Element (MeasuringLineFunction, SignalLineFunction) -->
+  <xsd:element name="InformationFlow">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element ref="Association" minOccurs="0" maxOccurs="unbounded"/>
+      </xsd:sequence>
+      <xsd:attribute name="ID" type="xsd:string" use="required"/>
+      <xsd:attribute name="ComponentClass" type="xsd:string" use="required"/>
+      <xsd:attribute name="ComponentClassURI" type="xsd:string" use="optional"/>
+    </xsd:complexType>
+  </xsd:element>
+
+  <!-- Association Element -->
+  <xsd:element name="Association">
+    <xsd:complexType>
+      <xsd:attribute name="Type" type="xsd:string" use="required"/>
+      <xsd:attribute name="ItemID" type="xsd:string" use="required"/>
+    </xsd:complexType>
+  </xsd:element>
+
+  <!-- ActuatingFunction Element -->
+  <xsd:element name="ActuatingFunction">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element ref="GenericAttributes" minOccurs="0" maxOccurs="unbounded"/>
+        <xsd:element ref="ConnectionPoints" minOccurs="0"/>
+        <xsd:element ref="Association" minOccurs="0" maxOccurs="unbounded"/>
+      </xsd:sequence>
+      <xsd:attribute name="ID" type="xsd:string" use="required"/>
+      <xsd:attribute name="ComponentClass" type="xsd:string" use="required"/>
+    </xsd:complexType>
+  </xsd:element>
+
+  <!-- ActuatingElectricalFunction Element -->
+  <xsd:element name="ActuatingElectricalFunction">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element ref="GenericAttributes" minOccurs="0" maxOccurs="unbounded"/>
+        <xsd:element ref="ConnectionPoints" minOccurs="0"/>
+        <xsd:element ref="Association" minOccurs="0" maxOccurs="unbounded"/>
+      </xsd:sequence>
+      <xsd:attribute name="ID" type="xsd:string" use="required"/>
+      <xsd:attribute name="ComponentClass" type="xsd:string" use="required"/>
+    </xsd:complexType>
+  </xsd:element>
+
+  <!-- SignalOffPageConnector Element -->
+  <xsd:element name="SignalOffPageConnector">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element ref="GenericAttributes" minOccurs="0" maxOccurs="unbounded"/>
+        <xsd:element ref="ConnectionPoints" minOccurs="0"/>
+      </xsd:sequence>
+      <xsd:attribute name="ID" type="xsd:string" use="required"/>
+      <xsd:attribute name="ComponentClass" type="xsd:string" use="required"/>
+      <xsd:attribute name="ConnectorName" type="xsd:string" use="optional"/>
     </xsd:complexType>
   </xsd:element>
 
