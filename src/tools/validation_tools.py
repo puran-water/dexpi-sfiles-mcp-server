@@ -13,6 +13,7 @@ Flowsheet = get_flowsheet_class()
 
 from ..utils.response import validation_response, create_issue, error_response
 from ..validators.constraints import EngineeringConstraints
+from ..core.analytics import model_metrics
 
 logger = logging.getLogger(__name__)
 
@@ -149,21 +150,37 @@ class ValidationTools:
             model = self.dexpi_models.get(model_id)
             if not model:
                 return error_response(f"DEXPI model {model_id} not found", code="MODEL_NOT_FOUND")
-            
+
+            # Get comprehensive model metrics from core.analytics
+            model_summary = model_metrics.summarize(model)
+            metrics.update({
+                "model_metadata": model_summary["metadata"],
+                "model_complexity": model_summary["complexity"],
+                "model_validation": model_summary["validation"]
+            })
+
+            # Convert model_metrics validation warnings/errors to issues
+            if model_summary["validation"]["warnings"]:
+                for warning in model_summary["validation"]["warnings"]:
+                    issues.append(create_issue("warning", warning, code="MODEL-METRICS"))
+            if model_summary["validation"]["errors"]:
+                for error in model_summary["validation"]["errors"]:
+                    issues.append(create_issue("error", error, code="MODEL-METRICS"))
+
             # Run DEXPI validations
             if "syntax" in scopes:
                 issues.extend(self._validate_dexpi_syntax(model))
-            
+
             if "topology" in scopes or "connectivity" in scopes:
                 graph = self.graph_loader.dexpi_to_graph(model)
-                
+
                 if "topology" in scopes:
                     issues.extend(self._validate_graph_topology(graph, "dexpi"))
                     metrics.update(self._get_graph_metrics(graph))
-                
+
                 if "connectivity" in scopes:
                     issues.extend(self._validate_connectivity(graph))
-            
+
             if "isa" in scopes:
                 issues.extend(self._validate_isa_tags(model, "dexpi"))
         
@@ -457,22 +474,45 @@ class ValidationTools:
         }
     
     def _compare_dexpi_models(self, original: Any, roundtrip: Any, compare_attributes: bool) -> List[Dict]:
-        """Compare two DEXPI models."""
+        """Compare two DEXPI models using model_metrics for comprehensive analysis."""
         issues = []
-        
+
+        # Use model_metrics to get detailed counts
+        orig_metadata = model_metrics.extract_metadata(original)
+        rt_metadata = model_metrics.extract_metadata(roundtrip)
+
         # Compare equipment counts
-        orig_count = len(original.conceptualModel.taggedPlantItems) if original.conceptualModel else 0
-        rt_count = len(roundtrip.conceptualModel.taggedPlantItems) if roundtrip.conceptualModel else 0
-        
-        if orig_count != rt_count:
+        if orig_metadata["equipment_count"] != rt_metadata["equipment_count"]:
             issues.append(create_issue(
                 "error",
-                f"Equipment count mismatch: {orig_count} vs {rt_count}",
+                f"Equipment count mismatch: {orig_metadata['equipment_count']} vs {rt_metadata['equipment_count']}",
                 code="RT-DEXPI-001"
             ))
-        
-        # TODO: Add detailed comparison if needed
-        
+
+        # Compare piping segment counts
+        if orig_metadata["piping_segments"] != rt_metadata["piping_segments"]:
+            issues.append(create_issue(
+                "error",
+                f"Piping segment count mismatch: {orig_metadata['piping_segments']} vs {rt_metadata['piping_segments']}",
+                code="RT-DEXPI-002"
+            ))
+
+        # Compare instrumentation counts
+        if orig_metadata["instrumentation_count"] != rt_metadata["instrumentation_count"]:
+            issues.append(create_issue(
+                "error",
+                f"Instrumentation count mismatch: {orig_metadata['instrumentation_count']} vs {rt_metadata['instrumentation_count']}",
+                code="RT-DEXPI-003"
+            ))
+
+        # Compare valve counts
+        if orig_metadata["valves_count"] != rt_metadata["valves_count"]:
+            issues.append(create_issue(
+                "error",
+                f"Valve count mismatch: {orig_metadata['valves_count']} vs {rt_metadata['valves_count']}",
+                code="RT-DEXPI-004"
+            ))
+
         return issues
     
     def _compare_flowsheets(self, original: Flowsheet, roundtrip: Flowsheet, compare_attributes: bool) -> List[Dict]:
