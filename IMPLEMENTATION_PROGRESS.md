@@ -49,17 +49,17 @@ All Quick Wins completed before starting main 8-week plan:
 
 ### Task Checklist
 
-- [ ] **Task 1**: Integrate pyDEXPI get_data_attributes() with GenericAttributeExporter
-  - [ ] Use pydexpi.toolkits.base_model_utils.get_data_attributes() as primary source
-  - [ ] Keep model_fields metadata for enrichment/override
-  - [ ] Add feature flag for fallback behavior
-  - [ ] Files: `src/exporters/proteus_xml_exporter.py` (GenericAttributeExporter class)
+- [x] **Task 1**: Integrate pyDEXPI get_data_attributes() with GenericAttributeExporter
+  - [x] Use pydexpi.toolkits.base_model_utils.get_data_attributes() as primary source
+  - [x] Keep model_fields metadata for enrichment/override
+  - [x] Add feature flag for fallback behavior
+  - [x] Files: `src/exporters/proteus_xml_exporter.py` (GenericAttributeExporter class)
 
-- [ ] **Task 2**: Extend GenericAttributeExporter type coverage
-  - [ ] Add dict handling: flatten `{"k": v}` into `Name=f"{attr_name}.{k}"`
-  - [ ] Add generic "object with value/unit/name" pattern
-  - [ ] Improve nullable physical quantities handling (zero is meaningful)
-  - [ ] Files: `src/exporters/proteus_xml_exporter.py` (_serialize_value method)
+- [x] **Task 2**: Extend GenericAttributeExporter type coverage
+  - [x] Add dict handling: flatten `{"k": v}` into `Name=f"{attr_name}.{k}"`
+  - [x] Add generic "object with value/unit/name" pattern
+  - [x] Improve nullable physical quantities handling (zero is meaningful)
+  - [x] Files: `src/exporters/proteus_xml_exporter.py` (_serialize_value method)
 
 - [ ] **Task 3**: Complete instrumentation attribute export
   - [ ] Export all 11+ ProcessInstrumentationFunction data attributes
@@ -90,7 +90,13 @@ All Quick Wins completed before starting main 8-week plan:
 
 ### Progress Notes
 
-**2025-11-17**: Quick Wins completed, starting Weeks 1-2. Task 4 already complete from Quick Win #4.
+**2025-11-17**:
+- Quick Wins completed (4/4)
+- Started Weeks 1-2
+- Task 1 complete: Integrated get_data_attributes() API (commit 5e81715)
+- Task 2 complete: Extended type coverage with dict handling, generic object pattern, and improved nullable quantities handling
+- Task 4 already complete from Quick Win #4
+- All 88 tests passing (45 Proteus exporter + 43 GenericAttributeExporter)
 
 ---
 

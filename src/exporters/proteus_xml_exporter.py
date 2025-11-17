@@ -30,6 +30,7 @@ from pydexpi.dexpi_classes import (
     physicalQuantities,
     piping,
 )
+from pydexpi.toolkits.base_model_utils import get_data_attributes
 
 
 class IDRegistry:
@@ -208,17 +209,23 @@ class GenericAttributeExporter:
         self._write_generic_attributes(parent, custom_entries, "DexpiCustomAttributes")
 
     def _collect_standard_attributes(self, component: Any) -> List[Dict[str, str]]:
+        """Collect standard data attributes using pyDEXPI's get_data_attributes() API.
+
+        This delegates attribute filtering to pyDEXPI's official API instead of
+        manually checking model_fields metadata, ensuring consistency with pyDEXPI
+        best practices and potentially catching more attributes.
+        """
         entries: List[Dict[str, str]] = []
-        model_fields = getattr(component.__class__, "model_fields", {})
-        for field_name, field in model_fields.items():
-            meta = field.json_schema_extra or {}
-            if meta.get("attribute_category") != "data":
-                continue
-            value = getattr(component, field_name, None)
+
+        # Use pyDEXPI's get_data_attributes() to retrieve all data-category attributes
+        data_attrs = get_data_attributes(component)
+
+        for field_name, value in data_attrs.items():
             if self._is_empty_value(value):
                 continue
             attr_name = self._attribute_name(field_name)
             entries.extend(self._serialize_value(attr_name, value))
+
         return entries
 
     def _collect_custom_attributes(self, component: Any) -> List[Dict[str, str]]:
@@ -274,9 +281,11 @@ class GenericAttributeExporter:
             return [self._apply_extra(entry, extra)]
 
         # Physical quantity (NullableLength, Length, etc.)
+        # Note: Zero is a meaningful value, so we only skip if quantity_value is None
         if self._looks_like_physical_quantity(value):
             quantity_value = getattr(value, "value", None)
             quantity_unit = getattr(value, "unit", None)
+            # Only skip if value is None; zero and other numeric values are meaningful
             if quantity_value is None:
                 return []
             entry = {
@@ -329,6 +338,29 @@ class GenericAttributeExporter:
                 "Value": value.isoformat(),
             }
             return [self._apply_extra(entry, extra)]
+
+        # Dict handling - flatten {"k": v} into Name=f"{attr_name}.{k}"
+        if isinstance(value, dict):
+            entries: List[Dict[str, str]] = []
+            for key, val in value.items():
+                # Use dotted notation for nested attribute names
+                nested_name = f"{attr_name}.{key}"
+                entries.extend(self._serialize_value(nested_name, val, extra))
+            return entries
+
+        # Generic object with value/unit/name pattern
+        # Handle objects that have value, unit, or name attributes
+        if hasattr(value, "__dict__") and not isinstance(value, (str, int, float, bool)):
+            # Check if this looks like a composite object with value/unit/name
+            obj_dict = vars(value)
+            if any(key in obj_dict for key in ["value", "unit", "name"]):
+                entries: List[Dict[str, str]] = []
+                # Export each attribute as a nested GenericAttribute
+                for key, val in obj_dict.items():
+                    if val is not None and not key.startswith("_"):
+                        nested_name = f"{attr_name}.{key}"
+                        entries.extend(self._serialize_value(nested_name, val, extra))
+                return entries
 
         # Lists/tuples - serialize each entry separately
         if isinstance(value, (list, tuple)):
