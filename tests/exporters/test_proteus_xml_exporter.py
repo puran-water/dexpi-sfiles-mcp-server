@@ -1186,6 +1186,28 @@ def sensor_with_location(simple_sensor, tank_with_nozzles):
     return sensor
 
 
+@pytest.fixture
+def instrumentation_loop_function(instrumentation_function_with_sensor):
+    """Create an InstrumentationLoopFunction with child ProcessInstrumentationFunction."""
+    loop_func = instrumentation.InstrumentationLoopFunction()
+    loop_func.id = "LOOP-001"
+    loop_func.instrumentationLoopFunctionNumber = "FIC-101"
+
+    # Add child ProcessInstrumentationFunction
+    loop_func.processInstrumentationFunctions = [instrumentation_function_with_sensor]
+
+    return loop_func
+
+
+@pytest.fixture
+def simple_instrumentation_loop():
+    """Create a simple InstrumentationLoopFunction without children."""
+    loop_func = instrumentation.InstrumentationLoopFunction()
+    loop_func.id = "LOOP-002"
+    loop_func.instrumentationLoopFunctionNumber = "TIC-201"
+    return loop_func
+
+
 # Instrumentation Export Tests
 class TestInstrumentationExport:
     """Test instrumentation XML export functionality."""
@@ -1427,6 +1449,82 @@ class TestInstrumentationExport:
         sensor_ids = {s.get("ID") for s in sensors}
         assert "SENSOR-010" in sensor_ids
         assert "SENSOR-011" in sensor_ids
+
+    def test_export_instrumentation_loop_function(self, empty_model, instrumentation_loop_function, tmp_path):
+        """Test InstrumentationLoopFunction export with child functions."""
+        empty_model.conceptualModel.instrumentationLoopFunctions = [instrumentation_loop_function]
+
+        output_file = tmp_path / "loop_function_test.xml"
+        exporter = ProteusXMLExporter()
+        exporter.export(empty_model, output_file, validate=False)
+
+        tree = etree.parse(str(output_file))
+        root = tree.getroot()
+
+        # Find InstrumentationLoopFunction element
+        loop_elem = root.find(".//InstrumentationLoopFunction")
+        assert loop_elem is not None
+
+        # Check required attributes
+        assert loop_elem.get("ID") == "LOOP-001"
+        assert loop_elem.get("ComponentClass") == "InstrumentationLoopFunction"
+
+        # Check GenericAttributes contain loop number
+        assert _generic_attribute_values(
+            loop_elem, "InstrumentationLoopFunctionNumberAssignmentClass"
+        ) == ["FIC-101"]
+
+        # Check child ProcessInstrumentationFunction is nested inside loop
+        child_func = loop_elem.find("ProcessInstrumentationFunction")
+        assert child_func is not None
+        assert child_func.get("ID") == "INS-001"
+
+    def test_export_simple_instrumentation_loop(self, empty_model, simple_instrumentation_loop, tmp_path):
+        """Test simple InstrumentationLoopFunction without children."""
+        empty_model.conceptualModel.instrumentationLoopFunctions = [simple_instrumentation_loop]
+
+        output_file = tmp_path / "simple_loop_test.xml"
+        exporter = ProteusXMLExporter()
+        exporter.export(empty_model, output_file, validate=False)
+
+        tree = etree.parse(str(output_file))
+        root = tree.getroot()
+
+        # Find InstrumentationLoopFunction element
+        loop_elem = root.find(".//InstrumentationLoopFunction")
+        assert loop_elem is not None
+        assert loop_elem.get("ID") == "LOOP-002"
+
+        # Check loop number attribute
+        assert _generic_attribute_values(
+            loop_elem, "InstrumentationLoopFunctionNumberAssignmentClass"
+        ) == ["TIC-201"]
+
+        # No children expected
+        child_func = loop_elem.find("ProcessInstrumentationFunction")
+        assert child_func is None
+
+    def test_export_multiple_loops(self, empty_model, instrumentation_loop_function, simple_instrumentation_loop, tmp_path):
+        """Test exporting multiple InstrumentationLoopFunctions."""
+        empty_model.conceptualModel.instrumentationLoopFunctions = [
+            instrumentation_loop_function,
+            simple_instrumentation_loop
+        ]
+
+        output_file = tmp_path / "multiple_loops_test.xml"
+        exporter = ProteusXMLExporter()
+        exporter.export(empty_model, output_file, validate=False)
+
+        tree = etree.parse(str(output_file))
+        root = tree.getroot()
+
+        # Find all InstrumentationLoopFunction elements
+        loops = root.findall(".//InstrumentationLoopFunction")
+        assert len(loops) == 2
+
+        loop_ids = {l.get("ID") for l in loops}
+        assert "LOOP-001" in loop_ids
+        assert "LOOP-002" in loop_ids
 
 
 # Round-Trip Validation Tests for Instrumentation

@@ -407,3 +407,134 @@ class GraphMetadataSerializer:
                 })
 
         return report
+
+
+class GraphConversionResult(BaseModel):
+    """Result of graph conversion including optional layout metadata.
+
+    This is the metadata transport contract for the conversion pipeline.
+    Converters return this result, and exporters can use the layout_metadata
+    to inject Position/Extent/Presentation into Proteus XML.
+
+    Attributes:
+        graph_metadata: Graph-level metadata (diagram type, source format, etc.)
+        layout_metadata: Optional layout positions for nodes
+        has_positions: Whether graph nodes have position data
+        component_count: Total number of components
+    """
+
+    model_config = ConfigDict(extra="allow")
+
+    graph_metadata: GraphMetadata = Field(
+        ...,
+        description="Graph-level metadata"
+    )
+
+    layout_metadata: Optional[Any] = Field(  # LayoutMetadata from layout_metadata.py
+        None,
+        description="Optional layout positions for nodes"
+    )
+
+    has_positions: bool = Field(
+        False,
+        description="Whether graph nodes have position data"
+    )
+
+    component_count: int = Field(
+        0,
+        description="Total number of components (nodes)"
+    )
+
+    @classmethod
+    def from_graph(
+        cls,
+        graph: nx.Graph,
+        metadata: GraphMetadata,
+        extract_layout: bool = True,
+        layout_algorithm: str = "spring"
+    ) -> "GraphConversionResult":
+        """Create GraphConversionResult from NetworkX graph.
+
+        Args:
+            graph: NetworkX graph with optional 'pos' attributes
+            metadata: Graph-level metadata
+            extract_layout: Whether to extract layout from graph
+            layout_algorithm: Name of layout algorithm used
+
+        Returns:
+            GraphConversionResult with metadata and optional layout
+
+        Example:
+            >>> result = GraphConversionResult.from_graph(
+            ...     graph=nx_graph,
+            ...     metadata=GraphMetadata(diagram_type="PID", ...),
+            ...     layout_algorithm="spring"
+            ... )
+            >>> exporter.export(model, path, layout_metadata=result.layout_metadata)
+        """
+        # Check if positions exist
+        has_positions = all(
+            'pos' in attrs
+            for _, attrs in graph.nodes(data=True)
+        )
+
+        # Extract layout metadata if positions exist
+        layout_metadata = None
+        if extract_layout and has_positions:
+            layout_metadata = extract_layout_from_graph(
+                graph,
+                algorithm=layout_algorithm,
+                generate_if_missing=False
+            )
+
+        return cls(
+            graph_metadata=metadata,
+            layout_metadata=layout_metadata,
+            has_positions=has_positions,
+            component_count=graph.number_of_nodes()
+        )
+
+
+def extract_layout_from_graph(
+    graph: nx.Graph,
+    algorithm: str = "spring",
+    generate_if_missing: bool = False,
+    seed: int = 42
+) -> Optional[Any]:
+    """Extract or generate layout metadata from graph.
+
+    Args:
+        graph: NetworkX graph
+        algorithm: Algorithm name to record
+        generate_if_missing: Whether to generate layout if positions missing
+        seed: Random seed for reproducible layout generation
+
+    Returns:
+        LayoutMetadata if positions exist or were generated, None otherwise
+    """
+    # Import here to avoid circular imports
+    from .layout_metadata import LayoutMetadata, NodePosition
+
+    # Check if all nodes have positions
+    all_have_pos = all('pos' in attrs for _, attrs in graph.nodes(data=True))
+
+    if all_have_pos:
+        return LayoutMetadata.from_networkx_graph(graph, algorithm=algorithm)
+
+    if generate_if_missing:
+        # Generate spring layout
+        pos = nx.spring_layout(graph, seed=seed)
+
+        # Convert to NodePosition format and scale up
+        positions = {
+            str(node_id): NodePosition(x=coords[0] * 500, y=coords[1] * 500)
+            for node_id, coords in pos.items()
+        }
+
+        return LayoutMetadata(
+            algorithm="spring (generated)",
+            positions=positions,
+            parameters={"seed": seed, "scale": 500}
+        )
+
+    return None

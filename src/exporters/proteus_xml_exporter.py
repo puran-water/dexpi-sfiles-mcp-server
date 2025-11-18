@@ -18,9 +18,12 @@ import re
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence, Set
+from typing import Any, Dict, List, Optional, Sequence, Set, TYPE_CHECKING
 
 from lxml import etree
+
+if TYPE_CHECKING:
+    from src.models.layout_metadata import LayoutMetadata
 from pydexpi.dexpi_classes import (
     dataTypes,
     dexpiModel,
@@ -476,7 +479,8 @@ class ProteusXMLExporter:
         self,
         model: dexpiModel.DexpiModel,
         output_path: Path,
-        validate: bool = True
+        validate: bool = True,
+        layout_metadata: Optional["LayoutMetadata"] = None
     ) -> None:
         """Export pyDEXPI model to Proteus XML file.
 
@@ -484,13 +488,17 @@ class ProteusXMLExporter:
             model: DexpiModel instance to export
             output_path: Path where XML file will be written
             validate: Whether to validate against XSD schema (default: True)
+            layout_metadata: Optional layout positions for equipment rendering
 
         Raises:
-            ValueError: If model validation fails
+            ValueError: If model validation fails or equipment missing from layout
             FileNotFoundError: If XSD schema not found (when validate=True)
         """
         # Reset ID registry for fresh export
         self.id_registry = IDRegistry()
+
+        # Store layout metadata for use by component export methods
+        self.layout_metadata = layout_metadata
 
         # Build XML tree
         root = self._create_root_element()
@@ -644,10 +652,155 @@ class ProteusXMLExporter:
         presentation.set("G", "0")
         presentation.set("B", "0")
 
-        # Optional Extent child - add if model has extent information
-        # TODO: Implement extent extraction from model when available
+        # Optional Extent child - add if layout metadata provides bounding box
+        if self.layout_metadata and self.layout_metadata.bounding_box:
+            bbox = self.layout_metadata.bounding_box
+            # Add padding around bounding box for drawing canvas
+            padding = 50.0
+            self._export_extent_from_bounds(
+                drawing,
+                min_x=bbox.min_x - padding,
+                min_y=bbox.min_y - padding,
+                max_x=bbox.max_x + padding,
+                max_y=bbox.max_y + padding
+            )
 
         return drawing
+
+    def _export_position(
+        self,
+        parent: etree._Element,
+        x: float,
+        y: float,
+        z: float = 0.0
+    ) -> etree._Element:
+        """Export Position element with Location/Axis/Reference children.
+
+        Args:
+            parent: Parent element (Equipment, PipingNetworkSegment, etc.)
+            x: X coordinate
+            y: Y coordinate
+            z: Z coordinate (default 0.0 for 2D diagrams)
+
+        Returns:
+            Created Position element
+
+        Structure per GraphicBuilder requirements:
+            <Position>
+                <Location X="..." Y="..." Z="..." />
+                <Axis X="0" Y="0" Z="1" />
+                <Reference X="1" Y="0" Z="0" />
+            </Position>
+        """
+        position = etree.SubElement(parent, "Position")
+
+        # Location - actual coordinates
+        location = etree.SubElement(position, "Location")
+        location.set("X", str(int(x)))
+        location.set("Y", str(int(y)))
+        location.set("Z", str(int(z)))
+
+        # Axis - default perpendicular to drawing plane (0,0,1)
+        axis = etree.SubElement(position, "Axis")
+        axis.set("X", "0")
+        axis.set("Y", "0")
+        axis.set("Z", "1")
+
+        # Reference - default X-axis direction (1,0,0)
+        reference = etree.SubElement(position, "Reference")
+        reference.set("X", "1")
+        reference.set("Y", "0")
+        reference.set("Z", "0")
+
+        return position
+
+    def _export_extent(
+        self,
+        parent: etree._Element,
+        x: float,
+        y: float,
+        symbol_size: float = 20.0
+    ) -> etree._Element:
+        """Export Extent element (bounding box) for a component.
+
+        Args:
+            parent: Parent element
+            x: Center X coordinate
+            y: Center Y coordinate
+            symbol_size: Size of symbol (default 20x20 units)
+
+        Returns:
+            Created Extent element
+        """
+        half_size = symbol_size / 2.0
+        return self._export_extent_from_bounds(
+            parent,
+            min_x=x - half_size,
+            min_y=y - half_size,
+            max_x=x + half_size,
+            max_y=y + half_size
+        )
+
+    def _export_extent_from_bounds(
+        self,
+        parent: etree._Element,
+        min_x: float,
+        min_y: float,
+        max_x: float,
+        max_y: float,
+        min_z: float = 0.0,
+        max_z: float = 0.0
+    ) -> etree._Element:
+        """Export Extent element from explicit bounds.
+
+        Args:
+            parent: Parent element
+            min_x, min_y, max_x, max_y: 2D bounds
+            min_z, max_z: Z bounds (default 0 for 2D)
+
+        Returns:
+            Created Extent element
+        """
+        extent = etree.SubElement(parent, "Extent")
+
+        min_elem = etree.SubElement(extent, "Min")
+        min_elem.set("X", str(int(min_x)))
+        min_elem.set("Y", str(int(min_y)))
+        min_elem.set("Z", str(int(min_z)))
+
+        max_elem = etree.SubElement(extent, "Max")
+        max_elem.set("X", str(int(max_x)))
+        max_elem.set("Y", str(int(max_y)))
+        max_elem.set("Z", str(int(max_z)))
+
+        return extent
+
+    def _export_component_presentation(self, parent: etree._Element) -> etree._Element:
+        """Export Presentation element for a component.
+
+        Args:
+            parent: Parent element
+
+        Returns:
+            Created Presentation element
+
+        Presentation attributes per GraphicBuilder requirements:
+            - Layer: Logical layer name
+            - Color: Named color
+            - R, G, B: RGB values (0-255)
+            - LineType: Solid, Dashed, etc.
+            - LineWeight: Line thickness in meters
+        """
+        presentation = etree.SubElement(parent, "Presentation")
+        presentation.set("Layer", "Default")
+        presentation.set("Color", "Black")
+        presentation.set("R", "0")
+        presentation.set("G", "0")
+        presentation.set("B", "0")
+        presentation.set("LineType", "Solid")
+        presentation.set("LineWeight", "0.00035")
+
+        return presentation
 
     def _apply_plant_item_attributes(
         self,
@@ -711,6 +864,21 @@ class ProteusXMLExporter:
 
             # PlantItem optional attributes (ComponentClassURI, Specification, etc.)
             self._apply_plant_item_attributes(equip_elem, equipment)
+
+            # Export Position/Extent/Presentation if layout metadata available
+            if self.layout_metadata:
+                # Get source ID (use original id attribute from pyDEXPI object)
+                source_id = getattr(equipment, 'id', equipment_id)
+                if source_id not in self.layout_metadata.positions:
+                    raise ValueError(
+                        f"Equipment '{source_id}' not found in layout metadata. "
+                        f"Available: {list(self.layout_metadata.positions.keys())}"
+                    )
+
+                pos = self.layout_metadata.positions[source_id]
+                self._export_position(equip_elem, pos.x, pos.y)
+                self._export_extent(equip_elem, pos.x, pos.y)
+                self._export_component_presentation(equip_elem)
 
             # Export all standard/custom attributes via the generic exporter
             self.attribute_exporter.export(equip_elem, equipment)
@@ -828,6 +996,16 @@ class ProteusXMLExporter:
         segment_elem.set("ComponentClass", segment.__class__.__name__)
 
         self._apply_plant_item_attributes(segment_elem, segment)
+
+        # Export Position/Extent/Presentation if layout metadata available
+        if self.layout_metadata:
+            source_id = getattr(segment, 'id', segment_id)
+            if source_id in self.layout_metadata.positions:
+                pos = self.layout_metadata.positions[source_id]
+                self._export_position(segment_elem, pos.x, pos.y)
+                self._export_extent(segment_elem, pos.x, pos.y)
+                self._export_component_presentation(segment_elem)
+            # Note: piping segments may not always have positions (they follow centerlines)
 
         # Export segment-level GenericAttributes
         self.attribute_exporter.export(segment_elem, segment)
@@ -1199,17 +1377,27 @@ class ProteusXMLExporter:
         parent: etree._Element,
         model: dexpiModel.DexpiModel
     ) -> None:
-        """Export all instrumentation functions to XML.
+        """Export all instrumentation functions and loops to XML.
 
         Args:
             parent: Parent root PlantModel element
             model: Source DexpiModel (for accessing instrumentation)
 
-        Exports ProcessInstrumentationFunction elements with:
-            - ProcessSignalGeneratingFunction (sensors)
-            - InformationFlow (MeasuringLineFunction, SignalLineFunction)
-            - Association elements (logical start/end, location)
+        Exports:
+            - InstrumentationLoopFunction elements (control loops)
+            - ProcessInstrumentationFunction elements with:
+                - ProcessSignalGeneratingFunction (sensors)
+                - InformationFlow (MeasuringLineFunction, SignalLineFunction)
+                - Association elements (logical start/end, location)
         """
+        # Export InstrumentationLoopFunction elements first (control loops)
+        if hasattr(model.conceptualModel, 'instrumentationLoopFunctions'):
+            loop_functions = model.conceptualModel.instrumentationLoopFunctions
+            if loop_functions:
+                for loop_func in loop_functions:
+                    self._export_instrumentation_loop_function(parent, loop_func)
+
+        # Export standalone ProcessInstrumentationFunction elements
         if not hasattr(model.conceptualModel, 'processInstrumentationFunctions'):
             return
 
@@ -1219,6 +1407,44 @@ class ProteusXMLExporter:
 
         for function in functions:
             self._export_process_instrumentation_function(parent, function)
+
+    def _export_instrumentation_loop_function(
+        self,
+        parent: etree._Element,
+        loop_function: Any
+    ) -> None:
+        """Export an InstrumentationLoopFunction to XML.
+
+        Args:
+            parent: Parent PlantModel element
+            loop_function: InstrumentationLoopFunction object
+
+        Exports structure per XSD (extends PlantItem):
+            <InstrumentationLoopFunction ID="..." ComponentClass="...">
+                <GenericAttributes>...</GenericAttributes>
+                <ProcessInstrumentationFunction>...</ProcessInstrumentationFunction>
+            </InstrumentationLoopFunction>
+        """
+        # Register loop function ID
+        loop_id = self.id_registry.register(loop_function)
+
+        # Create InstrumentationLoopFunction element
+        loop_elem = etree.SubElement(parent, "InstrumentationLoopFunction")
+
+        # Required attributes
+        loop_elem.set("ID", loop_id)
+        loop_elem.set("ComponentClass", "InstrumentationLoopFunction")
+
+        # Apply PlantItem attributes (ComponentClassURI, Specification, etc.)
+        self._apply_plant_item_attributes(loop_elem, loop_function)
+
+        # Export GenericAttributes (includes instrumentationLoopFunctionNumber)
+        self.attribute_exporter.export(loop_elem, loop_function)
+
+        # Export child ProcessInstrumentationFunction elements
+        if hasattr(loop_function, 'processInstrumentationFunctions') and loop_function.processInstrumentationFunctions:
+            for child_function in loop_function.processInstrumentationFunctions:
+                self._export_process_instrumentation_function(loop_elem, child_function)
 
     def _export_process_instrumentation_function(
         self, parent: etree._Element, function: Any

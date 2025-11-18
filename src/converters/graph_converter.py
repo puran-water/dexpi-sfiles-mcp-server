@@ -8,6 +8,11 @@ import networkx as nx
 from pydexpi.dexpi_classes.dexpiModel import DexpiModel
 from pydexpi.loaders.ml_graph_loader import MLGraphLoader
 from ..adapters.sfiles_adapter import get_flowsheet_class
+from ..models.graph_metadata import (
+    GraphMetadata,
+    GraphConversionResult,
+    extract_layout_from_graph
+)
 
 # Safe import with helpful error messages
 Flowsheet = get_flowsheet_class()
@@ -39,6 +44,65 @@ class UnifiedGraphConverter:
             logger.error(f"Error converting DEXPI to NetworkX: {e}")
             # Return empty graph on error
             return nx.DiGraph()
+
+    def dexpi_to_networkx_with_layout(
+        self,
+        dexpi_model: DexpiModel,
+        generate_layout: bool = True,
+        project_name: Optional[str] = None,
+        drawing_number: Optional[str] = None
+    ) -> GraphConversionResult:
+        """Convert DEXPI model to NetworkX graph with layout metadata.
+
+        This method returns a GraphConversionResult that includes:
+        - The NetworkX graph
+        - Graph metadata (diagram type, source format)
+        - Layout metadata (node positions for rendering)
+
+        Args:
+            dexpi_model: The DEXPI model to convert
+            generate_layout: Whether to generate layout if positions missing
+            project_name: Optional project name for metadata
+            drawing_number: Optional drawing number for metadata
+
+        Returns:
+            GraphConversionResult with graph and layout metadata
+
+        Example:
+            >>> result = converter.dexpi_to_networkx_with_layout(model)
+            >>> exporter.export(model, path, layout_metadata=result.layout_metadata)
+        """
+        # Convert to NetworkX
+        nx_graph = self.dexpi_to_networkx(dexpi_model)
+
+        # Create graph metadata
+        graph_metadata = GraphMetadata(
+            diagram_type="PID",
+            diagram_level=2,
+            source_format="dexpi",
+            project_name=project_name,
+            drawing_number=drawing_number
+        )
+
+        # Extract or generate layout
+        layout_metadata = extract_layout_from_graph(
+            nx_graph,
+            algorithm="spring",
+            generate_if_missing=generate_layout
+        )
+
+        # Check if positions exist
+        has_positions = all(
+            'pos' in attrs
+            for _, attrs in nx_graph.nodes(data=True)
+        ) if nx_graph.number_of_nodes() > 0 else False
+
+        return GraphConversionResult(
+            graph_metadata=graph_metadata,
+            layout_metadata=layout_metadata,
+            has_positions=has_positions or (generate_layout and layout_metadata is not None),
+            component_count=nx_graph.number_of_nodes()
+        )
     
     def dexpi_to_graphml(
         self, 
