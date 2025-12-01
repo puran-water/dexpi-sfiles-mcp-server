@@ -28,14 +28,15 @@ Usage:
     dexpi_store.restore_snapshot(snapshot)  # rollback
 """
 
-import copy
 import logging
 import threading
 from abc import ABC, abstractmethod
+from contextlib import contextmanager
+from copy import deepcopy
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, Generic, List, Optional, TypeVar
+from typing import Any, Callable, Dict, Generator, Generic, List, Optional, TypeVar
 
 logger = logging.getLogger(__name__)
 
@@ -236,11 +237,13 @@ class ModelStore(ABC, Generic[T]):
         pass
 
     @abstractmethod
-    def get(self, model_id: str) -> Optional[T]:
+    def get(self, model_id: str, copy: bool = False) -> Optional[T]:
         """Retrieve a model by ID.
 
         Args:
             model_id: Model identifier
+            copy: If True, return a deep copy (safe for mutation).
+                  If False (default), return live reference (faster but mutable).
 
         Returns:
             The model if found, None otherwise
@@ -368,6 +371,32 @@ class ModelStore(ABC, Generic[T]):
         """
         pass
 
+    # Edit context manager
+    @abstractmethod
+    def edit(self, model_id: str) -> Generator[T, None, None]:
+        """Context manager for safe model mutation with auto-update.
+
+        Yields the live model for in-place modifications. On successful exit,
+        automatically calls update() to trigger hooks and update metadata.
+        On exception, changes are NOT reverted (use snapshots for rollback).
+
+        Example:
+            with store.edit("model-123") as model:
+                model.add_equipment(...)
+                model.connect(...)
+            # update() called automatically on exit
+
+        Args:
+            model_id: Model identifier
+
+        Yields:
+            The live model object for modification
+
+        Raises:
+            KeyError: If model_id doesn't exist
+        """
+        pass
+
 
 # ============================================================================
 # In-Memory Implementation
@@ -447,8 +476,14 @@ class InMemoryModelStore(ModelStore[T]):
 
             return metadata
 
-    def get(self, model_id: str) -> Optional[T]:
-        """Retrieve a model by ID."""
+    def get(self, model_id: str, copy: bool = False) -> Optional[T]:
+        """Retrieve a model by ID.
+
+        Args:
+            model_id: Model identifier
+            copy: If True, return a deep copy (safe for mutation).
+                  If False (default), return live reference (faster but mutable).
+        """
         with self._lock:
             model = self._models.get(model_id)
             if model is None:
@@ -459,6 +494,9 @@ class InMemoryModelStore(ModelStore[T]):
             metadata.access_count += 1
             metadata.last_accessed = datetime.now()
 
+            # Return copy if requested
+            result = deepcopy(model) if copy else model
+
         # Dispatch hooks (outside lock)
         for hook in self._hooks:
             try:
@@ -466,7 +504,7 @@ class InMemoryModelStore(ModelStore[T]):
             except Exception as e:
                 logger.warning(f"Hook on_accessed failed: {e}")
 
-        return model
+        return result
 
     def update(self, model_id: str, model: T) -> ModelMetadata:
         """Update an existing model."""
@@ -536,7 +574,7 @@ class InMemoryModelStore(ModelStore[T]):
             snapshot = Snapshot(
                 model_id=model_id,
                 timestamp=datetime.now(),
-                state=copy.deepcopy(self._models[model_id]),
+                state=deepcopy(self._models[model_id]),
                 label=label
             )
             self._snapshots[model_id].append(snapshot)
@@ -552,7 +590,7 @@ class InMemoryModelStore(ModelStore[T]):
                 raise KeyError(f"Model {snapshot.model_id} not found")
 
             old_model = self._models[snapshot.model_id]
-            self._models[snapshot.model_id] = copy.deepcopy(snapshot.state)
+            self._models[snapshot.model_id] = deepcopy(snapshot.state)
 
             metadata = self._metadata[snapshot.model_id]
             metadata.modified_at = datetime.now()
@@ -582,6 +620,32 @@ class InMemoryModelStore(ModelStore[T]):
         with self._lock:
             if hook in self._hooks:
                 self._hooks.remove(hook)
+
+    @contextmanager
+    def edit(self, model_id: str) -> Generator[T, None, None]:
+        """Context manager for safe model mutation with auto-update.
+
+        Yields the live model for in-place modifications. On successful exit,
+        automatically calls update() to trigger hooks and update metadata.
+        On exception, changes are NOT reverted (use snapshots for rollback).
+
+        Example:
+            with store.edit("model-123") as model:
+                model.add_equipment(...)
+                model.connect(...)
+            # update() called automatically on exit
+        """
+        with self._lock:
+            if model_id not in self._models:
+                raise KeyError(f"Model {model_id} not found")
+            model = self._models[model_id]
+
+        try:
+            yield model
+        finally:
+            # Always call update on successful yield exit (even if no explicit changes)
+            # This ensures hooks are triggered and modified_at is updated
+            self.update(model_id, model)
 
     # Convenience methods for backward compatibility with dict-like access
     def __getitem__(self, model_id: str) -> T:

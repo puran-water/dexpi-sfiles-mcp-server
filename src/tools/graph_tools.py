@@ -8,18 +8,29 @@ from collections import defaultdict
 from mcp import Tool
 from ..utils.response import success_response, error_response, create_issue
 from ..converters.graph_converter import UnifiedGraphConverter
+from ..core.model_store import CachingHook
 
 logger = logging.getLogger(__name__)
 
 
 class GraphTools:
     """Provides graph analytics for engineering models."""
-    
-    def __init__(self, dexpi_models: Dict[str, Any], flowsheets: Dict[str, Any]):
-        """Initialize with model stores."""
+
+    def __init__(self, dexpi_models: Dict[str, Any], flowsheets: Dict[str, Any],
+                 caching_hook: Optional[CachingHook] = None):
+        """Initialize with model stores and optional caching hook.
+
+        Args:
+            dexpi_models: ModelStore or dict for DEXPI models
+            flowsheets: ModelStore or dict for SFILES flowsheets
+            caching_hook: Optional CachingHook for graph cache management.
+                         When provided, graphs are cached and auto-invalidated
+                         when models are updated or deleted.
+        """
         self.dexpi_models = dexpi_models
         self.flowsheets = flowsheets
         self.converter = UnifiedGraphConverter()
+        self._caching_hook = caching_hook
     
     def get_tools(self) -> List[Tool]:
         """Return graph analytics tools."""
@@ -179,7 +190,12 @@ class GraphTools:
             return error_response(str(e), code="TOOL_ERROR")
     
     def _get_graph(self, model_id: str, model_type: str = "auto") -> Tuple[nx.DiGraph, str]:
-        """Get graph from model."""
+        """Get graph from model, using cache when available.
+
+        When a CachingHook is configured, graphs are cached to avoid
+        expensive re-computation. Cache is auto-invalidated when
+        models are updated or deleted via the hook mechanism.
+        """
         # Auto-detect type
         if model_type == "auto":
             if model_id in self.dexpi_models:
@@ -188,7 +204,15 @@ class GraphTools:
                 model_type = "sfiles"
             else:
                 raise ValueError(f"Model {model_id} not found")
-        
+
+        # Check cache first
+        if self._caching_hook is not None:
+            cached_graph = self._caching_hook.get_cached_graph(model_id)
+            if cached_graph is not None:
+                logger.debug(f"Using cached graph for {model_id}")
+                return cached_graph, model_type
+
+        # Generate graph from model
         if model_type == "dexpi":
             model = self.dexpi_models.get(model_id)
             if not model:
@@ -199,7 +223,12 @@ class GraphTools:
             if not flowsheet:
                 raise ValueError(f"SFILES flowsheet {model_id} not found")
             graph = flowsheet.state
-        
+
+        # Store in cache for future use
+        if self._caching_hook is not None:
+            logger.debug(f"Caching graph for {model_id}")
+            self._caching_hook.cache_graph(model_id, graph)
+
         return graph, model_type
     
     async def _analyze_topology(self, args: dict) -> dict:

@@ -11,7 +11,7 @@ from mcp.server import Server, NotificationOptions
 from mcp.server.models import InitializationOptions
 from mcp.types import TextContent
 
-from .core.model_store import InMemoryModelStore, ModelType
+from .core.model_store import InMemoryModelStore, ModelType, CachingHook
 from .tools.dexpi_tools import DexpiTools
 from .tools.sfiles_tools import SfilesTools
 from .tools.bfd_tools import BfdTools
@@ -82,6 +82,13 @@ class EngineeringDrawingMCPServer:
         self.dexpi_models: InMemoryModelStore = InMemoryModelStore(ModelType.DEXPI)
         self.flowsheets: InMemoryModelStore = InMemoryModelStore(ModelType.SFILES)
 
+        # Phase 7+: CachingHook for graph/stats cache invalidation
+        # Shared hook registered with both stores to auto-invalidate cached graphs
+        # when models are updated or deleted
+        self.caching_hook = CachingHook()
+        self.dexpi_models.add_hook(self.caching_hook)
+        self.flowsheets.add_hook(self.caching_hook)
+
         # Note: Operation registry is initialized defensively in TransactionManager
         # No need to call register_all_operations() here - avoids duplicate registration
 
@@ -92,7 +99,7 @@ class EngineeringDrawingMCPServer:
         self.project_tools = ProjectTools(self.dexpi_models, self.flowsheets)
         self.validation_tools = ValidationTools(self.dexpi_models, self.flowsheets)
         self.schema_tools = SchemaTools()
-        self.graph_tools = GraphTools(self.dexpi_models, self.flowsheets)
+        self.graph_tools = GraphTools(self.dexpi_models, self.flowsheets, self.caching_hook)
         self.search_tools = SearchTools(self.dexpi_models, self.flowsheets)
         self.batch_tools = BatchTools(
             self.dexpi_tools,

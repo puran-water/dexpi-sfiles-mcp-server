@@ -717,3 +717,184 @@ class TestModelTypes:
         """Test SFILES store creates SFILES metadata."""
         metadata = sfiles_store.create("flowsheet-001", sample_model)
         assert metadata.model_type == ModelType.SFILES
+
+
+# ============================================================================
+# Get Copy Tests
+# ============================================================================
+
+class TestGetCopy:
+    """Test get() with copy parameter for safe mutation."""
+
+    def test_get_without_copy_returns_live_reference(self, dexpi_store, sample_model):
+        """Test get() without copy=True returns live reference."""
+        dexpi_store.create("model-001", sample_model)
+
+        model = dexpi_store.get("model-001")
+        model["modified"] = True
+
+        # Should affect the stored model (live reference)
+        stored = dexpi_store.get("model-001")
+        assert stored.get("modified") is True
+
+    def test_get_with_copy_returns_isolated_copy(self, dexpi_store, sample_model):
+        """Test get(copy=True) returns an isolated deep copy."""
+        dexpi_store.create("model-001", sample_model)
+
+        model_copy = dexpi_store.get("model-001", copy=True)
+        model_copy["modified"] = True
+
+        # Should NOT affect the stored model (isolated copy)
+        stored = dexpi_store.get("model-001")
+        assert stored.get("modified") is None
+
+    def test_get_copy_handles_nested_structures(self, dexpi_store):
+        """Test get(copy=True) deeply copies nested structures."""
+        nested_model = {
+            "name": "Test",
+            "equipment": [{"id": "P-101", "type": "pump"}],
+            "config": {"options": {"deep": True}}
+        }
+        dexpi_store.create("model-001", nested_model)
+
+        model_copy = dexpi_store.get("model-001", copy=True)
+        model_copy["equipment"].append({"id": "T-101", "type": "tank"})
+        model_copy["config"]["options"]["deep"] = False
+
+        # Original should be unchanged
+        stored = dexpi_store.get("model-001")
+        assert len(stored["equipment"]) == 1
+        assert stored["config"]["options"]["deep"] is True
+
+    def test_get_copy_nonexistent_returns_none(self, dexpi_store):
+        """Test get(copy=True) for nonexistent model returns None."""
+        result = dexpi_store.get("nonexistent", copy=True)
+        assert result is None
+
+    def test_get_copy_updates_access_metadata(self, dexpi_store, sample_model):
+        """Test get(copy=True) still updates access metadata."""
+        dexpi_store.create("model-001", sample_model)
+
+        dexpi_store.get("model-001", copy=True)
+        dexpi_store.get("model-001", copy=True)
+
+        metadata = dexpi_store.get_metadata("model-001")
+        assert metadata.access_count == 2
+
+    def test_get_copy_triggers_access_hook(self, dexpi_store, sample_model, tracking_hook):
+        """Test get(copy=True) triggers on_accessed hook."""
+        dexpi_store.add_hook(tracking_hook)
+        dexpi_store.create("model-001", sample_model)
+
+        dexpi_store.get("model-001", copy=True)
+
+        assert len(tracking_hook.accessed) == 1
+        assert tracking_hook.accessed[0]["model_id"] == "model-001"
+
+
+# ============================================================================
+# Edit Context Manager Tests
+# ============================================================================
+
+class TestEditContextManager:
+    """Test edit() context manager for safe mutations."""
+
+    def test_edit_yields_live_model(self, dexpi_store, sample_model):
+        """Test edit() yields the live model for modification."""
+        dexpi_store.create("model-001", sample_model)
+
+        with dexpi_store.edit("model-001") as model:
+            model["modified"] = True
+
+        stored = dexpi_store.get("model-001")
+        assert stored["modified"] is True
+
+    def test_edit_triggers_update_hook(self, dexpi_store, sample_model, tracking_hook):
+        """Test edit() triggers on_updated hook on exit."""
+        dexpi_store.add_hook(tracking_hook)
+        dexpi_store.create("model-001", sample_model)
+
+        with dexpi_store.edit("model-001") as model:
+            model["version"] = 2
+
+        assert len(tracking_hook.updated) == 1
+        assert tracking_hook.updated[0]["model_id"] == "model-001"
+
+    def test_edit_updates_modified_at(self, dexpi_store, sample_model):
+        """Test edit() updates modified_at timestamp on exit."""
+        dexpi_store.create("model-001", sample_model)
+        original_modified = dexpi_store.get_metadata("model-001").modified_at
+
+        time.sleep(0.01)  # Ensure time passes
+
+        with dexpi_store.edit("model-001") as model:
+            model["changed"] = True
+
+        new_modified = dexpi_store.get_metadata("model-001").modified_at
+        assert new_modified > original_modified
+
+    def test_edit_nonexistent_raises_keyerror(self, dexpi_store):
+        """Test edit() for nonexistent model raises KeyError."""
+        with pytest.raises(KeyError, match="not found"):
+            with dexpi_store.edit("nonexistent") as model:
+                pass
+
+    def test_edit_with_exception_still_calls_update(self, dexpi_store, sample_model, tracking_hook):
+        """Test edit() calls update even when exception is raised in block."""
+        dexpi_store.add_hook(tracking_hook)
+        dexpi_store.create("model-001", sample_model)
+
+        with pytest.raises(ValueError):
+            with dexpi_store.edit("model-001") as model:
+                model["partial_change"] = True
+                raise ValueError("Simulated error")
+
+        # Update should still have been called (finally block)
+        assert len(tracking_hook.updated) == 1
+        # Partial change should be visible (edit yields live model)
+        stored = dexpi_store.get("model-001")
+        assert stored.get("partial_change") is True
+
+    def test_edit_with_caching_hook_invalidates_cache(self, dexpi_store, sample_model):
+        """Test edit() invalidates caches via CachingHook."""
+        caching = CachingHook()
+        dexpi_store.add_hook(caching)
+        dexpi_store.create("model-001", sample_model)
+
+        # Pre-populate cache
+        caching.cache_graph("model-001", {"nodes": [], "edges": []})
+        assert caching.get_cached_graph("model-001") is not None
+
+        with dexpi_store.edit("model-001") as model:
+            model["equipment"] = ["new"]
+
+        # Cache should be invalidated
+        assert caching.get_cached_graph("model-001") is None
+
+    def test_edit_multiple_changes(self, dexpi_store):
+        """Test edit() for multiple sequential changes."""
+        dexpi_store.create("model-001", {"version": 0, "items": []})
+
+        with dexpi_store.edit("model-001") as model:
+            model["version"] = 1
+            model["items"].append("item1")
+            model["items"].append("item2")
+            model["new_field"] = "added"
+
+        stored = dexpi_store.get("model-001")
+        assert stored["version"] == 1
+        assert stored["items"] == ["item1", "item2"]
+        assert stored["new_field"] == "added"
+
+    def test_edit_nested_context_managers(self, dexpi_store, sample_model):
+        """Test that nested edit calls work correctly."""
+        dexpi_store.create("model-001", sample_model)
+        dexpi_store.create("model-002", {"name": "Second"})
+
+        with dexpi_store.edit("model-001") as m1:
+            m1["linked"] = "model-002"
+            with dexpi_store.edit("model-002") as m2:
+                m2["linked"] = "model-001"
+
+        assert dexpi_store.get("model-001")["linked"] == "model-002"
+        assert dexpi_store.get("model-002")["linked"] == "model-001"
