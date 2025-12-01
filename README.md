@@ -42,7 +42,13 @@ This repository prioritizes data fidelity over drawing aesthetics: the authorita
 - Batch/automation: `model_batch_apply`, `rules_apply`, `graph_connect`.
 - Templates: `template_list`, `template_get_schema`, `area_deploy`.
 
+### Visualization Tools (NEW - Weeks 5-6)
+- `visualize_model` - Generate HTML (Plotly), PNG (GraphicBuilder), or GraphML from DEXPI/SFILES models with auto model-type detection and intelligent renderer selection
+- `visualize_list_renderers` - List available renderers with capabilities and health status
+
 > **Phase 4 Update:** The consolidated tools (`model_create`, `model_load`, `model_save`, `model_tx_begin`, `model_tx_apply`, `model_tx_commit`, `schema_query`, `search_execute`, and `graph_modify`) are now **production-ready** and exposed by the MCP server. Legacy atomic tools remain available for backward compatibility. See [`docs/FEATURE_PARITY_MATRIX.md`](docs/FEATURE_PARITY_MATRIX.md) for migration guidance.
+
+> **Weeks 5-6 Update:** MCP visualization tools (`visualize_model`, `visualize_list_renderers`) are now operational. Symbol geometry foundation (Point, BoundingBox, Port) added to `src/core/symbols.py` for future rendering enhancements.
 
 ---
 
@@ -51,7 +57,8 @@ This repository prioritizes data fidelity over drawing aesthetics: the authorita
 | Component | Purpose |
 |-----------|---------|
 | `src/server.py` | Registers MCP handlers and routes tool calls to category handlers.
-| `src/tools/*` | Tool implementations grouped by domain (DEXPI, SFILES, project, validation, schema, graph, search, batch, templates).
+| `src/tools/*` | Tool implementations grouped by domain (DEXPI, SFILES, project, validation, schema, graph, search, batch, templates, visualization).
+| `src/tools/visualization_tools.py` | MCP visualization tools with RendererRouter integration (Weeks 5-6).
 | `src/persistence/project_persistence.py` | Saves/loads models, writes metadata, GraphML, and Plotly HTML artifacts, and performs git commits.
 | `src/templates/*.py` + `library/patterns/*.yaml` | Parametric template engine and YAML catalog (4 templates).
 | `src/managers/transaction_manager.py` & `src/registry/operation_registry.py` | ACID transaction infrastructure for `model_tx_*` tools (Phase 4 complete, production-ready).

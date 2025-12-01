@@ -88,26 +88,20 @@ class TestOrchestrationIntegration:
 
     def test_renderer_selection(self):
         """Test renderer selection based on requirements."""
-        # Production PDF requirement
+        # PDF format is not supported by any currently available renderer
+        # The router should raise RuntimeError for unsupported formats
         requirements = RenderRequirements(
             format=OutputFormat.PDF,
             quality=QualityLevel.PRODUCTION,
             platform=Platform.PRINT
         )
 
-        renderer = self.router.select_renderer(requirements)
+        with pytest.raises(RuntimeError) as excinfo:
+            self.router.select_renderer(requirements)
+        assert "PDF" in str(excinfo.value)
+        assert "not supported" in str(excinfo.value)
 
-        # If GraphicBuilder is available, it should be selected for production PDF
-        # Otherwise, python_simple is the fallback
-        if self.available_renderers['graphicbuilder']:
-            assert renderer == "graphicbuilder", \
-                f"Expected graphicbuilder for production PDF when available, got {renderer}"
-        else:
-            # python_simple is fallback for PDF when graphicbuilder unavailable
-            assert renderer == "python_simple", \
-                f"Expected python_simple as fallback for PDF, got {renderer}"
-
-        # Web interactive requirement
+        # Web interactive requirement - should work with plotly
         requirements = RenderRequirements(
             format=OutputFormat.HTML,
             quality=QualityLevel.STANDARD,
@@ -182,9 +176,14 @@ class TestOrchestrationIntegration:
 
     def test_scenario_based_routing(self):
         """Test pre-defined scenario routing."""
-        # Define scenarios with expected renderers and fallbacks
+        # production_pdf scenario uses PDF format which is not supported
+        # by any available renderer, so it should raise RuntimeError
+        with pytest.raises(RuntimeError) as excinfo:
+            self.router.get_renderer_for_scenario("production_pdf")
+        assert "PDF" in str(excinfo.value)
+
+        # Define scenarios that should work with available renderers
         scenarios = [
-            ("production_pdf", "graphicbuilder", "python_simple"),  # fallback if graphicbuilder unavailable
             ("web_interactive", "plotly", None),  # plotly should always be available
             ("quick_preview", "python_simple", None),  # python_simple should always be available
             ("current_html", "plotly", None)  # plotly should always be available

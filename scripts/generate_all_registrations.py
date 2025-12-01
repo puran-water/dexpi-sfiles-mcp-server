@@ -17,7 +17,7 @@ from typing import Dict, List, Tuple, Optional
 # Add src to path
 sys.path.append(str(Path(__file__).parent.parent / "src"))
 
-from tools.dexpi_introspector import DexpiIntrospector
+from core.components import get_registry, ComponentType
 
 # Reuse equipment generation classes
 sys.path.append(str(Path(__file__).parent))
@@ -182,8 +182,7 @@ class InstrumentationAliasGenerator:
 
 def generate_all_registrations():
     """Generate registrations for all 272 classes."""
-    introspector = DexpiIntrospector()
-    available = introspector.get_available_types()
+    registry = get_registry()
 
     all_registrations = {
         'equipment': [],
@@ -198,8 +197,9 @@ def generate_all_registrations():
     # Instantiate SymbolMapper for piping and instrumentation (Phase 3 Pass 1)
     symbol_mapper = SymbolMapper()
 
-    # Piping
-    piping_classes = available['piping']
+    # Piping - get class names from ComponentRegistry
+    piping_defs = registry.get_all_by_type(ComponentType.PIPING)
+    piping_classes = [d.dexpi_class.__name__ for d in piping_defs]
     for class_name in sorted(piping_classes):
         category = PipingCategorizer.categorize(class_name)
         alias, is_primary, family = PipingAliasGenerator.generate_alias(class_name, category)
@@ -234,8 +234,9 @@ def generate_all_registrations():
             'display_name': display_name,
         })
 
-    # Instrumentation
-    inst_classes = available['instrumentation']
+    # Instrumentation - get class names from ComponentRegistry
+    inst_defs = registry.get_all_by_type(ComponentType.INSTRUMENTATION)
+    inst_classes = [d.dexpi_class.__name__ for d in inst_defs]
     for class_name in sorted(inst_classes):
         category = InstrumentationCategorizer.categorize(class_name)
         alias, is_primary, family = InstrumentationAliasGenerator.generate_alias(class_name)

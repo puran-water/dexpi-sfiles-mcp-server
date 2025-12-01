@@ -75,23 +75,26 @@ class RendererRouter:
         """Initialize available renderers and their capabilities."""
 
         # GraphicBuilder - Production quality DEXPI renderer
+        # NOTE: Currently PNG only - SVG/PDF require Java API integration (TODO)
         self.renderers["graphicbuilder"] = RendererCapabilities(
             name="GraphicBuilder",
-            formats=[OutputFormat.SVG, OutputFormat.PNG, OutputFormat.PDF],
+            formats=[OutputFormat.PNG],  # SVG, PDF pending Java API integration
             quality_levels=[QualityLevel.PRODUCTION],
             platforms=[Platform.DESKTOP, Platform.PRINT, Platform.API],
             interactive=False,
             speed="slow",
             features=[
                 "full_dexpi_compliance",
-                "imagemaps",
                 "high_quality",
                 "symbol_library",
-                "complex_layouts"
+                "complex_layouts",
+                "png_only"  # Limitation: CLI only supports PNG output
             ]
         )
 
         # ProteusXMLDrawing - Web interactive viewer
+        # NOTE: NOT YET IMPLEMENTED - Planned for Phase 5 Week 5
+        # Health check returns False until implementation complete
         self.renderers["proteus_viewer"] = RendererCapabilities(
             name="ProteusXMLDrawing",
             formats=[OutputFormat.SVG, OutputFormat.HTML],
@@ -104,22 +107,25 @@ class RendererRouter:
                 "pan_zoom",
                 "selection",
                 "realtime_updates",
-                "collaboration"
+                "collaboration",
+                "not_implemented"  # Status: planned, not yet available
             ]
         )
 
-        # Simple Python renderer (future)
+        # Simple Python renderer - Draft quality only
+        # NOTE: Experimental - basic matplotlib/networkx rendering
         self.renderers["python_simple"] = RendererCapabilities(
             name="SimplePythonRenderer",
             formats=[OutputFormat.SVG, OutputFormat.PNG],
-            quality_levels=[QualityLevel.DRAFT],
+            quality_levels=[QualityLevel.DRAFT],  # Draft quality only
             platforms=[Platform.API],
             interactive=False,
             speed="fast",
             features=[
                 "quick_preview",
                 "basic_layout",
-                "minimal_dependencies"
+                "minimal_dependencies",
+                "experimental"  # Status: basic functionality, not feature-complete
             ]
         )
 
@@ -162,10 +168,21 @@ class RendererRouter:
         if not scores:
             raise RuntimeError("No available renderers satisfy the requested requirements")
 
-        # Select highest scoring renderer
-        best_renderer = max(scores.keys(), key=lambda k: scores[k])
+        # Filter out zero-score renderers (format/platform incompatible)
+        valid_scores = {k: v for k, v in scores.items() if v > 0}
+        if not valid_scores:
+            supported_formats = set()
+            for caps in self.renderers.values():
+                supported_formats.update(f.value for f in caps.formats)
+            raise RuntimeError(
+                f"Format '{requirements.format.value}' is not supported by any available renderer. "
+                f"Supported formats: {sorted(supported_formats)}"
+            )
 
-        logger.info(f"Selected renderer: {best_renderer} (score: {scores[best_renderer]})")
+        # Select highest scoring renderer
+        best_renderer = max(valid_scores.keys(), key=lambda k: valid_scores[k])
+
+        logger.info(f"Selected renderer: {best_renderer} (score: {valid_scores[best_renderer]})")
 
         return best_renderer
 

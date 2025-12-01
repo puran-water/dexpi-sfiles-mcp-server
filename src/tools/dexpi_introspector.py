@@ -1,69 +1,63 @@
 """
 Dynamic introspection and schema generation for pyDEXPI classes.
 
-MODULE-LEVEL INTROSPECTION
-==========================
+INSTANCE-LEVEL INTROSPECTION & SCHEMA GENERATION
+=================================================
 
-This module provides MODULE-level introspection capabilities for pyDEXPI classes:
-- Class discovery across equipment, piping, and instrumentation modules
-- Dynamic schema generation for MCP tool parameters
-- Filtered queries (e.g., get all valves, get equipment with nozzles)
-- Type enumeration for tool schemas
+This module provides CLASS-level introspection capabilities for pyDEXPI classes:
+- Schema generation: generate_class_schema(), generate_tool_schema()
+- Attribute introspection: get_class_attributes(), describe_class()
+- Validation: validate_equipment_completeness()
+- Type mapping: map_python_type_to_json()
 
-RELATIONSHIP WITH base_model_utils
-===================================
+RELATIONSHIP WITH ComponentRegistry
+====================================
 
-This module is COMPLEMENTARY to base_model_utils, NOT duplicative:
+Type enumeration (listing available classes) is now handled by ComponentRegistry:
+- ComponentRegistry.get_all_by_type() - Get classes by ComponentType
+- ComponentRegistry.get_all_by_category() - Get classes by ComponentCategory
+
+This module focuses on INTROSPECTION (inspecting a specific class in detail),
+while ComponentRegistry handles TYPE ENUMERATION (listing available types).
 
 ┌─────────────────────────────────────────────────────────────────┐
 │ dexpi_introspector (THIS MODULE)                                │
-│ - MODULE-level introspection                                     │
-│ - Class discovery: _discover_all_classes()                      │
-│ - Schema generation: generate_tool_schema()                     │
-│ - Type queries: get_available_types(), get_valves()             │
-│ - MCP integration: Used by tools/dexpi_tools.py for enums       │
+│ - Schema generation: generate_tool_schema(), generate_class_schema()│
+│ - Attribute queries: get_class_attributes(), describe_class()  │
+│ - Validation: validate_equipment_completeness()                 │
+│ - Used by schema_tools.py for MCP schema_query(describe_class)  │
 └─────────────────────────────────────────────────────────────────┘
                               ↕ (complementary)
 ┌─────────────────────────────────────────────────────────────────┐
-│ base_model_utils (pydexpi.toolkits.base_model_utils)            │
-│ - INSTANCE-level introspection                                  │
-│ - Attribute inspection: get_composition_attributes()            │
-│ - Reference traversal: get_reference_attributes()               │
-│ - Data extraction: get_data_attributes()                        │
-│ - Runtime queries: Used on actual model instances               │
+│ core/components.py (ComponentRegistry)                          │
+│ - Type enumeration: get_all_by_type(), get_all_by_category()   │
+│ - Alias resolution: resolve_alias()                            │
+│ - Used by schema_tools.py for MCP schema_query(list_classes)    │
 └─────────────────────────────────────────────────────────────────┘
-
-INTEGRATION
-===========
-
-This module already uses base_model_utils internally (see lines 72-78):
-- Uses bmt.get_composition_attributes() for nozzle detection
-- Delegates instance-level queries to base_model_utils
-- Provides module-level layer on top of instance-level utilities
 
 WHEN TO USE EACH
 ================
 
-Use dexpi_introspector when:
-- Generating MCP tool schemas with class enumerations
-- Discovering available types for UI dropdowns
+Use ComponentRegistry when:
+- Listing available types for UI dropdowns
 - Filtering classes by category (e.g., all valves)
-- Building type registries for code generation
+- Resolving aliases to DEXPI class names
+- Getting all equipment/piping/instrumentation types
 
-Use base_model_utils when:
-- Inspecting attributes of a model instance
-- Traversing object references at runtime
-- Extracting data from populated models
-- Validating instance structure
+Use dexpi_introspector when:
+- Generating MCP tool schemas with detailed properties
+- Getting comprehensive class descriptions with attributes
+- Validating equipment attribute completeness
+- Converting Python types to JSON schema types
 
 STATUS
 ======
 
-This module is ACTIVE and NOT deprecated. It provides unique functionality
-that has no equivalent in base_model_utils or other toolkits.
+This module provides unique schema generation and introspection functionality.
+Type enumeration has been migrated to ComponentRegistry for consistency.
 
-Version: 1.0
-Last Updated: 2025-11-12 (Phase 5 Week 3 Step 4)
+Version: 2.0
+Last Updated: 2025-11-29 (Week 5 - ComponentRegistry migration)
 """
 
 import inspect
@@ -220,14 +214,6 @@ class DexpiIntrospector:
             "required": ["model_id", "tag_name"]
         }
     
-    def get_available_types(self) -> Dict[str, List[str]]:
-        """Get all available types organized by category."""
-        return {
-            "equipment": sorted(list(self._equipment_classes.keys())),
-            "piping": sorted(list(self._piping_classes.keys())),
-            "instrumentation": sorted(list(self._instrumentation_classes.keys()))
-        }
-    
     def get_equipment_with_nozzles(self) -> List[str]:
         """Get equipment types that support nozzles.
 
@@ -266,15 +252,7 @@ class DexpiIntrospector:
                 ) from e
 
         return sorted(nozzle_equipment)
-    
-    def get_valves(self) -> List[str]:
-        """Get all valve types from piping components."""
-        valves = []
-        for name in self._piping_classes.keys():
-            if "Valve" in name:
-                valves.append(name)
-        return sorted(valves)
-    
+
     def _get_class(self, class_name: str, category: str) -> Optional[Type]:
         """Get a class by name and category."""
         if category == "equipment":
@@ -450,27 +428,7 @@ class DexpiIntrospector:
                 required.append(field_name)
         
         return required
-    
-    def generate_dynamic_enum(self, category: str, filter_func: Optional[callable] = None) -> List[str]:
-        """Generate dynamic enum of class names for a category."""
-        if category == "equipment":
-            classes = list(self._equipment_classes.keys())
-        elif category == "piping":
-            classes = list(self._piping_classes.keys())
-        elif category == "instrumentation":
-            classes = list(self._instrumentation_classes.keys())
-        elif category == "valves":
-            # Special case for valves
-            classes = self.get_valves()
-        else:
-            classes = []
-        
-        # Apply filter if provided
-        if filter_func:
-            classes = [c for c in classes if filter_func(c)]
-        
-        return sorted(classes)
-    
+
     def describe_class(self, class_name: str, category: str = None) -> Dict[str, Any]:
         """Get comprehensive description of a class including schema and attributes."""
         # Try to find the class in any category if not specified

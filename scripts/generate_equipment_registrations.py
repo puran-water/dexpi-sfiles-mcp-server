@@ -17,7 +17,7 @@ from typing import Dict, List, Tuple, Optional
 # Add src to path
 sys.path.append(str(Path(__file__).parent.parent / "src"))
 
-from tools.dexpi_introspector import DexpiIntrospector
+from core.components import get_registry, ComponentType
 from core.symbols import get_registry as get_symbol_registry
 
 
@@ -547,10 +547,12 @@ class NozzleDefaults:
 
 def generate_registration_data():
     """Generate complete registration data for all equipment."""
-    introspector = DexpiIntrospector()
+    registry = get_registry()
     symbol_mapper = SymbolMapper()
 
-    equipment_classes = introspector.get_available_types()['equipment']
+    # Get equipment class names from ComponentRegistry
+    equipment_defs = registry.get_all_by_type(ComponentType.EQUIPMENT)
+    equipment_classes = [d.dexpi_class.__name__ for d in equipment_defs]
 
     registrations = []
 

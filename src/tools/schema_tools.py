@@ -7,6 +7,7 @@ import inspect
 from mcp import Tool
 from ..utils.response import success_response, error_response
 from .dexpi_introspector import DexpiIntrospector
+from ..core.components import get_registry, ComponentType
 
 # Import SFILES2 module for schema introspection - REQUIRED
 try:
@@ -282,21 +283,25 @@ class SchemaTools:
         })
     
     def _get_dexpi_classes(self, category: str) -> List[str]:
-        """Get DEXPI classes by category using existing introspector."""
+        """Get DEXPI classes by category using ComponentRegistry."""
+        registry = get_registry()
+
         if category == "all":
             # Combine all categories
-            all_types = self.dexpi_introspector.get_available_types()
             classes = []
-            classes.extend(all_types.get("equipment", []))
-            classes.extend(all_types.get("piping", []))
-            classes.extend(all_types.get("instrumentation", []))
+            for comp_type in [ComponentType.EQUIPMENT, ComponentType.PIPING, ComponentType.INSTRUMENTATION]:
+                defs = registry.get_all_by_type(comp_type)
+                classes.extend([d.dexpi_class.__name__ for d in defs])
             return sorted(list(set(classes)))
         elif category == "equipment":
-            return self.dexpi_introspector.get_available_types().get("equipment", [])
+            defs = registry.get_all_by_type(ComponentType.EQUIPMENT)
+            return sorted([d.dexpi_class.__name__ for d in defs])
         elif category == "piping":
-            return self.dexpi_introspector.get_available_types().get("piping", [])
+            defs = registry.get_all_by_type(ComponentType.PIPING)
+            return sorted([d.dexpi_class.__name__ for d in defs])
         elif category == "instrumentation":
-            return self.dexpi_introspector.get_available_types().get("instrumentation", [])
+            defs = registry.get_all_by_type(ComponentType.INSTRUMENTATION)
+            return sorted([d.dexpi_class.__name__ for d in defs])
         else:
             return []
     
@@ -407,11 +412,19 @@ class SchemaTools:
                     }
                     break
         else:
-            # Build full hierarchy using introspector's discovered classes
-            all_types = self.dexpi_introspector.get_available_types()
-            for category, classes in all_types.items():
+            # Build full hierarchy using ComponentRegistry for type enumeration
+            registry = get_registry()
+            category_map = {
+                "equipment": ComponentType.EQUIPMENT,
+                "piping": ComponentType.PIPING,
+                "instrumentation": ComponentType.INSTRUMENTATION
+            }
+            for category, comp_type in category_map.items():
                 hierarchy[category] = {}
-                for class_name in classes:
+                defs = registry.get_all_by_type(comp_type)
+                for defn in defs:
+                    class_name = defn.dexpi_class.__name__
+                    # Use introspector for attribute introspection (unique functionality)
                     attrs = self.dexpi_introspector.get_class_attributes(class_name, category)
                     if attrs:
                         hierarchy[category][class_name] = {

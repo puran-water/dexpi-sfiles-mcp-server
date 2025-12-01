@@ -1145,14 +1145,32 @@ class DexpiTools:
         piping_class = args.get("piping_class", "CS150")
         nominal_diameter = args.get("nominal_diameter", "DN50")
         operation = args.get("operation", "manual")
-        
-        # Import valve types
-        from pydexpi.dexpi_classes import piping as piping_module
-        
-        # Get the valve class dynamically
-        valve_class = getattr(piping_module, valve_type, None)
-        if not valve_class:
-            raise ValueError(f"Unknown valve type: {valve_type}")
+
+        # Use ComponentRegistry to resolve valve type (supports both aliases and class names)
+        from src.core.components import get_registry, ComponentCategory
+
+        registry = get_registry()
+        component_def = registry.get_by_alias(valve_type)
+
+        # If not found by alias, try as DEXPI class name
+        if not component_def:
+            try:
+                dexpi_class = registry.get_dexpi_class(valve_type)
+                component_def = registry.get_by_class(dexpi_class)
+            except Exception:
+                raise ValueError(
+                    f"Unknown valve type: {valve_type}. "
+                    f"Use either SFILES alias (e.g., 'gate_valve') or DEXPI class name (e.g., 'GateValve')."
+                )
+
+        # Validate it's a valve component
+        if component_def.category != ComponentCategory.VALVE:
+            raise ValueError(
+                f"Type '{valve_type}' is not a valve. "
+                f"Expected ComponentCategory.VALVE, got {component_def.category}."
+            )
+
+        valve_class = component_def.dexpi_class
         
         # Create valve instance with tagName for consistency
         # Don't pass operation parameter since it causes validation errors
@@ -1285,18 +1303,43 @@ class DexpiTools:
         at_position = args.get("at_position", 0.5)
         
         # Import required classes and toolkit
-        from pydexpi.dexpi_classes import piping as piping_module
         from pydexpi.dexpi_classes.piping import (
             PipingNetworkSegment,
             PipingNode,
             Pipe
         )
         from pydexpi.toolkits import piping_toolkit as pt
-        
+
+        # Use ComponentRegistry to resolve valve type (supports both aliases and class names)
+        from src.core.components import get_registry, ComponentCategory
+
+        registry = get_registry()
+        component_def = registry.get_by_alias(valve_type)
+
+        # If not found by alias, try as DEXPI class name
+        if not component_def:
+            try:
+                dexpi_class = registry.get_dexpi_class(valve_type)
+                component_def = registry.get_by_class(dexpi_class)
+            except Exception:
+                raise ValueError(
+                    f"Unknown valve type: {valve_type}. "
+                    f"Use either SFILES alias (e.g., 'gate_valve') or DEXPI class name (e.g., 'GateValve')."
+                )
+
+        # Validate it's a valve component
+        if component_def.category != ComponentCategory.VALVE:
+            raise ValueError(
+                f"Type '{valve_type}' is not a valve. "
+                f"Expected ComponentCategory.VALVE, got {component_def.category}."
+            )
+
+        valve_class = component_def.dexpi_class
+
         # Find the segment to modify
         target_segment = None
         system = None
-        
+
         if model.conceptualModel and model.conceptualModel.pipingNetworkSystems:
             for sys in model.conceptualModel.pipingNetworkSystems:
                 if hasattr(sys, 'segments'):
@@ -1307,14 +1350,9 @@ class DexpiTools:
                             break
                 if target_segment:
                     break
-        
+
         if not target_segment:
             raise ValueError(f"Segment {segment_id} not found")
-        
-        # Get the valve class
-        valve_class = getattr(piping_module, valve_type, None)
-        if not valve_class:
-            raise ValueError(f"Unknown valve type: {valve_type}")
         
         # Create valve instance with nodes
         valve = valve_class(
@@ -1386,27 +1424,38 @@ class DexpiTools:
         })
     
     async def _list_available_types(self, args: dict) -> dict:
-        """List all available element types."""
+        """List all available element types using ComponentRegistry."""
         category = args.get("category", "all")
-        
+
+        # Use ComponentRegistry for type enumeration
+        from src.core.components import get_registry, ComponentType, ComponentCategory
+        registry = get_registry()
+
         result = {}
-        
+
         if category in ["all", "equipment"]:
-            result["equipment"] = self.introspector.get_available_types()["equipment"]
-        
+            defs = registry.get_all_by_type(ComponentType.EQUIPMENT)
+            result["equipment"] = sorted([d.dexpi_class.__name__ for d in defs])
+
         if category in ["all", "valves"]:
-            result["valves"] = self.introspector.get_valves()
-        
+            defs = registry.get_all_by_category(ComponentCategory.VALVE)
+            result["valves"] = sorted([d.dexpi_class.__name__ for d in defs])
+
         if category in ["all", "piping"]:
-            result["piping"] = self.introspector.get_available_types()["piping"]
-        
+            defs = registry.get_all_by_type(ComponentType.PIPING)
+            result["piping"] = sorted([d.dexpi_class.__name__ for d in defs])
+
         if category in ["all", "instrumentation"]:
-            result["instrumentation"] = self.introspector.get_available_types()["instrumentation"]
-        
-        # Also include equipment that support nozzles
+            defs = registry.get_all_by_type(ComponentType.INSTRUMENTATION)
+            result["instrumentation"] = sorted([d.dexpi_class.__name__ for d in defs])
+
+        # Also include equipment that support nozzles (using nozzle_count_default > 0)
         if category in ["all", "equipment"]:
-            result["equipment_with_nozzles"] = self.introspector.get_equipment_with_nozzles()
-        
+            defs = registry.get_all_by_type(ComponentType.EQUIPMENT)
+            result["equipment_with_nozzles"] = sorted([
+                d.dexpi_class.__name__ for d in defs if d.nozzle_count_default > 0
+            ])
+
         return {
             "status": "success",
             "category": category,

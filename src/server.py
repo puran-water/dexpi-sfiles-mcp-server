@@ -24,6 +24,7 @@ from .tools.template_tools import TemplateTools
 from .tools.graph_modify_tools import GraphModifyTools
 from .tools.model_tools import ModelTools
 from .tools.transaction_tools import TransactionTools
+from .tools.visualization_tools import VisualizationTools
 from .resources.graph_resources import GraphResourceProvider
 from .converters.graph_converter import UnifiedGraphConverter
 
@@ -96,6 +97,7 @@ class EngineeringDrawingMCPServer:
             self.sfiles_tools,
             self.search_tools
         )
+        self.visualization_tools = VisualizationTools(self.dexpi_models, self.flowsheets)
 
         # Phase 4: Unified model and transaction tools
         self.model_tools = ModelTools(
@@ -145,6 +147,7 @@ class EngineeringDrawingMCPServer:
             tools.extend(self.batch_tools.get_tools())
             tools.extend(self.template_tools.get_tools())
             tools.extend(self.graph_modify_tools.get_tools())
+            tools.extend(self.visualization_tools.get_tools())
             return tools
         
         @self.server.call_tool()
@@ -179,6 +182,8 @@ class EngineeringDrawingMCPServer:
                     result = await self.graph_tools.handle_tool(name, arguments)
                 elif name.startswith("search_") or name == "query_model_statistics":
                     result = await self.search_tools.handle_tool(name, arguments)
+                elif name.startswith("visualize_"):
+                    result = await self.visualization_tools.handle_tool(name, arguments)
                 else:
                     raise ValueError(f"Unknown tool: {name}")
                 

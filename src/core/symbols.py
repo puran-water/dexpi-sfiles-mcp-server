@@ -8,13 +8,18 @@ This module consolidates symbol mappings from:
 - merge_symbol_libraries.py (NOAKA vs DISC provenance)
 
 Provides unified access to symbol data with provenance tracking.
+
+Week 6 Extension: Added geometry support for rendering:
+- BoundingBox: Symbol bounding box for layout
+- Point: 2D coordinate for anchor points
+- Port: Connection point with direction and flow type
 """
 
 import json
 import logging
 from pathlib import Path
 from typing import Dict, List, Optional, Set
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from enum import Enum
 
 logger = logging.getLogger(__name__)
@@ -24,6 +29,46 @@ class CatalogNotFoundError(FileNotFoundError):
     """Raised when merged symbol catalog is missing in strict mode."""
     pass
 
+
+# ============================================================================
+# Geometry Types (Week 6 Extension)
+# ============================================================================
+
+@dataclass
+class Point:
+    """2D coordinate point for symbol geometry."""
+    x: float
+    y: float
+
+
+@dataclass
+class BoundingBox:
+    """Bounding box for symbol layout and collision detection."""
+    x: float  # Top-left X
+    y: float  # Top-left Y
+    width: float
+    height: float
+
+    @property
+    def center(self) -> Point:
+        """Calculate center point of bounding box."""
+        return Point(self.x + self.width / 2, self.y + self.height / 2)
+
+
+@dataclass
+class Port:
+    """Connection point on a symbol for piping/signal connections."""
+    id: str  # Port identifier (e.g., "inlet", "outlet", "N1")
+    x: float  # X coordinate in symbol-local space
+    y: float  # Y coordinate in symbol-local space
+    direction: Optional[str] = None  # N/S/E/W/NE/NW/SE/SW
+    type: Optional[str] = None  # inlet/outlet/auxiliary
+    flow_direction: Optional[str] = None  # in/out/bidirectional
+
+
+# ============================================================================
+# Enums and Symbol Info
+# ============================================================================
 
 class SymbolSource(Enum):
     """Symbol library sources."""
@@ -51,7 +96,14 @@ class SymbolCategory(Enum):
 
 @dataclass
 class SymbolInfo:
-    """Complete information about a symbol."""
+    """Complete information about a symbol.
+
+    Week 6 Extension: Added geometry fields for rendering support:
+    - bounding_box: Symbol dimensions for layout
+    - anchor_point: Connection anchor (defaults to box center if not set)
+    - ports: List of connection points with direction/flow info
+    - scalable/rotatable: Render hints for transformations
+    """
     # Identifiers
     symbol_id: str  # e.g., "PP0101"
     name: str  # Display name
@@ -73,6 +125,23 @@ class SymbolInfo:
     variants: List[str] = None  # Alternative symbol IDs
     tags: List[str] = None  # Searchable tags
     attributes: Dict = None  # Additional metadata
+
+    # Geometry (Week 6 Extension - all optional for backward compatibility)
+    bounding_box: Optional[BoundingBox] = None  # Symbol dimensions
+    anchor_point: Optional[Point] = None  # Connection anchor
+    ports: List[Port] = field(default_factory=list)  # Connection points
+
+    # Render hints (Week 6 Extension)
+    scalable: bool = True  # Can symbol be scaled
+    rotatable: bool = True  # Can symbol be rotated
+
+    def get_anchor(self) -> Optional[Point]:
+        """Get anchor point, deriving from bounding box center if not set."""
+        if self.anchor_point:
+            return self.anchor_point
+        if self.bounding_box:
+            return self.bounding_box.center
+        return None
 
 
 class SymbolRegistry:

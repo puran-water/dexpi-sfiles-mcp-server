@@ -1,9 +1,32 @@
 # Core Layer Migration Plan
 ## From Duplication to Single Source of Truth
 
-**Status**: DRAFT v1.0  
-**Created**: 2025-11-09  
-**Target Completion**: Phase 1-3 (Critical Path): 2 weeks  
+**Status**: IN PROGRESS v1.1
+**Created**: 2025-11-09
+**Last Updated**: 2025-11-30
+**Target Completion**: Phase 1-3 (Critical Path): 2 weeks
+
+---
+
+## Recent Progress (November 2025)
+
+### Week 5-6 Updates (2025-11-30)
+
+**ComponentRegistry Migration Complete:**
+- ✅ Removed deprecated methods from `DexpiIntrospector`:
+  - `get_available_types()` - Use `ComponentRegistry.get_all_by_type()`
+  - `get_valves()` - Use `ComponentRegistry.get_all_by_category()`
+  - `generate_dynamic_enum()` - Use ComponentRegistry directly
+- ✅ Updated `scripts/generate_all_registrations.py` to use ComponentRegistry API
+- ✅ Updated `scripts/generate_equipment_registrations.py` to use ComponentRegistry API
+- ✅ Updated DexpiIntrospector docstring to clarify relationship with ComponentRegistry
+
+**Impact:**
+- Type enumeration now consolidated in ComponentRegistry (272 classes)
+- DexpiIntrospector focused on schema generation only
+- Scripts use consistent API
+
+**Remaining:** `catalog.py` migration (Week 7-8 task)  
 
 ---
 
@@ -1161,6 +1184,6 @@ This migration plan provides a pragmatic, risk-minimized path to achieving true 
 
 ---
 
-**Document Version**: 1.0  
-**Last Updated**: 2025-11-09  
-**Status**: READY FOR REVIEW
+**Document Version**: 1.1
+**Last Updated**: 2025-11-30
+**Status**: IN PROGRESS - ComponentRegistry migration complete, catalog.py migration pending

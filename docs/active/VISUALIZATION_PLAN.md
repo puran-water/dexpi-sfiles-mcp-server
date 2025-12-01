@@ -1,10 +1,10 @@
 # Visualization Plan: Federated Rendering Platform
 
 **Created:** 2025-11-09
-**Last Updated:** 2025-11-10 (Phase 5 Week 1 Complete)
-**Status:** ✅ WEEK 1 COMPLETE (Nov 10, 2025) - Bugs #2 & #3 Fixed
-**Sprint:** Sprint 4 (Visualization Infrastructure)
-**Current Phase:** Core Layer Stabilization Complete - Week 2 Ready
+**Last Updated:** 2025-11-30 (Weeks 5-6 Complete)
+**Status:** ✅ MCP VISUALIZATION TOOLS COMPLETE (Nov 30, 2025)
+**Sprint:** Sprint 5 (MCP Integration & Symbol Geometry)
+**Current Phase:** MCP Integration Complete - Symbol Geometry Foundation Ready
 
 ---
 
@@ -115,6 +115,72 @@ The visualization system depends on the core layer (`src/core/`) for model enric
 
 **Status:** All blockers resolved - Ready for Week 2 (model_service.py removal)
 **Next Action:** Week 2 - Remove model_service.py duplication (~400 lines)
+
+---
+
+## ✅ WEEKS 5-6 COMPLETE - NOVEMBER 30, 2025
+
+### MCP Visualization Tools - OPERATIONAL
+
+The MCP visualization infrastructure is now **production-ready** with two new tools:
+
+**New MCP Tools:**
+1. **`visualize_model`** - Generate visualizations from DEXPI/SFILES models
+   - Supports HTML (Plotly interactive), PNG (GraphicBuilder), GraphML export
+   - Auto-detects model type
+   - Intelligent renderer selection via RendererRouter
+   - Quality levels: draft, standard, production
+   - Layout algorithms: spring, hierarchical, auto
+
+2. **`visualize_list_renderers`** - List available renderers with capabilities
+   - Returns health status for each renderer
+   - Shows supported formats and platforms
+
+**Key Implementation Details:**
+- File: `src/tools/visualization_tools.py` (469 lines)
+- Tests: `tests/tools/test_visualization_tools.py` (24 tests)
+- Integrated into `src/server.py` with `visualize_*` prefix routing
+
+**Bug Fixes Applied (Codex Review):**
+- ✅ GraphML routing: Now bypasses RendererRouter (direct export)
+- ✅ Error handling: Uses `result.get("ok") is False` consistently
+- ✅ Zero-score guard: Rejects renderers that can't handle requested format
+- ✅ Input validation: User-friendly errors for invalid format/quality
+
+### Symbol Geometry Foundation - COMPLETE
+
+Extended `src/core/symbols.py` with geometry support for future rendering:
+
+**New Dataclasses:**
+- `Point` - 2D coordinate (x, y)
+- `BoundingBox` - Symbol dimensions with `center` property
+- `Port` - Connection point with id, position, direction, type, flow_direction
+
+**SymbolInfo Extensions:**
+- `bounding_box: Optional[BoundingBox]` - Symbol dimensions
+- `anchor_point: Optional[Point]` - Connection anchor
+- `ports: List[Port]` - Connection points (default: empty list)
+- `scalable: bool = True` - Render hint
+- `rotatable: bool = True` - Render hint
+- `get_anchor()` method - Returns explicit anchor or derives from bounding box center
+
+**Tests:** `tests/core/test_symbol_geometry.py` (25 tests)
+
+### ComponentRegistry Migration - COMPLETE
+
+Removed deprecated methods from `DexpiIntrospector`:
+- `get_available_types()` → Use `ComponentRegistry.get_all_by_type()`
+- `get_valves()` → Use `ComponentRegistry.get_all_by_category()`
+- `generate_dynamic_enum()` → Use `ComponentRegistry` directly
+
+Updated scripts to use new API:
+- `scripts/generate_all_registrations.py`
+- `scripts/generate_equipment_registrations.py`
+
+### Test Results
+- **Total tests:** 590 passed, 16 skipped, 3 failed (GraphicBuilder Docker)
+- **Visualization tests:** 24 passed
+- **Geometry tests:** 25 passed
 
 ---
 
