@@ -155,6 +155,13 @@ class TestDeterminePortDirection:
         assert determine_port_direction(50, 50, 0, 0) == 'E'
         assert determine_port_direction(50, 50, 0, 100) == 'E'
 
+    def test_offset_viewbox(self):
+        """Direction accounts for non-zero/negative viewBox origins."""
+        # Bounding box spans -10..10 in X; port at 10 is still east
+        assert determine_port_direction(10, 0, 20, 20, origin_x=-10, origin_y=-10) == 'E'
+        # Port at -10 is on the west edge
+        assert determine_port_direction(-10, 0, 20, 20, origin_x=-10, origin_y=-10) == 'W'
+
 
 class TestInferDefaultPorts:
     """Tests for default port inference based on symbol type."""

@@ -81,16 +81,16 @@ def extract_svg_metadata(svg_path: Path, include_hash: bool = True) -> Optional[
         anchor = _extract_anchor_point(root, bbox)
 
         # Extract ports
-        ports = _extract_ports(root, bbox.width, bbox.height)
+        ports = _extract_ports(root, bbox)
 
         # Infer default ports if none found
         if not ports:
             ports = _infer_default_ports(svg_path, bbox.width, bbox.height)
 
-        # Calculate file hash
+        # Calculate file hash (SHA-256 for consistency with merged_catalog.json)
         file_hash = None
         if include_hash:
-            file_hash = hashlib.md5(svg_path.read_bytes()).hexdigest()
+            file_hash = hashlib.sha256(svg_path.read_bytes()).hexdigest()
 
         return SVGMetadata(
             bounding_box=bbox,
@@ -160,7 +160,7 @@ def _extract_anchor_point(root: ET.Element, bbox: BoundingBox) -> Point:
     return bbox.center
 
 
-def _extract_ports(root: ET.Element, width: float, height: float) -> List[Port]:
+def _extract_ports(root: ET.Element, bbox: BoundingBox) -> List[Port]:
     """Extract connection ports from SVG elements."""
     ports = []
 
@@ -168,7 +168,7 @@ def _extract_ports(root: ET.Element, width: float, height: float) -> List[Port]:
     for elem in root.iter():
         elem_class = elem.get('class', '')
         if 'port' in elem_class.lower():
-            port = _port_from_element(elem, width, height, len(ports))
+            port = _port_from_element(elem, bbox, len(ports))
             if port:
                 ports.append(port)
 
@@ -177,7 +177,7 @@ def _extract_ports(root: ET.Element, width: float, height: float) -> List[Port]:
         for elem in root.iter():
             elem_id = elem.get('id', '')
             if elem_id.lower().startswith('port'):
-                port = _port_from_element(elem, width, height, len(ports))
+                port = _port_from_element(elem, bbox, len(ports))
                 if port:
                     ports.append(port)
 
@@ -186,21 +186,28 @@ def _extract_ports(root: ET.Element, width: float, height: float) -> List[Port]:
         for elem in root.iter():
             elem_id = elem.get('id', '').lower()
             if 'nozzle' in elem_id or 'connection' in elem_id:
-                port = _port_from_element(elem, width, height, len(ports))
+                port = _port_from_element(elem, bbox, len(ports))
                 if port:
                     ports.append(port)
 
     return ports
 
 
-def _port_from_element(elem: ET.Element, width: float, height: float, index: int) -> Optional[Port]:
+def _port_from_element(elem: ET.Element, bbox: BoundingBox, index: int) -> Optional[Port]:
     """Extract port data from an SVG element."""
     x, y = _get_element_position(elem)
     if x is None or y is None:
         return None
 
     # Determine direction based on position
-    direction = determine_port_direction(x, y, width, height)
+    direction = determine_port_direction(
+        x,
+        y,
+        bbox.width,
+        bbox.height,
+        bbox.x,
+        bbox.y
+    )
 
     # Determine port type from id
     elem_id = elem.get('id', f'port_{index}').lower()
@@ -256,7 +263,14 @@ def _get_element_position(elem: ET.Element) -> Tuple[Optional[float], Optional[f
     return None, None
 
 
-def determine_port_direction(x: float, y: float, width: float, height: float) -> str:
+def determine_port_direction(
+    x: float,
+    y: float,
+    width: float,
+    height: float,
+    origin_x: float = 0.0,
+    origin_y: float = 0.0
+) -> str:
     """
     Determine port direction based on position relative to symbol bounds.
 
@@ -265,6 +279,8 @@ def determine_port_direction(x: float, y: float, width: float, height: float) ->
         y: Port Y position
         width: Symbol width
         height: Symbol height
+        origin_x: Bounding box origin X (for non-zero/negative viewBoxes)
+        origin_y: Bounding box origin Y (for non-zero/negative viewBoxes)
 
     Returns:
         Direction string: N, S, E, W, NE, NW, SE, SW
@@ -272,8 +288,8 @@ def determine_port_direction(x: float, y: float, width: float, height: float) ->
     if width == 0 or height == 0:
         return 'E'
 
-    rel_x = x / width
-    rel_y = y / height
+    rel_x = (x - origin_x) / width
+    rel_y = (y - origin_y) / height
 
     # Edge detection with tolerance
     if rel_x < 0.15:
