@@ -168,38 +168,56 @@ class TestInferDefaultPorts:
 
     def test_pump_ports(self):
         """Pumps should have W inlet, E outlet."""
-        ports = _infer_default_ports(Path("/symbols/pump.svg"), 100, 50)
+        bbox = BoundingBox(x=0, y=0, width=100, height=50)
+        ports = _infer_default_ports(Path("/symbols/pump.svg"), bbox)
         assert len(ports) == 2
         assert ports[0].direction == 'W'
         assert ports[0].type == 'inlet'
+        assert ports[0].x == 0  # Left edge
         assert ports[1].direction == 'E'
         assert ports[1].type == 'outlet'
+        assert ports[1].x == 100  # Right edge
 
     def test_pump_by_prefix(self):
         """PP prefix should be recognized as pump."""
-        ports = _infer_default_ports(Path("/symbols/PP001A.svg"), 100, 50)
+        bbox = BoundingBox(x=0, y=0, width=100, height=50)
+        ports = _infer_default_ports(Path("/symbols/PP001A.svg"), bbox)
         assert len(ports) == 2
         assert ports[0].direction == 'W'
 
+    def test_pump_with_offset_bbox(self):
+        """Ports should use absolute coordinates for offset bboxes."""
+        bbox = BoundingBox(x=-50, y=-25, width=100, height=50)
+        ports = _infer_default_ports(Path("/symbols/pump.svg"), bbox)
+        assert len(ports) == 2
+        assert ports[0].x == -50  # Left edge at bbox.x
+        assert ports[0].y == 0    # Center Y at bbox.y + height/2
+        assert ports[1].x == 50   # Right edge at bbox.x + width
+
     def test_tank_ports(self):
         """Tanks should have N inlet, S outlet."""
-        ports = _infer_default_ports(Path("/symbols/tank.svg"), 100, 150)
+        bbox = BoundingBox(x=0, y=0, width=100, height=150)
+        ports = _infer_default_ports(Path("/symbols/tank.svg"), bbox)
         assert len(ports) == 2
         assert ports[0].direction == 'N'
         assert ports[0].type == 'inlet'
+        assert ports[0].y == 0  # Top edge
         assert ports[1].direction == 'S'
         assert ports[1].type == 'outlet'
+        assert ports[1].y == 150  # Bottom edge
 
     def test_valve_ports(self):
         """Valves should be inline (W to E)."""
-        ports = _infer_default_ports(Path("/symbols/valve.svg"), 50, 50)
+        bbox = BoundingBox(x=0, y=0, width=50, height=50)
+        ports = _infer_default_ports(Path("/symbols/valve.svg"), bbox)
         assert len(ports) == 2
         assert ports[0].direction == 'W'
         assert ports[1].direction == 'E'
 
     def test_heat_exchanger_ports(self):
         """Heat exchangers should have shell and tube ports."""
-        ports = _infer_default_ports(Path("/symbols/heat_exchanger.svg"), 100, 60)
+        bbox = BoundingBox(x=0, y=0, width=100, height=60)
+        ports = _infer_default_ports(Path("/symbols/heat_exchanger.svg"), bbox)
         assert len(ports) == 4
         ids = [p.id for p in ports]
         assert 'shell_in' in ids
@@ -209,7 +227,8 @@ class TestInferDefaultPorts:
 
     def test_separator_ports(self):
         """Separators should have inlet and two outlets."""
-        ports = _infer_default_ports(Path("/symbols/separator.svg"), 100, 100)
+        bbox = BoundingBox(x=0, y=0, width=100, height=100)
+        ports = _infer_default_ports(Path("/symbols/separator.svg"), bbox)
         assert len(ports) == 3
         directions = [p.direction for p in ports]
         assert 'W' in directions  # inlet
@@ -218,7 +237,8 @@ class TestInferDefaultPorts:
 
     def test_unknown_type(self):
         """Unknown types should return empty list."""
-        ports = _infer_default_ports(Path("/symbols/unknown.svg"), 100, 100)
+        bbox = BoundingBox(x=0, y=0, width=100, height=100)
+        ports = _infer_default_ports(Path("/symbols/unknown.svg"), bbox)
         assert ports == []
 
 

@@ -9,8 +9,13 @@ This script:
 4. Updates merged_catalog.json with geometry data
 
 NOTE: Uses the consolidated svg_parser module to avoid code duplication.
+
+Usage:
+    python scripts/extract_all_geometry.py          # Extract only missing geometry
+    python scripts/extract_all_geometry.py --force  # Re-extract all geometry
 """
 
+import argparse
 import json
 import logging
 import sys
@@ -55,6 +60,10 @@ def find_svg_for_symbol(symbol_id: str, source_file: str, assets_dir: Path) -> O
 
 def main():
     """Main entry point."""
+    parser = argparse.ArgumentParser(description="Extract geometry from SVG files")
+    parser.add_argument("--force", action="store_true", help="Re-extract all geometry, even if already present")
+    args = parser.parse_args()
+
     assets_dir = project_root / "src" / "visualization" / "symbols" / "assets"
     catalog_path = assets_dir / "merged_catalog.json"
 
@@ -70,6 +79,9 @@ def main():
     symbols = catalog.get("symbols", {})
     logger.info(f"Found {len(symbols)} symbols")
 
+    if args.force:
+        logger.info("Force mode: Re-extracting all geometry")
+
     # Process each symbol
     extracted = 0
     already_have = 0
@@ -77,8 +89,8 @@ def main():
     failed = 0
 
     for symbol_id, data in symbols.items():
-        # Skip if already has geometry
-        if data.get("bounding_box"):
+        # Skip if already has geometry (unless --force)
+        if data.get("bounding_box") and not args.force:
             already_have += 1
             continue
 

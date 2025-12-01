@@ -85,7 +85,7 @@ def extract_svg_metadata(svg_path: Path, include_hash: bool = True) -> Optional[
 
         # Infer default ports if none found
         if not ports:
-            ports = _infer_default_ports(svg_path, bbox.width, bbox.height)
+            ports = _infer_default_ports(svg_path, bbox)
 
         # Calculate file hash (SHA-256 for consistency with merged_catalog.json)
         file_hash = None
@@ -325,54 +325,68 @@ def _infer_port_type(port_id: str, index: int) -> str:
         return 'inlet' if index == 0 else 'outlet'
 
 
-def _infer_default_ports(svg_path: Path, width: float, height: float) -> List[Port]:
-    """Infer default ports based on symbol type from filename."""
+def _infer_default_ports(svg_path: Path, bbox: BoundingBox) -> List[Port]:
+    """Infer default ports based on symbol type from filename.
+
+    Port positions are calculated as absolute coordinates relative to the bbox origin.
+    """
     path_str = str(svg_path).lower()
     filename = svg_path.stem.lower()
+
+    # Calculate absolute positions from bbox
+    x0 = bbox.x                    # Left edge
+    x1 = bbox.x + bbox.width       # Right edge
+    y0 = bbox.y                    # Top edge
+    y1 = bbox.y + bbox.height      # Bottom edge
+    cx = bbox.x + bbox.width / 2   # Center X
+    cy = bbox.y + bbox.height / 2  # Center Y
 
     # Pumps - inlet on left (W), outlet on right (E)
     if 'pump' in path_str or filename.startswith('pp'):
         return [
-            Port(id="inlet", x=0, y=height / 2, direction="W", type="inlet", flow_direction=None),
-            Port(id="outlet", x=width, y=height / 2, direction="E", type="outlet", flow_direction=None)
+            Port(id="inlet", x=x0, y=cy, direction="W", type="inlet", flow_direction=None),
+            Port(id="outlet", x=x1, y=cy, direction="E", type="outlet", flow_direction=None)
         ]
 
     # Tanks - inlet on top (N), outlet on bottom (S)
     if 'tank' in path_str or 'vessel' in path_str or filename.startswith('pt'):
         return [
-            Port(id="inlet", x=width / 2, y=0, direction="N", type="inlet", flow_direction=None),
-            Port(id="outlet", x=width / 2, y=height, direction="S", type="outlet", flow_direction=None)
+            Port(id="inlet", x=cx, y=y0, direction="N", type="inlet", flow_direction=None),
+            Port(id="outlet", x=cx, y=y1, direction="S", type="outlet", flow_direction=None)
         ]
 
     # Valves - inline (W to E)
     if 'valve' in path_str or filename.startswith('pv'):
         return [
-            Port(id="inlet", x=0, y=height / 2, direction="W", type="inlet", flow_direction=None),
-            Port(id="outlet", x=width, y=height / 2, direction="E", type="outlet", flow_direction=None)
+            Port(id="inlet", x=x0, y=cy, direction="W", type="inlet", flow_direction=None),
+            Port(id="outlet", x=x1, y=cy, direction="E", type="outlet", flow_direction=None)
         ]
 
     # Heat exchangers - shell and tube sides
     if 'heat' in path_str or 'exchanger' in path_str or filename.startswith('pe'):
+        # Divide height into thirds
+        y_third = bbox.y + bbox.height / 3
+        y_two_thirds = bbox.y + 2 * bbox.height / 3
         return [
-            Port(id="shell_in", x=0, y=height / 3, direction="W", type="inlet", flow_direction=None),
-            Port(id="shell_out", x=width, y=height / 3, direction="E", type="outlet", flow_direction=None),
-            Port(id="tube_in", x=0, y=2 * height / 3, direction="W", type="inlet", flow_direction=None),
-            Port(id="tube_out", x=width, y=2 * height / 3, direction="E", type="outlet", flow_direction=None)
+            Port(id="shell_in", x=x0, y=y_third, direction="W", type="inlet", flow_direction=None),
+            Port(id="shell_out", x=x1, y=y_third, direction="E", type="outlet", flow_direction=None),
+            Port(id="tube_in", x=x0, y=y_two_thirds, direction="W", type="inlet", flow_direction=None),
+            Port(id="tube_out", x=x1, y=y_two_thirds, direction="E", type="outlet", flow_direction=None)
         ]
 
     # Filters - inline
     if 'filter' in path_str or filename.startswith('pf'):
         return [
-            Port(id="inlet", x=0, y=height / 2, direction="W", type="inlet", flow_direction=None),
-            Port(id="outlet", x=width, y=height / 2, direction="E", type="outlet", flow_direction=None)
+            Port(id="inlet", x=x0, y=cy, direction="W", type="inlet", flow_direction=None),
+            Port(id="outlet", x=x1, y=cy, direction="E", type="outlet", flow_direction=None)
         ]
 
     # Separators - multi-outlet
     if 'separator' in path_str or 'centrifuge' in path_str or filename.startswith('ps'):
         return [
-            Port(id="inlet", x=0, y=height / 2, direction="W", type="inlet", flow_direction=None),
-            Port(id="light_out", x=width / 2, y=0, direction="N", type="outlet", flow_direction=None),
-            Port(id="heavy_out", x=width / 2, y=height, direction="S", type="outlet", flow_direction=None)
+            Port(id="inlet", x=x0, y=cy, direction="W", type="inlet", flow_direction=None),
+            Port(id="light_out", x=cx, y=y0, direction="N", type="outlet", flow_direction=None),
+            Port(id="heavy_out", x=cx, y=y1, direction="S", type="outlet", flow_direction=None)
         ]
 
     # Default - no ports (will use bounding box center as connection point)
