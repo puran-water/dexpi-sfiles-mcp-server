@@ -1,8 +1,8 @@
 # 8-Week Enhancement Plan: Implementation Progress
 
 **Started**: 2025-11-17
-**Current Phase**: Weeks 5-6 (Visualization Orchestration & Symbol Geometry)
-**Last Updated**: 2025-11-30
+**Current Phase**: Week 7 (ModelStore Abstraction)
+**Last Updated**: 2025-12-01
 
 ---
 
@@ -288,7 +288,7 @@ The key metric is `missing_attributes == []` - when this is empty, no data is lo
 
 ---
 
-## Weeks 7-8: Integration, ModelStore, and Infrastructure Hardening (PENDING)
+## Weeks 7-8: Integration, ModelStore, and Infrastructure Hardening (IN PROGRESS)
 
 **Theme**: "Complete visualization foundation + harden core infrastructure"
 
@@ -302,25 +302,41 @@ The key metric is `missing_attributes == []` - when this is empty, no data is lo
   - [ ] Add port definitions from SVG analysis
   - [ ] Update SymbolRegistry loader to parse geometry
 
-- [ ] **Task 2**: Introduce ModelStore abstraction
-  - [ ] Abstract current dict-based stores (dexpi_models, flowsheets)
-  - [ ] Add lifecycle hooks (on_create, on_update, on_delete)
-  - [ ] Enable caching strategies
+- [x] **Task 2**: Introduce ModelStore abstraction ✅ COMPLETE (2025-12-01)
+  - [x] Abstract current dict-based stores (dexpi_models, flowsheets) → InMemoryModelStore
+  - [x] Add lifecycle hooks (on_created, on_updated, on_deleted, on_accessed)
+  - [x] Enable caching strategies via CachingHook
+  - [x] Add snapshot/rollback for transaction support
+  - [x] Full dict-like backward compatibility (660/660 tests pass)
 
-- [ ] **Task 3**: Consolidate instrumentation logic
+- [ ] **Task 3**: Consolidate instrumentation logic (Week 8)
   - [ ] Replace dexpi_tools.py instrumentation with instrumentation_toolkit
   - [ ] ~165 lines reduction
 
-- [ ] **Task 4**: Complete catalog.py migration
-  - [ ] Migrate remaining catalog.py references to core/symbols.py
-  - [ ] Remove catalog.py once all references updated
+- [ ] **Task 4**: Complete catalog.py migration (Week 8)
+  - [ ] Extract SVG parsing to core/svg_parser.py
+  - [ ] Update catalog.py imports
 
-- [ ] **Task 5**: End-to-end integration tests
+- [ ] **Task 5**: End-to-end integration tests (Week 8)
   - [ ] Test SFILES → DEXPI → Proteus XML → visualization pipeline
   - [ ] Test template deployment with geometry
   - [ ] Test round-trip fidelity with geometry preservation
 
-- [ ] Optional: ProteusXMLDrawing integration (time-boxed to 2 days)
+- [ ] Optional: ProteusXMLDrawing integration (deferred per user decision)
+
+### Week 7 Progress Notes
+
+**2025-12-01 (Week 7 Day 1)**:
+- Created `src/core/model_store.py` with full ModelStore implementation:
+  - `ModelStore` ABC with CRUD + lifecycle + snapshot interface
+  - `InMemoryModelStore` thread-safe implementation with RLock
+  - `CachingHook` for graph/stats cache invalidation
+  - `ModelMetadata` tracking (created_at, modified_at, access_count)
+  - `Snapshot` for transaction rollback support
+  - Full dict-like backward compatibility (__getitem__, __setitem__, __delitem__, etc.)
+- Created 56 comprehensive unit tests in `tests/core/test_model_store.py`
+- Integrated ModelStore with server.py (replaced Dict[str, Any] with InMemoryModelStore)
+- All 660 tests passing (was 604, +56 new ModelStore tests)
 
 ---
 
@@ -350,7 +366,7 @@ efcebab Wire model_metrics into validation_tools
 ## Notes
 
 - **Codex review session** (ID: 019ad060-45df-7272-a6ce-7e54fd37d4be) used for Week 5-6 bug identification and architecture guidance
-- **Total test count**: 604 passed, 5 skipped, 0 failed ✅
+- **Total test count**: 660 passed, 5 skipped, 0 failed ✅ (was 604, +56 ModelStore tests)
 - DEXPI TrainingTestCases cloned to `/tmp/TrainingTestCases` for GraphicBuilder tests
 
 ### Test Fixes (2025-12-01)
@@ -386,3 +402,18 @@ efcebab Wire model_metrics into validation_tools
 - `scripts/generate_equipment_registrations.py` - Updated to use ComponentRegistry
 - `tests/visualization/test_orchestrator_integration.py` - Updated for new behavior
 - `tests/test_graphicbuilder_integration.py` - Fixed response format, tool names, CLI limitations
+
+---
+
+## Files Modified in Week 7
+
+### New Files
+- `src/core/model_store.py` - ModelStore abstraction (650 lines):
+  - `ModelStore` ABC with CRUD, lifecycle hooks, snapshots
+  - `InMemoryModelStore` thread-safe implementation
+  - `CachingHook` for derived data cache management
+  - `ModelMetadata`, `Snapshot` dataclasses
+- `tests/core/test_model_store.py` - 56 comprehensive unit tests
+
+### Modified Files
+- `src/server.py` - Replaced `Dict[str, Any]` with `InMemoryModelStore` for dexpi_models/flowsheets

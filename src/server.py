@@ -11,6 +11,7 @@ from mcp.server import Server, NotificationOptions
 from mcp.server.models import InitializationOptions
 from mcp.types import TextContent
 
+from .core.model_store import InMemoryModelStore, ModelType
 from .tools.dexpi_tools import DexpiTools
 from .tools.sfiles_tools import SfilesTools
 from .tools.bfd_tools import BfdTools
@@ -67,9 +68,19 @@ class EngineeringDrawingMCPServer:
     """MCP Server for engineering drawing generation and manipulation."""
     
     def __init__(self):
-        """Initialize the MCP server with empty model stores."""
-        self.dexpi_models: Dict[str, Any] = {}
-        self.flowsheets: Dict[str, Any] = {}
+        """Initialize the MCP server with ModelStore-backed storage.
+
+        Uses InMemoryModelStore for thread-safe storage with lifecycle hooks,
+        metadata tracking, and snapshot/rollback support.
+        """
+        # Phase 7: Replace dict storage with ModelStore abstraction
+        # ModelStore provides backward-compatible dict-like access while adding:
+        # - Thread-safe operations with RLock
+        # - Lifecycle hooks for caching and events
+        # - Snapshot/rollback for transaction support
+        # - Metadata tracking (created_at, modified_at, access_count)
+        self.dexpi_models: InMemoryModelStore = InMemoryModelStore(ModelType.DEXPI)
+        self.flowsheets: InMemoryModelStore = InMemoryModelStore(ModelType.SFILES)
 
         # Note: Operation registry is initialized defensively in TransactionManager
         # No need to call register_all_operations() here - avoids duplicate registration
