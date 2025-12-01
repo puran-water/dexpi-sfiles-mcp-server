@@ -477,8 +477,29 @@ efcebab Wire model_metrics into validation_tools
 
 #### New Files
 - `scripts/migrate_geometry_data.py` - Geometry migration script (~120 lines)
+- `scripts/extract_all_geometry.py` - Full geometry extraction from all SVG files (~300 lines)
+- `src/core/svg_parser.py` - Consolidated SVG parsing module (~320 lines)
+- `tests/core/test_svg_parser.py` - SVG parser unit tests (23 tests)
 
 #### Modified Files
 - `src/core/symbols.py` - Added `_load_bounding_box()`, `_load_anchor_point()`, `_load_ports()` helper methods (~55 lines)
-- `src/visualization/symbols/assets/merged_catalog.json` - Added geometry data to 40 symbols
+- `src/visualization/symbols/assets/merged_catalog.json` - Added geometry data to ALL 805 symbols (100% coverage)
+- `src/visualization/symbols/catalog.py` - Added deprecation notices for DEXPI_CLASS_MAPPING and extract_svg_metadata()
 - `tests/core/test_symbol_geometry.py` - Added TestSymbolRegistryGeometryLoading class (10 tests)
+
+### Week 8 Summary
+
+**Task 1: Geometry Data Population** - COMPLETE
+- 100% geometry coverage (805/805 symbols)
+- All categories: Pumps 17/17, Tanks 12/12, Valves 53/53, Equipment 45/45
+
+**Task 2: Instrumentation Consolidation** - ALREADY WELL-STRUCTURED
+- Existing code uses ComponentRegistry and instrumentation_toolkit appropriately
+- No significant consolidation needed
+
+**Task 3: SVG Parser Extraction** - COMPLETE
+- Created `src/core/svg_parser.py` with unified SVG parsing
+- Deprecated DEXPI_CLASS_MAPPING in catalog.py
+- 23 new tests for SVG parsing
+
+**Test Results**: 727 passed, 5 skipped (up from 704)

@@ -1,6 +1,13 @@
 """
 Symbol Catalog and Registry
 Manages DEXPI symbol library with metadata extraction
+
+DEPRECATION NOTICE (Week 8):
+- DEXPI_CLASS_MAPPING: Use src.core.symbols.SymbolRegistry.get_by_dexpi_class() instead
+- extract_svg_metadata(): Use src.core.svg_parser.extract_svg_metadata() instead
+- SymbolCatalog: Use src.core.symbols.SymbolRegistry for authoritative symbol lookups
+
+The unified symbol data is in merged_catalog.json, accessed via SymbolRegistry.
 """
 
 import json
@@ -77,7 +84,10 @@ class SymbolMetadata:
 class SymbolCatalog:
     """Symbol catalog management."""
 
-    # DEXPI class to symbol mapping
+    # DEPRECATED: Use src.core.symbols.SymbolRegistry.get_by_dexpi_class() instead.
+    # This mapping is maintained for backward compatibility only.
+    # The authoritative DEXPI class to symbol mappings are in merged_catalog.json.
+    # See: src/core/symbols.py SymbolRegistry for the recommended API.
     DEXPI_CLASS_MAPPING = {
         # Pumps
         "CentrifugalPump": "P-01-01",
