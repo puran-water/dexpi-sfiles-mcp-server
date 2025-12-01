@@ -34,6 +34,12 @@ from .conversion import (
     SfilesStream,
     get_engine as get_conversion_engine
 )
+from .layout_store import (
+    LayoutStore,
+    LayoutNotFoundError,
+    OptimisticLockError,
+    create_layout_store,
+)
 
 __all__ = [
     # Equipment
@@ -55,4 +61,9 @@ __all__ = [
     'SfilesUnit',
     'SfilesStream',
     'get_conversion_engine',
+    # Layout
+    'LayoutStore',
+    'LayoutNotFoundError',
+    'OptimisticLockError',
+    'create_layout_store',
 ]
