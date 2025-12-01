@@ -208,7 +208,7 @@ class SymbolRegistry:
                 except KeyError:
                     source = SymbolSource.MERGED
 
-                # Create symbol info
+                # Create symbol info with geometry (Week 8 extension)
                 symbol = SymbolInfo(
                     symbol_id=symbol_id,
                     name=data.get("name", symbol_id),
@@ -218,7 +218,14 @@ class SymbolRegistry:
                     file_hash=provenance.get("file_hash"),
                     source=source,
                     is_unique_to_source=provenance.get("is_unique_to_source", False),
-                    attributes=data.get("metadata", {})
+                    attributes=data.get("metadata", {}),
+                    # Geometry fields (loaded if present in catalog)
+                    bounding_box=self._load_bounding_box(data),
+                    anchor_point=self._load_anchor_point(data),
+                    ports=self._load_ports(data),
+                    # Render hints
+                    scalable=data.get("scalable", True),
+                    rotatable=data.get("rotatable", True)
                 )
 
                 self._symbols[symbol_id] = symbol
@@ -229,6 +236,65 @@ class SymbolRegistry:
             logger.error(f"Failed to load merged catalog: {e}")
             # NO FALLBACKS - re-raise so we know the catalog is broken
             raise
+
+    def _load_bounding_box(self, data: Dict) -> Optional[BoundingBox]:
+        """Load bounding_box from catalog entry.
+
+        Args:
+            data: Symbol data dict from catalog
+
+        Returns:
+            BoundingBox if present, None otherwise
+        """
+        bb = data.get("bounding_box")
+        if not bb:
+            return None
+        return BoundingBox(
+            x=float(bb.get("x", 0)),
+            y=float(bb.get("y", 0)),
+            width=float(bb.get("width", 0)),
+            height=float(bb.get("height", 0))
+        )
+
+    def _load_anchor_point(self, data: Dict) -> Optional[Point]:
+        """Load anchor_point from catalog entry.
+
+        Args:
+            data: Symbol data dict from catalog
+
+        Returns:
+            Point if present, None otherwise
+        """
+        anchor = data.get("anchor_point")
+        if not anchor:
+            return None
+        return Point(
+            x=float(anchor.get("x", 0)),
+            y=float(anchor.get("y", 0))
+        )
+
+    def _load_ports(self, data: Dict) -> List[Port]:
+        """Load ports from catalog entry.
+
+        Args:
+            data: Symbol data dict from catalog
+
+        Returns:
+            List of Port objects (empty if no ports defined)
+        """
+        ports_data = data.get("ports", [])
+        ports = []
+        for p in ports_data:
+            pos = p.get("position", {})
+            ports.append(Port(
+                id=p.get("id", ""),
+                x=float(pos.get("x", 0)),
+                y=float(pos.get("y", 0)),
+                direction=p.get("direction"),
+                type=p.get("type"),
+                flow_direction=p.get("flow_direction")
+            ))
+        return ports
 
     def _guess_category(self, symbol_id: str) -> SymbolCategory:
         """Guess category from symbol ID prefix."""

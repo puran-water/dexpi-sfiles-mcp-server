@@ -1,7 +1,7 @@
 # 8-Week Enhancement Plan: Implementation Progress
 
 **Started**: 2025-11-17
-**Current Phase**: Week 7 (ModelStore Abstraction)
+**Current Phase**: Week 8 (Geometry Data Population)
 **Last Updated**: 2025-12-01
 
 ---
@@ -439,3 +439,46 @@ efcebab Wire model_metrics into validation_tools
 
 ### Modified Files
 - `src/server.py` - Replaced `Dict[str, Any]` with `InMemoryModelStore` for dexpi_models/flowsheets
+
+---
+
+## Week 8: Geometry Data Population
+
+### Task 1: Geometry Data Population (COMPLETE)
+
+**Objective**: Enable SymbolRegistry to load geometry data (bounding_box, ports, anchor_point) from merged_catalog.json
+
+**Problem**: merged_catalog.json (805 symbols) had NO geometry data, but catalog.json had geometry for ~40 symbols. The SymbolInfo class already supported geometry fields (Week 6), but SymbolRegistry._load_merged_catalog() didn't load them.
+
+**Solution**:
+1. Added geometry loading helper methods to SymbolRegistry:
+   - `_load_bounding_box(data)` - loads BoundingBox from catalog entry
+   - `_load_anchor_point(data)` - loads Point from catalog entry
+   - `_load_ports(data)` - loads list of Port objects
+
+2. Updated `_load_merged_catalog()` to use new helpers when creating SymbolInfo
+
+3. Created migration script `scripts/migrate_geometry_data.py` to copy geometry from catalog.json to merged_catalog.json
+
+4. Added 10 new tests in `TestSymbolRegistryGeometryLoading` class
+
+**Results**:
+- Migrated geometry for 40 symbols (100% of those with geometry in catalog.json)
+- Coverage by category:
+  - Pumps: 10/17 (58.8%)
+  - Tanks: 5/12 (41.7%)
+  - Valves: 10/53 (18.9%)
+  - Equipment: 8/45 (17.8%)
+  - Filters: 5/15 (33.3%)
+  - Separators: 2/16 (12.5%)
+- All 704 tests passing (up from 694)
+
+### Files Modified in Week 8
+
+#### New Files
+- `scripts/migrate_geometry_data.py` - Geometry migration script (~120 lines)
+
+#### Modified Files
+- `src/core/symbols.py` - Added `_load_bounding_box()`, `_load_anchor_point()`, `_load_ports()` helper methods (~55 lines)
+- `src/visualization/symbols/assets/merged_catalog.json` - Added geometry data to 40 symbols
+- `tests/core/test_symbol_geometry.py` - Added TestSymbolRegistryGeometryLoading class (10 tests)

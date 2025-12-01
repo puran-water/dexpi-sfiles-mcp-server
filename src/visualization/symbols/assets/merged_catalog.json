@@ -2421,7 +2421,51 @@
         "file_hash": "b074823db07046d479b177c75ca13d669bdf61e29b65e671899661ed0ce6c785",
         "is_unique_to_source": false
       },
-      "metadata": {}
+      "metadata": {},
+      "bounding_box": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 713.438,
+        "height": 243.989
+      },
+      "ports": [
+        {
+          "id": "inlet",
+          "position": {
+            "x": 356.719,
+            "y": 0
+          },
+          "direction": "N",
+          "type": "inlet",
+          "flow_direction": null
+        },
+        {
+          "id": "outlet",
+          "position": {
+            "x": 356.719,
+            "y": 243.989
+          },
+          "direction": "S",
+          "type": "outlet",
+          "flow_direction": null
+        },
+        {
+          "id": "vent",
+          "position": {
+            "x": 356.719,
+            "y": 0
+          },
+          "direction": "N",
+          "type": "auxiliary",
+          "flow_direction": null
+        }
+      ],
+      "anchor_point": {
+        "x": 356.719,
+        "y": 121.9945
+      },
+      "scalable": true,
+      "rotatable": true
     },
     "ND0031": {
       "id": "ND0031",
@@ -2616,7 +2660,19 @@
         "file_hash": "93c5d73f23db651a488778aa4c855918ad5014634adaadffc2aeeee13328003e",
         "is_unique_to_source": false
       },
-      "metadata": {}
+      "metadata": {},
+      "bounding_box": {
+        "x": -0.03125,
+        "y": -0.03125,
+        "width": 32.125,
+        "height": 16.0625
+      },
+      "anchor_point": {
+        "x": 16.0625,
+        "y": 8.03125
+      },
+      "scalable": true,
+      "rotatable": true
     },
     "ND0012A_Detail": {
       "id": "ND0012A_Detail",
@@ -2721,7 +2777,41 @@
         "file_hash": "f478b00ea57f759f23d27a5e12640dcd21fc211affa99f76fb9a20c2f9f0f499",
         "is_unique_to_source": false
       },
-      "metadata": {}
+      "metadata": {},
+      "bounding_box": {
+        "x": -0.03125,
+        "y": -0.03125,
+        "width": 16.125,
+        "height": 18.125
+      },
+      "ports": [
+        {
+          "id": "inlet",
+          "position": {
+            "x": 0,
+            "y": 9.0625
+          },
+          "direction": "W",
+          "type": "inlet",
+          "flow_direction": null
+        },
+        {
+          "id": "outlet",
+          "position": {
+            "x": 16.125,
+            "y": 9.0625
+          },
+          "direction": "E",
+          "type": "outlet",
+          "flow_direction": null
+        }
+      ],
+      "anchor_point": {
+        "x": 8.0625,
+        "y": 9.0625
+      },
+      "scalable": true,
+      "rotatable": true
     },
     "PD007A_Detail": {
       "id": "PD007A_Detail",
@@ -2946,7 +3036,19 @@
         "file_hash": "e72056c5393191f74848249f1b45e8c2d03bec7d2e36eb868623ebb56ea59164",
         "is_unique_to_source": false
       },
-      "metadata": {}
+      "metadata": {},
+      "bounding_box": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 87.899,
+        "height": 88.0674
+      },
+      "anchor_point": {
+        "x": 43.9495,
+        "y": 44.0337
+      },
+      "scalable": true,
+      "rotatable": true
     },
     "PE007A": {
       "id": "PE007A",
@@ -3231,7 +3333,19 @@
         "file_hash": "f91d7e314c2fe9ed0038709ecea9dbbca704f04add831d1f7e2d3bacc75fa06d",
         "is_unique_to_source": false
       },
-      "metadata": {}
+      "metadata": {},
+      "bounding_box": {
+        "x": -0.03125,
+        "y": -0.03125,
+        "width": 0.125,
+        "height": 4.125
+      },
+      "anchor_point": {
+        "x": 0.0625,
+        "y": 2.0625
+      },
+      "scalable": true,
+      "rotatable": true
     },
     "PE029A_Detail": {
       "id": "PE029A_Detail",
@@ -3291,7 +3405,19 @@
         "file_hash": "fdba84c41d6973eaa262f8fdf611f134c974606f76fd4a1030928a2122dd3892",
         "is_unique_to_source": false
       },
-      "metadata": {}
+      "metadata": {},
+      "bounding_box": {
+        "x": -0.031746,
+        "y": -0.031746,
+        "width": 8.06349,
+        "height": 8.06349
+      },
+      "anchor_point": {
+        "x": 4.031745,
+        "y": 4.031745
+      },
+      "scalable": true,
+      "rotatable": true
     },
     "ND0020_Option1": {
       "id": "ND0020_Option1",
@@ -3741,7 +3867,41 @@
         "file_hash": "dcfee5f2808cb60cd440f277d5dd146e884d608ec030bc9f0408180ed0159e00",
         "is_unique_to_source": false
       },
-      "metadata": {}
+      "metadata": {},
+      "bounding_box": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 255.555,
+        "height": 257.368
+      },
+      "ports": [
+        {
+          "id": "inlet",
+          "position": {
+            "x": 0,
+            "y": 128.684
+          },
+          "direction": "W",
+          "type": "inlet",
+          "flow_direction": null
+        },
+        {
+          "id": "outlet",
+          "position": {
+            "x": 255.555,
+            "y": 128.684
+          },
+          "direction": "E",
+          "type": "outlet",
+          "flow_direction": null
+        }
+      ],
+      "anchor_point": {
+        "x": 127.7775,
+        "y": 128.684
+      },
+      "scalable": true,
+      "rotatable": true
     },
     "PV003B_Detail": {
       "id": "PV003B_Detail",
@@ -4206,7 +4366,51 @@
         "file_hash": "bb86f9207536c3fc2224468e90de62153af887de0f86b6f5c074b84957d5e603",
         "is_unique_to_source": false
       },
-      "metadata": {}
+      "metadata": {},
+      "bounding_box": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 243.573,
+        "height": 714.899
+      },
+      "ports": [
+        {
+          "id": "inlet",
+          "position": {
+            "x": 121.7865,
+            "y": 0
+          },
+          "direction": "N",
+          "type": "inlet",
+          "flow_direction": null
+        },
+        {
+          "id": "outlet",
+          "position": {
+            "x": 121.7865,
+            "y": 714.899
+          },
+          "direction": "S",
+          "type": "outlet",
+          "flow_direction": null
+        },
+        {
+          "id": "vent",
+          "position": {
+            "x": 121.7865,
+            "y": 0
+          },
+          "direction": "N",
+          "type": "auxiliary",
+          "flow_direction": null
+        }
+      ],
+      "anchor_point": {
+        "x": 121.7865,
+        "y": 357.4495
+      },
+      "scalable": true,
+      "rotatable": true
     },
     "PA002A_Detail": {
       "id": "PA002A_Detail",
@@ -4941,7 +5145,41 @@
         "file_hash": "81540ff5c3ee7bd56a8cc54b4c3ef43c4472b078d3ee7fdee47dda45b4c138ce",
         "is_unique_to_source": false
       },
-      "metadata": {}
+      "metadata": {},
+      "bounding_box": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 229.341,
+        "height": 271.541
+      },
+      "ports": [
+        {
+          "id": "inlet",
+          "position": {
+            "x": 0,
+            "y": 135.7705
+          },
+          "direction": "W",
+          "type": "inlet",
+          "flow_direction": null
+        },
+        {
+          "id": "outlet",
+          "position": {
+            "x": 229.341,
+            "y": 135.7705
+          },
+          "direction": "E",
+          "type": "outlet",
+          "flow_direction": null
+        }
+      ],
+      "anchor_point": {
+        "x": 114.6705,
+        "y": 135.7705
+      },
+      "scalable": true,
+      "rotatable": true
     },
     "PS007A_Detail": {
       "id": "PS007A_Detail",
@@ -5166,7 +5404,19 @@
         "file_hash": "361bb2573fed43d63eb5c806ee1f9f1c78f5cf3c0fd51c1fe3664dcbbf186d5d",
         "is_unique_to_source": false
       },
-      "metadata": {}
+      "metadata": {},
+      "bounding_box": {
+        "x": -0.031746,
+        "y": -0.031746,
+        "width": 8.06349,
+        "height": 8.06349
+      },
+      "anchor_point": {
+        "x": 4.031745,
+        "y": 4.031745
+      },
+      "scalable": true,
+      "rotatable": true
     },
     "PZ016A_Detail": {
       "id": "PZ016A_Detail",
@@ -5436,7 +5686,51 @@
         "file_hash": "06f8b4901fa9b35b13ca31d7e41e4967e69587df7f8e723af1ca5a080ab7e359",
         "is_unique_to_source": false
       },
-      "metadata": {}
+      "metadata": {},
+      "bounding_box": {
+        "x": -0.0624858,
+        "y": -0.0624858,
+        "width": 32.2427,
+        "height": 96.1031
+      },
+      "ports": [
+        {
+          "id": "inlet",
+          "position": {
+            "x": 16.12135,
+            "y": 0
+          },
+          "direction": "N",
+          "type": "inlet",
+          "flow_direction": null
+        },
+        {
+          "id": "outlet",
+          "position": {
+            "x": 16.12135,
+            "y": 96.1031
+          },
+          "direction": "S",
+          "type": "outlet",
+          "flow_direction": null
+        },
+        {
+          "id": "vent",
+          "position": {
+            "x": 16.12135,
+            "y": 0
+          },
+          "direction": "N",
+          "type": "auxiliary",
+          "flow_direction": null
+        }
+      ],
+      "anchor_point": {
+        "x": 16.12135,
+        "y": 48.05155
+      },
+      "scalable": true,
+      "rotatable": true
     },
     "PE008A_Detail": {
       "id": "PE008A_Detail",
@@ -5826,7 +6120,19 @@
         "file_hash": "bb87df52f9ee8b27923075919a81dd4d72981614adaeccbc838efdde65315469",
         "is_unique_to_source": false
       },
-      "metadata": {}
+      "metadata": {},
+      "bounding_box": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 271.541,
+        "height": 200.675
+      },
+      "anchor_point": {
+        "x": 135.7705,
+        "y": 100.3375
+      },
+      "scalable": true,
+      "rotatable": true
     },
     "PP003A": {
       "id": "PP003A",
@@ -5841,7 +6147,41 @@
         "file_hash": "e2873852e31c6311d4bcc1a948809270df7587004fbc370c4aba6542c16f09db",
         "is_unique_to_source": false
       },
-      "metadata": {}
+      "metadata": {},
+      "bounding_box": {
+        "x": -0.03125,
+        "y": -0.03125,
+        "width": 16.125,
+        "height": 18.125
+      },
+      "ports": [
+        {
+          "id": "inlet",
+          "position": {
+            "x": 0,
+            "y": 9.0625
+          },
+          "direction": "W",
+          "type": "inlet",
+          "flow_direction": null
+        },
+        {
+          "id": "outlet",
+          "position": {
+            "x": 16.125,
+            "y": 9.0625
+          },
+          "direction": "E",
+          "type": "outlet",
+          "flow_direction": null
+        }
+      ],
+      "anchor_point": {
+        "x": 8.0625,
+        "y": 9.0625
+      },
+      "scalable": true,
+      "rotatable": true
     },
     "PE014A_Detail": {
       "id": "PE014A_Detail",
@@ -5871,7 +6211,19 @@
         "file_hash": "3f4062dcaf9b239802eba0951361b3f2c18413b33cf119b6d6f1eb71f020b66c",
         "is_unique_to_source": false
       },
-      "metadata": {}
+      "metadata": {},
+      "bounding_box": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 30.5965,
+        "height": 58.9429
+      },
+      "anchor_point": {
+        "x": 15.29825,
+        "y": 29.47145
+      },
+      "scalable": true,
+      "rotatable": true
     },
     "PV007A_Detail": {
       "id": "PV007A_Detail",
@@ -5976,7 +6328,41 @@
         "file_hash": "0944ec809db4b4076f62c12903c9edcfabdc919b52c7fccb99ef85d744c112b0",
         "is_unique_to_source": false
       },
-      "metadata": {}
+      "metadata": {},
+      "bounding_box": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 229.022,
+        "height": 257.193
+      },
+      "ports": [
+        {
+          "id": "inlet",
+          "position": {
+            "x": 0,
+            "y": 128.5965
+          },
+          "direction": "W",
+          "type": "inlet",
+          "flow_direction": null
+        },
+        {
+          "id": "outlet",
+          "position": {
+            "x": 229.022,
+            "y": 128.5965
+          },
+          "direction": "E",
+          "type": "outlet",
+          "flow_direction": null
+        }
+      ],
+      "anchor_point": {
+        "x": 114.511,
+        "y": 128.5965
+      },
+      "scalable": true,
+      "rotatable": true
     },
     "PF005A": {
       "id": "PF005A",
@@ -5991,7 +6377,19 @@
         "file_hash": "64daf8d47b911c6476cec78046687fa203a41fa2cac7f831e6133f1dd0682c4c",
         "is_unique_to_source": false
       },
-      "metadata": {}
+      "metadata": {},
+      "bounding_box": {
+        "x": -0.031746,
+        "y": -0.031746,
+        "width": 8.06349,
+        "height": 8.06349
+      },
+      "anchor_point": {
+        "x": 4.031745,
+        "y": 4.031745
+      },
+      "scalable": true,
+      "rotatable": true
     },
     "PE016A_Origo": {
       "id": "PE016A_Origo",
@@ -6066,7 +6464,19 @@
         "file_hash": "70468ab3bef7fcf817722f98b2aa30dae1c44eaf633d3d61c6710ff5a94faa94",
         "is_unique_to_source": false
       },
-      "metadata": {}
+      "metadata": {},
+      "bounding_box": {
+        "x": -0.03125,
+        "y": -0.03125,
+        "width": 8.0625,
+        "height": 4.0625
+      },
+      "anchor_point": {
+        "x": 4.03125,
+        "y": 2.03125
+      },
+      "scalable": true,
+      "rotatable": true
     },
     "LineStyles": {
       "id": "LineStyles",
@@ -6141,7 +6551,19 @@
         "file_hash": "c5fdf74f23ecbfc4ca9c3aff7d9bc440b121499afccef5dcd449d9e1968f8ede",
         "is_unique_to_source": false
       },
-      "metadata": {}
+      "metadata": {},
+      "bounding_box": {
+        "x": -0.031746,
+        "y": -0.031746,
+        "width": 8.06349,
+        "height": 8.06349
+      },
+      "anchor_point": {
+        "x": 4.031745,
+        "y": 4.031745
+      },
+      "scalable": true,
+      "rotatable": true
     },
     "PZ004A": {
       "id": "PZ004A",
@@ -6486,7 +6908,19 @@
         "file_hash": "399d0d0863b35dc5c43d2f1fc0f17a7a0dbd5c6e596212d0126a138a2cc80139",
         "is_unique_to_source": false
       },
-      "metadata": {}
+      "metadata": {},
+      "bounding_box": {
+        "x": -0.03125,
+        "y": -0.03125,
+        "width": 4.125,
+        "height": 4.125
+      },
+      "anchor_point": {
+        "x": 2.0625,
+        "y": 2.0625
+      },
+      "scalable": true,
+      "rotatable": true
     },
     "PP009A_Detail": {
       "id": "PP009A_Detail",
@@ -6786,7 +7220,41 @@
         "file_hash": "66d9117999a8a65652c8dcad7e85dfe14fe813d44e065686a1639b8faa66a940",
         "is_unique_to_source": false
       },
-      "metadata": {}
+      "metadata": {},
+      "bounding_box": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 299.888,
+        "height": 200.675
+      },
+      "ports": [
+        {
+          "id": "inlet",
+          "position": {
+            "x": 0,
+            "y": 100.3375
+          },
+          "direction": "W",
+          "type": "inlet",
+          "flow_direction": null
+        },
+        {
+          "id": "outlet",
+          "position": {
+            "x": 299.888,
+            "y": 100.3375
+          },
+          "direction": "E",
+          "type": "outlet",
+          "flow_direction": null
+        }
+      ],
+      "anchor_point": {
+        "x": 149.944,
+        "y": 100.3375
+      },
+      "scalable": true,
+      "rotatable": true
     },
     "IM005A_Detail": {
       "id": "IM005A_Detail",
@@ -7041,7 +7509,19 @@
         "file_hash": "0f29409246110cbe1a7d8466f2f838ebc9b74b0fd809c1803cf7f4c21e254c0f",
         "is_unique_to_source": false
       },
-      "metadata": {}
+      "metadata": {},
+      "bounding_box": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 117.16,
+        "height": 116.356
+      },
+      "anchor_point": {
+        "x": 58.58,
+        "y": 58.178
+      },
+      "scalable": true,
+      "rotatable": true
     },
     "PP006A": {
       "id": "PP006A",
@@ -7056,7 +7536,41 @@
         "file_hash": "3ed2573d25fdcc020e6582b1b7c3c4db4bc368cc5185867a2552a728a08af9d9",
         "is_unique_to_source": false
       },
-      "metadata": {}
+      "metadata": {},
+      "bounding_box": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 229.022,
+        "height": 257.193
+      },
+      "ports": [
+        {
+          "id": "inlet",
+          "position": {
+            "x": 0,
+            "y": 128.5965
+          },
+          "direction": "W",
+          "type": "inlet",
+          "flow_direction": null
+        },
+        {
+          "id": "outlet",
+          "position": {
+            "x": 229.022,
+            "y": 128.5965
+          },
+          "direction": "E",
+          "type": "outlet",
+          "flow_direction": null
+        }
+      ],
+      "anchor_point": {
+        "x": 114.511,
+        "y": 128.5965
+      },
+      "scalable": true,
+      "rotatable": true
     },
     "PE002A_Origo": {
       "id": "PE002A_Origo",
@@ -7296,7 +7810,51 @@
         "file_hash": "94334dbdf4d336acaaae0fdd283bcaefd1beb1bbab60992c7d1520e6753b2914",
         "is_unique_to_source": false
       },
-      "metadata": {}
+      "metadata": {},
+      "bounding_box": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 186.588,
+        "height": 568.907
+      },
+      "ports": [
+        {
+          "id": "inlet",
+          "position": {
+            "x": 93.294,
+            "y": 0
+          },
+          "direction": "N",
+          "type": "inlet",
+          "flow_direction": null
+        },
+        {
+          "id": "outlet",
+          "position": {
+            "x": 93.294,
+            "y": 568.907
+          },
+          "direction": "S",
+          "type": "outlet",
+          "flow_direction": null
+        },
+        {
+          "id": "vent",
+          "position": {
+            "x": 93.294,
+            "y": 0
+          },
+          "direction": "N",
+          "type": "auxiliary",
+          "flow_direction": null
+        }
+      ],
+      "anchor_point": {
+        "x": 93.294,
+        "y": 284.4535
+      },
+      "scalable": true,
+      "rotatable": true
     },
     "PS006A_Detail": {
       "id": "PS006A_Detail",
@@ -7476,7 +8034,19 @@
         "file_hash": "8ee8c2e929d6609dc034965eeeda7b5e279b447201150ebd9e42524da0fbd14a",
         "is_unique_to_source": false
       },
-      "metadata": {}
+      "metadata": {},
+      "bounding_box": {
+        "x": -0.03125,
+        "y": -0.03125,
+        "width": 4.125,
+        "height": 14.125
+      },
+      "anchor_point": {
+        "x": 2.0625,
+        "y": 7.0625
+      },
+      "scalable": true,
+      "rotatable": true
     },
     "PP001A": {
       "id": "PP001A",
@@ -7491,7 +8061,41 @@
         "file_hash": "197a793f71ba8208480f1a74ad567b52e62243cbcb828a5dce1c035384deaf99",
         "is_unique_to_source": false
       },
-      "metadata": {}
+      "metadata": {},
+      "bounding_box": {
+        "x": -0.03125,
+        "y": -0.03125,
+        "width": 16.125,
+        "height": 18.125
+      },
+      "ports": [
+        {
+          "id": "inlet",
+          "position": {
+            "x": 0,
+            "y": 9.0625
+          },
+          "direction": "W",
+          "type": "inlet",
+          "flow_direction": null
+        },
+        {
+          "id": "outlet",
+          "position": {
+            "x": 16.125,
+            "y": 9.0625
+          },
+          "direction": "E",
+          "type": "outlet",
+          "flow_direction": null
+        }
+      ],
+      "anchor_point": {
+        "x": 8.0625,
+        "y": 9.0625
+      },
+      "scalable": true,
+      "rotatable": true
     },
     "ND0030_Origo": {
       "id": "ND0030_Origo",
@@ -8361,7 +8965,19 @@
         "file_hash": "f37da5b64a7f7be94d6c24766ce9f9b2a73cd60ac902eff106a17008aaf52bb0",
         "is_unique_to_source": false
       },
-      "metadata": {}
+      "metadata": {},
+      "bounding_box": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 117.16,
+        "height": 91.2588
+      },
+      "anchor_point": {
+        "x": 58.58,
+        "y": 45.6294
+      },
+      "scalable": true,
+      "rotatable": true
     },
     "PV018A_Detail": {
       "id": "PV018A_Detail",
@@ -8526,7 +9142,19 @@
         "file_hash": "ec1451cc09f00b59b7783d83f90bf5d924f24e71037275e9cd3ad5d121074b82",
         "is_unique_to_source": false
       },
-      "metadata": {}
+      "metadata": {},
+      "bounding_box": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 415.913,
+        "height": 370.318
+      },
+      "anchor_point": {
+        "x": 207.9565,
+        "y": 185.159
+      },
+      "scalable": true,
+      "rotatable": true
     },
     "PS010A_Detail": {
       "id": "PS010A_Detail",
@@ -8751,7 +9379,19 @@
         "file_hash": "3544d235f2c399588f1a08c71d1bd2c94627b47cdbb80f7cf74dc77b75cdfcbd",
         "is_unique_to_source": false
       },
-      "metadata": {}
+      "metadata": {},
+      "bounding_box": {
+        "x": -0.03125,
+        "y": -0.03125,
+        "width": 8.0625,
+        "height": 4.0625
+      },
+      "anchor_point": {
+        "x": 4.03125,
+        "y": 2.03125
+      },
+      "scalable": true,
+      "rotatable": true
     },
     "PE004A": {
       "id": "PE004A",
@@ -8796,7 +9436,19 @@
         "file_hash": "ac1bba42179bf17a1fe4236633e036846bb607de46ac5e852eafb5fb5c31d8ce",
         "is_unique_to_source": false
       },
-      "metadata": {}
+      "metadata": {},
+      "bounding_box": {
+        "x": -0.03125,
+        "y": -0.03125,
+        "width": 4.125,
+        "height": 11.125
+      },
+      "anchor_point": {
+        "x": 2.0625,
+        "y": 5.5625
+      },
+      "scalable": true,
+      "rotatable": true
     },
     "PF014A": {
       "id": "PF014A",
@@ -9306,7 +9958,51 @@
         "file_hash": "4f9bca5b8da284d6c80b19fee2257de55ec2eaec3c05363e4f98559902a34c99",
         "is_unique_to_source": false
       },
-      "metadata": {}
+      "metadata": {},
+      "bounding_box": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 229.022,
+        "height": 342.409
+      },
+      "ports": [
+        {
+          "id": "inlet",
+          "position": {
+            "x": 114.511,
+            "y": 0
+          },
+          "direction": "N",
+          "type": "inlet",
+          "flow_direction": null
+        },
+        {
+          "id": "outlet",
+          "position": {
+            "x": 114.511,
+            "y": 342.409
+          },
+          "direction": "S",
+          "type": "outlet",
+          "flow_direction": null
+        },
+        {
+          "id": "vent",
+          "position": {
+            "x": 114.511,
+            "y": 0
+          },
+          "direction": "N",
+          "type": "auxiliary",
+          "flow_direction": null
+        }
+      ],
+      "anchor_point": {
+        "x": 114.511,
+        "y": 171.2045
+      },
+      "scalable": true,
+      "rotatable": true
     },
     "PP010A": {
       "id": "PP010A",
@@ -9321,7 +10017,41 @@
         "file_hash": "6e2aa5598b8759243001d809b7d95f8fbdfb3fa1fd9c38e282b125910c3f1167",
         "is_unique_to_source": false
       },
-      "metadata": {}
+      "metadata": {},
+      "bounding_box": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 198.885,
+        "height": 170.794
+      },
+      "ports": [
+        {
+          "id": "inlet",
+          "position": {
+            "x": 0,
+            "y": 85.397
+          },
+          "direction": "W",
+          "type": "inlet",
+          "flow_direction": null
+        },
+        {
+          "id": "outlet",
+          "position": {
+            "x": 198.885,
+            "y": 85.397
+          },
+          "direction": "E",
+          "type": "outlet",
+          "flow_direction": null
+        }
+      ],
+      "anchor_point": {
+        "x": 99.4425,
+        "y": 85.397
+      },
+      "scalable": true,
+      "rotatable": true
     },
     "PP016A": {
       "id": "PP016A",
@@ -9681,7 +10411,19 @@
         "file_hash": "d23ae80f5515ebf9a88c431b66f249dcd6b0e9701abdbaf115f19726062667b3",
         "is_unique_to_source": false
       },
-      "metadata": {}
+      "metadata": {},
+      "bounding_box": {
+        "x": -0.03125,
+        "y": -0.03125,
+        "width": 12.0625,
+        "height": 6.0625
+      },
+      "anchor_point": {
+        "x": 6.03125,
+        "y": 3.03125
+      },
+      "scalable": true,
+      "rotatable": true
     },
     "ND0036_Detail": {
       "id": "ND0036_Detail",
@@ -9786,7 +10528,19 @@
         "file_hash": "aeab15ed65ea07728ddf8540a2c3bed31cae650b1433b62fb70fb6869c6982af",
         "is_unique_to_source": false
       },
-      "metadata": {}
+      "metadata": {},
+      "bounding_box": {
+        "x": -0.03125,
+        "y": -0.03125,
+        "width": 4.0625,
+        "height": 3.0625
+      },
+      "anchor_point": {
+        "x": 2.03125,
+        "y": 1.53125
+      },
+      "scalable": true,
+      "rotatable": true
     },
     "PE005A_Detail": {
       "id": "PE005A_Detail",
@@ -10086,7 +10840,19 @@
         "file_hash": "b14b3fefd4af75b2de8652e9e416fa02de827da7638318bfdfd029201fda90c0",
         "is_unique_to_source": false
       },
-      "metadata": {}
+      "metadata": {},
+      "bounding_box": {
+        "x": -0.031746,
+        "y": -0.031746,
+        "width": 8.06349,
+        "height": 8.06349
+      },
+      "anchor_point": {
+        "x": 4.031745,
+        "y": 4.031745
+      },
+      "scalable": true,
+      "rotatable": true
     },
     "PZ018A": {
       "id": "PZ018A",
@@ -10221,7 +10987,19 @@
         "file_hash": "90ce0793a3a25fcae098e9742ea43d98f4a4387c9b01aa980a45d55868bf80cc",
         "is_unique_to_source": false
       },
-      "metadata": {}
+      "metadata": {},
+      "bounding_box": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 257.211,
+        "height": 115.562
+      },
+      "anchor_point": {
+        "x": 128.6055,
+        "y": 57.781
+      },
+      "scalable": true,
+      "rotatable": true
     },
     "PZ003A_Origo": {
       "id": "PZ003A_Origo",
@@ -10596,7 +11374,19 @@
         "file_hash": "2c4147b33c6e6e139c3aeb3237ff725749d823411257ec040c88f5a582a34621",
         "is_unique_to_source": false
       },
-      "metadata": {}
+      "metadata": {},
+      "bounding_box": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 115.636,
+        "height": 74.1533
+      },
+      "anchor_point": {
+        "x": 57.818,
+        "y": 37.07665
+      },
+      "scalable": true,
+      "rotatable": true
     },
     "ND0020_Detail": {
       "id": "ND0020_Detail",
@@ -10806,7 +11596,19 @@
         "file_hash": "f4c8732292986a4914e2a31f50cfbdebd295127b6ef849a16ac5d7628534a9ee",
         "is_unique_to_source": false
       },
-      "metadata": {}
+      "metadata": {},
+      "bounding_box": {
+        "x": -0.03125,
+        "y": -0.03125,
+        "width": 8.0625,
+        "height": 6.0625
+      },
+      "anchor_point": {
+        "x": 4.03125,
+        "y": 3.03125
+      },
+      "scalable": true,
+      "rotatable": true
     },
     "PF001A_Origo": {
       "id": "PF001A_Origo",
@@ -10836,7 +11638,19 @@
         "file_hash": "14007c02b8c8547da835e0e1d67dd3501d2f4dd3b2692a9d5021683ddd683d9c",
         "is_unique_to_source": false
       },
-      "metadata": {}
+      "metadata": {},
+      "bounding_box": {
+        "x": -0.0626225,
+        "y": -0.0626225,
+        "width": 32.188,
+        "height": 32.0627
+      },
+      "anchor_point": {
+        "x": 16.094,
+        "y": 16.03135
+      },
+      "scalable": true,
+      "rotatable": true
     },
     "PD016A": {
       "id": "PD016A",
@@ -11421,7 +12235,41 @@
         "file_hash": "1da0288e2eeb73d7236a35e6950896729054ccd408b3529ac9130833a6b95d95",
         "is_unique_to_source": false
       },
-      "metadata": {}
+      "metadata": {},
+      "bounding_box": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 257.368,
+        "height": 159.647
+      },
+      "ports": [
+        {
+          "id": "inlet",
+          "position": {
+            "x": 0,
+            "y": 79.8235
+          },
+          "direction": "W",
+          "type": "inlet",
+          "flow_direction": null
+        },
+        {
+          "id": "outlet",
+          "position": {
+            "x": 257.368,
+            "y": 79.8235
+          },
+          "direction": "E",
+          "type": "outlet",
+          "flow_direction": null
+        }
+      ],
+      "anchor_point": {
+        "x": 128.684,
+        "y": 79.8235
+      },
+      "scalable": true,
+      "rotatable": true
     },
     "PF012A_Detail": {
       "id": "PF012A_Detail",
@@ -11601,7 +12449,19 @@
         "file_hash": "6536bfa6f3284fe525421c74b7c50796271bdbcda28adebee2a3b7e976fcf4e3",
         "is_unique_to_source": false
       },
-      "metadata": {}
+      "metadata": {},
+      "bounding_box": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 342.407,
+        "height": 115.636
+      },
+      "anchor_point": {
+        "x": 171.2035,
+        "y": 57.818
+      },
+      "scalable": true,
+      "rotatable": true
     },
     "PD003A": {
       "id": "PD003A",

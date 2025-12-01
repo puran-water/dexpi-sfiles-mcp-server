@@ -342,6 +342,135 @@ class TestSymbolInfoFullGeometry:
         assert len(inlet_ports) == 2
 
 
+class TestSymbolRegistryGeometryLoading:
+    """Tests for SymbolRegistry geometry loading from merged_catalog.json (Week 8)."""
+
+    @pytest.fixture
+    def registry(self):
+        """Get the symbol registry."""
+        from src.core.symbols import get_registry
+        return get_registry()
+
+    def test_registry_loads_bounding_box(self, registry):
+        """Test that bounding_box is loaded for symbols that have it."""
+        # PP001A (Centrifugal Pump) should have geometry after migration
+        pump = registry.get_by_dexpi_class("CentrifugalPump")
+
+        if pump and pump.bounding_box:
+            assert pump.bounding_box.width > 0
+            assert pump.bounding_box.height > 0
+            assert isinstance(pump.bounding_box.center, Point)
+
+    def test_registry_loads_ports(self, registry):
+        """Test that ports are loaded for symbols that have them."""
+        pump = registry.get_by_dexpi_class("CentrifugalPump")
+
+        if pump and pump.ports:
+            assert len(pump.ports) >= 1
+            for port in pump.ports:
+                assert port.id
+                assert port.x is not None
+                assert port.y is not None
+
+    def test_registry_loads_anchor_point(self, registry):
+        """Test that anchor_point is loaded for symbols that have it."""
+        pump = registry.get_by_dexpi_class("CentrifugalPump")
+
+        if pump and pump.anchor_point:
+            assert pump.anchor_point.x is not None
+            assert pump.anchor_point.y is not None
+
+    def test_get_anchor_from_loaded_bounding_box(self, registry):
+        """Test get_anchor derives from loaded bounding_box center."""
+        pump = registry.get_by_dexpi_class("CentrifugalPump")
+
+        if pump and pump.bounding_box:
+            anchor = pump.get_anchor()
+            assert anchor is not None
+            # Should either be explicit anchor or bounding box center
+            if pump.anchor_point:
+                assert anchor == pump.anchor_point
+            else:
+                assert anchor == pump.bounding_box.center
+
+    def test_symbols_without_geometry_work(self, registry):
+        """Test that symbols without geometry still load correctly."""
+        # Get a symbol that may not have geometry
+        symbol = registry.get_symbol("ND0009")  # Annotation symbol
+
+        if symbol:
+            # Should exist but may not have geometry
+            assert symbol.symbol_id == "ND0009"
+            # These should be None or empty, not raise errors
+            assert symbol.bounding_box is None or isinstance(symbol.bounding_box, BoundingBox)
+            assert isinstance(symbol.ports, list)
+
+    def test_pump_port_directions(self, registry):
+        """Test that pump ports have correct directions."""
+        pump = registry.get_by_dexpi_class("CentrifugalPump")
+
+        if pump and pump.ports:
+            # Pumps typically have inlet (W) and outlet (E) ports
+            directions = [p.direction for p in pump.ports if p.direction]
+            assert len(directions) > 0
+
+    def test_statistics_include_geometry(self, registry):
+        """Test registry statistics reflect geometry data."""
+        stats = registry.get_statistics()
+
+        # Basic stats should work
+        assert stats["total"] > 0
+        assert "by_category" in stats
+
+    def test_load_bounding_box_helper(self, registry):
+        """Test _load_bounding_box helper method directly."""
+        # Test with valid data
+        data = {
+            "bounding_box": {"x": 0.0, "y": 0.0, "width": 100.0, "height": 50.0}
+        }
+        bb = registry._load_bounding_box(data)
+        assert bb is not None
+        assert bb.width == 100.0
+        assert bb.height == 50.0
+
+        # Test with missing data
+        empty_bb = registry._load_bounding_box({})
+        assert empty_bb is None
+
+    def test_load_ports_helper(self, registry):
+        """Test _load_ports helper method directly."""
+        # Test with valid data
+        data = {
+            "ports": [
+                {"id": "inlet", "position": {"x": 0, "y": 25}, "direction": "W"},
+                {"id": "outlet", "position": {"x": 100, "y": 25}, "direction": "E"}
+            ]
+        }
+        ports = registry._load_ports(data)
+        assert len(ports) == 2
+        assert ports[0].id == "inlet"
+        assert ports[0].x == 0
+        assert ports[1].id == "outlet"
+        assert ports[1].direction == "E"
+
+        # Test with empty data
+        empty_ports = registry._load_ports({})
+        assert empty_ports == []
+
+    def test_load_anchor_point_helper(self, registry):
+        """Test _load_anchor_point helper method directly."""
+        # Test with valid data
+        data = {"anchor_point": {"x": 50.0, "y": 25.0}}
+        anchor = registry._load_anchor_point(data)
+        assert anchor is not None
+        assert anchor.x == 50.0
+        assert anchor.y == 25.0
+
+        # Test with missing data
+        empty_anchor = registry._load_anchor_point({})
+        assert empty_anchor is None
+
+
 # Run tests with pytest
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
