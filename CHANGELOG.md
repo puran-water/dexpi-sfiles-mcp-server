@@ -5,6 +5,108 @@ All notable changes to the Engineering MCP Server are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0] - 2025-12-02
+
+### Added - Layout System with ELK Integration
+
+**Complete Layout Layer for Automatic Diagram Positioning**
+
+This release delivers a production-ready layout system with ELK (Eclipse Layout Kernel) integration, providing automatic orthogonal routing suitable for P&ID standards.
+
+#### Layout Infrastructure
+
+**Architecture Decision**: Codex Consensus Session #019adb91-b13a-79d1-8772-5823bdec96ff
+
+1. **Layout Metadata Schema** (`src/models/layout_metadata.py`)
+   - `LayoutMetadata`: Complete layout with positions, edges, ports, labels
+   - `NodePosition`: 2D coordinates with optional width/height
+   - `EdgeRoute`: Edge routing with sections, bend points, sourcePoint/targetPoint
+   - `PortLayout`: Port positions with side constraints
+   - `BoundingBox`: Auto-computed layout bounds
+   - `ModelReference`: Link to source DEXPI/SFILES model
+   - SHA-256 etag computation for optimistic concurrency
+
+2. **Layout Store** (`src/core/layout_store.py`)
+   - Thread-safe CRUD operations with RLock
+   - Etag-based optimistic concurrency control
+   - `OptimisticLockError` for concurrent modification detection
+   - File persistence (save_to_file/load_from_file)
+   - List/filter by model reference
+
+3. **Persistent ELK Worker** (`src/layout/engines/elk.py`, `src/layout/elk_worker.js`)
+   - Persistent Node.js worker process (not per-call subprocess)
+   - stdin/stdout JSON protocol with newline delimiting
+   - UUID-based request correlation
+   - Thread-safe `ELKWorkerManager` class
+   - Proper atexit cleanup for graceful shutdown
+   - P&ID-specific layout options (orthogonal routing, layered algorithm)
+
+#### MCP Tools (8 new tools)
+
+| Tool | Purpose |
+|------|---------|
+| `layout_compute` | Compute automatic layout using ELK algorithm |
+| `layout_get` | Retrieve stored layout with positions, edges, ports |
+| `layout_update` | Update layout with etag-based concurrency control |
+| `layout_validate` | Validate schema and model consistency |
+| `layout_list` | List layouts, optionally filtered by model |
+| `layout_save_to_file` | Persist layout to project file |
+| `layout_load_from_file` | Load layout from project file |
+| `layout_delete` | Remove layout from store |
+
+#### Codex Consensus Fixes
+
+Per review session #019adb91:
+
+1. **Fix #1: Persistent ELK Worker** - Replaced per-call subprocess with persistent worker
+2. **Fix #2: layout_update with etag** - Optimistic concurrency control
+3. **Fix #3: sourcePoint/targetPoint** - High-fidelity edge endpoint capture
+4. **Fix #4: layout_validate** - Schema and model consistency validation
+5. **Deferred: model_revision hash** - Topology hash for stale detection (next sprint)
+
+#### Test Coverage
+
+- **39 new layout tests** in `tests/test_layout_system.py`
+- **768 total tests passing** (was 727, +39 layout tests, +2 additional)
+- Full coverage: schema, store, engine, MCP tools, concurrency
+
+#### Files Created
+
+```
+src/models/layout_metadata.py     # Extended layout schema
+src/core/layout_store.py          # Thread-safe storage
+src/layout/__init__.py            # Package init
+src/layout/engines/__init__.py    # Engines package
+src/layout/engines/base.py        # Abstract base class
+src/layout/engines/elk.py         # ELK integration
+src/layout/elk_worker.js          # Node.js worker
+src/tools/layout_tools.py         # 8 MCP tools
+tests/test_layout_system.py       # 39 tests
+docs/LAYOUT_SYSTEM.md             # Documentation
+package.json                      # elkjs dependency
+```
+
+#### Dependencies
+
+- **elkjs**: ELK layout engine for Node.js (`npm install elkjs`)
+- Node.js required for ELK worker process
+
+### Documentation
+
+- Added [`docs/LAYOUT_SYSTEM.md`](docs/LAYOUT_SYSTEM.md) - Complete layout system documentation
+- Updated [`README.md`](README.md) - Layout tools in MCP catalog
+- Updated [`IMPLEMENTATION_PROGRESS.md`](IMPLEMENTATION_PROGRESS.md) - Week 8+ progress
+
+### Migration Notes
+
+**For users working with layouts:**
+- Install elkjs: `npm install elkjs`
+- Use `layout_compute` to generate automatic layouts
+- Use `layout_update` with `etag` parameter for concurrent-safe updates
+- Layouts are stored alongside models in project structure
+
+**Breaking Changes:** None - new functionality only
+
 ## [0.7.0] - 2025-11-14
 
 ### Added - Proteus XML 4.2 Export System

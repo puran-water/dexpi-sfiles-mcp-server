@@ -1,10 +1,10 @@
 # Visualization Plan: Federated Rendering Platform
 
 **Created:** 2025-11-09
-**Last Updated:** 2025-11-30 (Weeks 5-6 Complete)
-**Status:** ✅ MCP VISUALIZATION TOOLS COMPLETE (Nov 30, 2025)
-**Sprint:** Sprint 5 (MCP Integration & Symbol Geometry)
-**Current Phase:** MCP Integration Complete - Symbol Geometry Foundation Ready
+**Last Updated:** 2025-12-02 (Layout System Complete)
+**Status:** ✅ LAYOUT SYSTEM COMPLETE (Dec 2, 2025)
+**Sprint:** Sprint 5+ (Layout Layer Integration)
+**Current Phase:** Layout Layer Complete - Ready for Rendering Integration
 
 ---
 
@@ -181,6 +181,40 @@ Updated scripts to use new API:
 - **Total tests:** 590 passed, 16 skipped, 3 failed (GraphicBuilder Docker)
 - **Visualization tests:** 24 passed
 - **Geometry tests:** 25 passed
+
+---
+
+## ✅ WEEK 8+: LAYOUT SYSTEM COMPLETE - DECEMBER 2, 2025
+
+### Layout Layer - OPERATIONAL
+
+The Layout System with ELK integration is now **production-ready**:
+
+**Core Components:**
+- `src/models/layout_metadata.py` - Layout schema with etag computation
+- `src/core/layout_store.py` - Thread-safe storage with optimistic concurrency
+- `src/layout/engines/elk.py` - Persistent ELK worker integration
+- `src/layout/elk_worker.js` - Node.js worker process
+
+**MCP Tools (8 new):**
+- `layout_compute` - Compute automatic layout using ELK
+- `layout_get` - Retrieve stored layout
+- `layout_update` - Update with etag requirement
+- `layout_validate` - Schema and model consistency validation
+- `layout_list` - List layouts by model
+- `layout_save_to_file` / `layout_load_from_file` - File persistence
+- `layout_delete` - Remove from store
+
+**Architecture Decisions (Codex Consensus #019adb91):**
+- Persistent Node.js worker (not per-call subprocess)
+- Etag-based optimistic concurrency control
+- sourcePoint/targetPoint capture for high-fidelity edge routing
+
+**Test Coverage:** 39 layout tests, 768 total tests passing
+
+**Documentation:** [`docs/LAYOUT_SYSTEM.md`](../LAYOUT_SYSTEM.md)
+
+**Next Phase:** Wire Layout Layer into visualization pipeline for coordinate-based rendering.
 
 ---
 

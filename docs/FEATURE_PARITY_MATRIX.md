@@ -298,6 +298,35 @@ This document maps the 58 legacy atomic tools to the 12 new consolidated tools i
 
 ---
 
+## Layout Tools (NEW - v0.8.0)
+
+### 22-29. Layout Tools
+
+**Status**: New tools - no legacy equivalents
+
+| Tool | Purpose | Key Parameters |
+|------|---------|----------------|
+| `layout_compute` | Compute automatic layout using ELK | `model_id`, `algorithm`, `direction`, `spacing` |
+| `layout_get` | Retrieve stored layout | `layout_id`, `include_edges`, `include_ports` |
+| `layout_update` | Update with concurrency control | `layout_id`, `etag`, `positions`, `edges` |
+| `layout_validate` | Validate schema and consistency | `layout_id`, `check_model_consistency` |
+| `layout_list` | List layouts by model | `model_id`, `model_type` |
+| `layout_save_to_file` | Persist to project | `layout_id`, `project_path`, `model_name` |
+| `layout_load_from_file` | Load from project | `project_path`, `model_name` |
+| `layout_delete` | Remove from store | `layout_id` |
+
+**Architecture**: Codex Consensus #019adb91
+
+**Key Features**:
+- Persistent ELK worker process for efficient layout computation
+- Etag-based optimistic concurrency control
+- Orthogonal edge routing suitable for P&ID standards
+- File persistence alongside models in project structure
+
+**Documentation**: [`docs/LAYOUT_SYSTEM.md`](LAYOUT_SYSTEM.md)
+
+---
+
 ## Summary Statistics
 
 | Category | Legacy Tools | Consolidated Tools | Reduction |
@@ -308,9 +337,12 @@ This document maps the 58 legacy atomic tools to the 12 new consolidated tools i
 | **Project (Git)** | 4 | 4 | 0% (unique) |
 | **Graph Analysis** | 6 | 6 | 0% (unique) |
 | **Batch/Rules** | 3 | 3 | 0% (unique) |
-| **TOTAL** | **76** | **21** | **72%** |
+| **Layout** | 0 | 8 | New capability |
+| **TOTAL** | **76** | **29** | **62%** |
 
 **Core Consolidation**: 58 tools → 12 tools (79% reduction for commonly-used operations)
+
+**New Capabilities**: 8 layout tools added in v0.8.0
 
 ---
 

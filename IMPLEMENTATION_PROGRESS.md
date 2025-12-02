@@ -1,8 +1,8 @@
 # 8-Week Enhancement Plan: Implementation Progress
 
 **Started**: 2025-11-17
-**Current Phase**: Week 8 (Geometry Data Population)
-**Last Updated**: 2025-12-01
+**Current Phase**: Week 8+ (Layout System Complete)
+**Last Updated**: 2025-12-02
 
 ---
 
@@ -367,19 +367,19 @@ The key metric is `missing_attributes == []` - when this is empty, no data is lo
 - **Week 4**: ✅ Layout/presentation in Proteus XML, GraphicBuilder quality unlocked - ACHIEVED
 - **Week 6**: ✅ MCP visualization tools operational (`visualize_model`, `visualize_list_renderers`) - ACHIEVED
 - **Week 6**: ✅ SymbolInfo geometry foundation (Point, BoundingBox, Port) - ACHIEVED
-- **Week 8**: Code duplication eliminated, ModelStore operational, end-to-end tests passing
+- **Week 8**: ✅ Code duplication eliminated, ModelStore operational, end-to-end tests passing - ACHIEVED
+- **Week 8+**: ✅ Layout System with ELK integration, 8 MCP tools, 768 tests passing - ACHIEVED
 
 ---
 
 ## Recent Commits
 
 ```
-de26172 feat(exporter): Complete Weeks 3-4 - Layout/Presentation + InstrumentationLoopFunction
-72dfaeb docs: Mark Task 3 complete - instrumentation export verified
-ec5f2ca feat(exporter): Extend GenericAttributeExporter type coverage (Weeks 1-2 Task 2)
-5e81715 docs: Add implementation progress tracker for 8-week plan
-3443a95 test(exporter): Add comprehensive GenericAttributeExporter unit tests
-efcebab Wire model_metrics into validation_tools
+74634a4 feat(layout): Add Layout Layer with ELK integration and MCP tools
+a9d6f4f fix(geometry): Port inference uses absolute coordinates with bbox origin
+53a76ce fix(geometry): Port direction normalization + SHA-256 hashing + validation
+2f7a14d feat(symbols): Complete geometry coverage + SVG parser consolidation (Week 8)
+cb73c95 feat(symbols): Add geometry data loading to SymbolRegistry (Week 8 Task 1)
 ```
 
 ---
@@ -388,8 +388,10 @@ efcebab Wire model_metrics into validation_tools
 
 - **Codex review session** (ID: 019ad060-45df-7272-a6ce-7e54fd37d4be) used for Week 5-6 bug identification and architecture guidance
 - **Codex review session** (ID: 019ada9a-4169-7a62-b8c8-c2a4b04b1ab7) used for Week 7 ModelStore enhancement recommendations
-- **Total test count**: 694 passed, 5 skipped, 0 failed ✅ (was 660, +14 ModelStore tests, +20 E2E tests)
+- **Codex consensus session** (ID: 019adb91-b13a-79d1-8772-5823bdec96ff) used for Layout System architecture decisions
+- **Total test count**: 768 passed, 5 skipped, 0 failed ✅ (was 727, +39 layout tests, +2 additional)
 - DEXPI TrainingTestCases cloned to `/tmp/TrainingTestCases` for GraphicBuilder tests
+- Node.js with elkjs required for layout computation (`npm install elkjs`)
 
 ### Test Fixes (2025-12-01)
 
@@ -503,3 +505,134 @@ efcebab Wire model_metrics into validation_tools
 - 23 new tests for SVG parsing
 
 **Test Results**: 727 passed, 5 skipped (up from 704)
+
+---
+
+## Week 8+: Layout System with ELK Integration (COMPLETE)
+
+**Theme**: "Automatic positioning for engineering diagrams with orthogonal edge routing"
+
+**Completed**: 2025-12-02
+**Codex Consensus**: Session #019adb91-b13a-79d1-8772-5823bdec96ff
+
+### Task Checklist
+
+- [x] **Task 1**: Layout Metadata Schema
+  - [x] Created `src/models/layout_metadata.py` with comprehensive dataclasses
+  - [x] `LayoutMetadata`: Complete layout with positions, edges, ports, labels
+  - [x] `NodePosition`: 2D coordinates with optional width/height
+  - [x] `EdgeRoute`: Edge routing with sections, bend points, sourcePoint/targetPoint
+  - [x] `PortLayout`: Port positions with side constraints
+  - [x] `BoundingBox`: Auto-computed layout bounds
+  - [x] `ModelReference`: Link to source DEXPI/SFILES model
+  - [x] SHA-256 etag computation for optimistic concurrency
+
+- [x] **Task 2**: Layout Store
+  - [x] Created `src/core/layout_store.py` with thread-safe storage
+  - [x] CRUD operations with etag-based optimistic concurrency
+  - [x] `OptimisticLockError` for concurrent modification detection
+  - [x] File persistence (save_to_file/load_from_file)
+  - [x] List/filter by model reference
+
+- [x] **Task 3**: ELK Layout Engine (Codex Consensus Fix #1)
+  - [x] Created `src/layout/engines/elk.py` with `ELKLayoutEngine`
+  - [x] **Persistent Node.js worker** (not per-call subprocess)
+  - [x] `ELKWorkerManager` class with request/response protocol
+  - [x] UUID-based request correlation
+  - [x] Thread-safe with proper atexit cleanup
+  - [x] P&ID-specific layout options (orthogonal routing, layered algorithm)
+
+- [x] **Task 4**: ELK Worker (Codex Consensus Fix #1)
+  - [x] Created `src/layout/elk_worker.js` persistent worker
+  - [x] stdin/stdout JSON protocol with newline delimiting
+  - [x] Request format: `{"id": "uuid", "graph": {...}}`
+  - [x] Response format: `{"id": "uuid", "result": {...}}`
+  - [x] Proper error handling with stderr logging
+
+- [x] **Task 5**: MCP Layout Tools
+  - [x] Created `src/tools/layout_tools.py` with 8 MCP tools
+  - [x] `layout_compute`: Compute layout using ELK algorithm
+  - [x] `layout_get`: Retrieve stored layout
+  - [x] `layout_update`: Update with etag requirement (Codex Consensus Fix #2)
+  - [x] `layout_validate`: Schema and model consistency validation (Codex Consensus Fix #4)
+  - [x] `layout_list`: List layouts filtered by model
+  - [x] `layout_save_to_file` / `layout_load_from_file`: File persistence
+  - [x] `layout_delete`: Remove layout from store
+
+- [x] **Task 6**: sourcePoint/targetPoint Capture (Codex Consensus Fix #3)
+  - [x] Updated `_elk_to_layout()` to capture edge endpoints
+  - [x] High-fidelity edge routing for rendering
+
+- [x] **Task 7**: Server Integration
+  - [x] Integrated `LayoutTools` into `src/server.py`
+  - [x] Added `layout_*` prefix routing
+
+- [x] **Task 8**: Tests
+  - [x] Created `tests/test_layout_system.py` (39 tests)
+  - [x] Schema validation tests (8 tests)
+  - [x] Store operations tests (6 tests)
+  - [x] ELK engine tests (5 tests)
+  - [x] Integration tests (2 tests)
+  - [x] Layout Update tests (3 tests)
+  - [x] Layout Validate tests (3 tests)
+  - [x] MCP interface tests (6 tests)
+  - [x] PID layout options tests (2 tests)
+  - [x] Edge route tests (2 tests)
+  - [x] File persistence tests (2 tests)
+
+### Codex Consensus Fixes Applied
+
+Per Codex review session #019adb91:
+
+1. **Fix #1: Persistent ELK Worker** ✅
+   - Replaced per-call subprocess with persistent worker process
+   - Added ELKWorkerManager for process lifecycle management
+   - Request/response protocol with UUID correlation
+
+2. **Fix #2: layout_update with etag** ✅
+   - Added `layout_update` MCP tool requiring `etag` parameter
+   - Returns new etag and version on success
+   - Returns `ETAG_MISMATCH` error on concurrent modification
+
+3. **Fix #3: sourcePoint/targetPoint** ✅
+   - Capture overall edge endpoints from ELK output
+   - Stored in EdgeRoute for high-fidelity rendering
+
+4. **Fix #4: layout_validate** ✅
+   - Basic validation: schema, required fields, etag integrity
+   - Model consistency: layout nodes match model topology
+   - Recompute diff: re-run ELK and report position changes
+
+5. **Deferred: model_revision hash**
+   - Topology hash for stale detection deferred to next sprint
+
+### Success Criteria
+
+- [x] ✅ ELK integration operational with persistent worker
+- [x] ✅ Layout metadata schema complete with etag computation
+- [x] ✅ Thread-safe store with optimistic concurrency
+- [x] ✅ 8 MCP tools fully functional
+- [x] ✅ File persistence alongside models
+- [x] ✅ 39 layout tests passing
+- [x] ✅ 768 total tests passing
+
+### Files Created
+
+- `src/models/layout_metadata.py` - Extended with full layout schema
+- `src/core/layout_store.py` - Thread-safe storage with etag concurrency
+- `src/layout/__init__.py` - Package initialization
+- `src/layout/engines/__init__.py` - Engines package
+- `src/layout/engines/base.py` - Abstract base class for layout engines
+- `src/layout/engines/elk.py` - ELK integration with persistent worker
+- `src/layout/elk_worker.js` - Node.js persistent worker process
+- `src/tools/layout_tools.py` - 8 MCP layout tools
+- `tests/test_layout_system.py` - 39 comprehensive tests
+- `docs/LAYOUT_SYSTEM.md` - Complete documentation
+- `package.json` / `package-lock.json` - elkjs dependency
+
+### Files Modified
+
+- `src/server.py` - Integrated LayoutTools with layout_* routing
+- `src/core/__init__.py` - Export layout store
+
+**Week 8+ COMPLETE** ✅ - Layout System fully operational with 768 tests passing

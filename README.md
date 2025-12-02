@@ -42,13 +42,22 @@ This repository prioritizes data fidelity over drawing aesthetics: the authorita
 - Batch/automation: `model_batch_apply`, `rules_apply`, `graph_connect`.
 - Templates: `template_list`, `template_get_schema`, `area_deploy`.
 
-### Visualization Tools (NEW - Weeks 5-6)
+### Visualization Tools (Weeks 5-6)
 - `visualize_model` - Generate HTML (Plotly), PNG (GraphicBuilder), or GraphML from DEXPI/SFILES models with auto model-type detection and intelligent renderer selection
 - `visualize_list_renderers` - List available renderers with capabilities and health status
 
+### Layout Tools (NEW - Week 8+)
+- `layout_compute` - Compute automatic layout using ELK algorithm (layered, orthogonal routing)
+- `layout_get` - Retrieve stored layout with positions, edges, ports
+- `layout_update` - Update layout with etag-based optimistic concurrency control
+- `layout_validate` - Validate layout schema and model consistency
+- `layout_list` - List layouts, optionally filtered by model
+- `layout_save_to_file` / `layout_load_from_file` - Persist layouts to project files
+- `layout_delete` - Remove layout from store
+
 > **Phase 4 Update:** The consolidated tools (`model_create`, `model_load`, `model_save`, `model_tx_begin`, `model_tx_apply`, `model_tx_commit`, `schema_query`, `search_execute`, and `graph_modify`) are now **production-ready** and exposed by the MCP server. Legacy atomic tools remain available for backward compatibility. See [`docs/FEATURE_PARITY_MATRIX.md`](docs/FEATURE_PARITY_MATRIX.md) for migration guidance.
 
-> **Weeks 5-6 Update:** MCP visualization tools (`visualize_model`, `visualize_list_renderers`) are now operational. Symbol geometry foundation (Point, BoundingBox, Port) added to `src/core/symbols.py` for future rendering enhancements.
+> **Layout System Update (Dec 2025):** Complete Layout Layer with ELK integration. Persistent Node.js worker for efficient layout computation, etag-based concurrency control, file persistence alongside models. See [`docs/LAYOUT_SYSTEM.md`](docs/LAYOUT_SYSTEM.md) for details.
 
 ---
 
@@ -59,6 +68,8 @@ This repository prioritizes data fidelity over drawing aesthetics: the authorita
 | `src/server.py` | Registers MCP handlers and routes tool calls to category handlers.
 | `src/tools/*` | Tool implementations grouped by domain (DEXPI, SFILES, project, validation, schema, graph, search, batch, templates, visualization).
 | `src/tools/visualization_tools.py` | MCP visualization tools with RendererRouter integration (Weeks 5-6).
+| `src/tools/layout_tools.py` | MCP layout tools for ELK-based automatic positioning (Week 8+).
+| `src/layout/engines/elk.py` | Persistent ELK worker integration for layout computation.
 | `src/persistence/project_persistence.py` | Saves/loads models, writes metadata, GraphML, and Plotly HTML artifacts, and performs git commits.
 | `src/templates/*.py` + `library/patterns/*.yaml` | Parametric template engine and YAML catalog (4 templates).
 | `src/managers/transaction_manager.py` & `src/registry/operation_registry.py` | ACID transaction infrastructure for `model_tx_*` tools (Phase 4 complete, production-ready).
@@ -205,12 +216,23 @@ Each template exposes typed parameters (see `template_get_schema`) and can be in
 - ✅ Symbol library – 701 NOAKADEXPI symbols mounted
 - **Status:** Functional for PNG rendering, SVG/PDF pending Java API integration
 
-**Planned Work:**
-1. **ProteusXMLDrawing Integration (Phase 5 Week 5)** – Fork `src/visualization/proteus-viewer/` backend with text/spline fixups, WebSocket/live update path, expose through MCP visualize tools.
-2. **SFILES2 Visualization (Phase 5 Week 6)** – Expose `SFILES2.visualize_flowsheet()` via `src/tools/sfiles_tools.py`, ship stream/unit tables + OntoCape tags in outputs.
-3. **Additional templates** – Library currently has 4 patterns; expansion to 5+ and beyond is tracked in `docs/templates/template_system.md`.
+**Week 8+ (Completed):** Layout System with ELK Integration
+- ✅ Complete Layout Layer – LayoutMetadata schema, LayoutStore, ELK engine integration
+- ✅ Persistent ELK Worker – Node.js worker process with request/response protocol (Codex Consensus #019adb91)
+- ✅ 8 MCP Tools – layout_compute, layout_get, layout_update, layout_validate, layout_list, layout_save_to_file, layout_load_from_file, layout_delete
+- ✅ Optimistic Concurrency – Etag-based updates with ETAG_MISMATCH error handling
+- ✅ File Persistence – Layouts stored alongside models in project structure
+- ✅ 39 Layout Tests – Full coverage of schema, store, engine, and MCP tools
+- ✅ 768 Total Tests Passing
+- **Documentation:** [`docs/LAYOUT_SYSTEM.md`](docs/LAYOUT_SYSTEM.md)
 
-Refer to [ROADMAP.md](ROADMAP.md) for detailed phase timelines and design discussions.
+**Planned Work:**
+1. **ProteusXMLDrawing Integration** – Fork `src/visualization/proteus-viewer/` backend with text/spline fixups, WebSocket/live update path, expose through MCP visualize tools.
+2. **SFILES2 Visualization** – Expose `SFILES2.visualize_flowsheet()` via `src/tools/sfiles_tools.py`, ship stream/unit tables + OntoCape tags in outputs.
+3. **Additional templates** – Library currently has 4 patterns; expansion to 5+ and beyond is tracked in `docs/templates/template_system.md`.
+4. **Rendering Integration** – Wire Layout Layer into visualization pipeline for coordinate-based rendering.
+
+Refer to [`IMPLEMENTATION_PROGRESS.md`](IMPLEMENTATION_PROGRESS.md) for detailed progress tracking.
 
 ---
 
