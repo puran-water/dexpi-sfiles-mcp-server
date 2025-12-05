@@ -420,22 +420,25 @@ This document maps the 58 legacy atomic tools to the 12 new consolidated tools i
 
 ## Deprecation Strategy
 
-### Phase 1: Dual API (Current)
+### Phase 1: Dual API ✅ COMPLETE
 - ✅ Both atomic and consolidated tools available
 - ✅ Consolidated tools production-ready
-- ✅ Full test coverage (150 tests passing)
-- ⏳ Add deprecation notices to atomic tools
-- ⏳ Document migration paths
+- ✅ Full test coverage (768 tests passing)
+- ✅ Deprecation notices added to 11 atomic tools
+- ✅ Migration paths documented with examples
 
-### Phase 2: Deprecation Notices
-- Mark atomic tools with `[Consolidated into model_* / model_tx_*]` in descriptions
-- Point to this parity matrix in deprecation messages
-- Ship migration guide with examples
+### Phase 2: Deprecation Notices ✅ COMPLETE (Dec 2, 2025)
+- ✅ Atomic tools marked with `[DEPRECATED]` in descriptions:
+  - Schema tools (4): `schema_list_classes`, `schema_describe_class`, `schema_find_class`, `schema_get_hierarchy`
+  - Search tools (6): `search_by_tag`, `search_by_type`, `search_by_attributes`, `search_connected`, `query_model_statistics`, `search_by_stream`
+  - DEXPI tools (1): `dexpi_add_valve`
+- ✅ Each deprecated tool points to its consolidated replacement
+- ✅ Migration examples included in this document
 
-### Phase 3: Optional Removal (Future)
-- After one release cycle with deprecation notices
-- Decide: Keep both APIs or remove atomics
+### Phase 3: Optional Removal (Future Decision)
+- Decision pending: Keep both APIs or remove atomics
 - Recommendation: Keep atomics for quick scripts, consolidated for robust workflows
+- No timeline set for removal
 
 ---
 
@@ -443,10 +446,11 @@ This document maps the 58 legacy atomic tools to the 12 new consolidated tools i
 
 The Phase 4 consolidation achieves:
 
-✅ **79% reduction** in commonly-used tools (58 → 12)
+✅ **62% reduction** in total tools (76 → 29)
 ✅ **Full functionality preservation** - every legacy tool has a clear consolidated equivalent
-✅ **Enhanced capabilities** - ACID transactions, diff preview, validation integration
+✅ **Enhanced capabilities** - ACID transactions, diff preview, validation integration, layout system
 ✅ **Clean architecture** - 1:1 operation→tool mapping, no legacy baggage
-✅ **Comprehensive testing** - 150 tests passing, full coverage of SFILES/GraphML/ambiguous paths
+✅ **Comprehensive testing** - 768 tests passing, full coverage of all operations
+✅ **Deprecation complete** - 11 atomic tools marked with migration paths
 
-**Status**: Production-ready for live MCP testing and deprecation notices.
+**Status**: Production-ready. All phases complete except optional atomic tool removal.

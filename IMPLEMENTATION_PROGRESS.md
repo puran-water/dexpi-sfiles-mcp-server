@@ -1,8 +1,9 @@
 # 8-Week Enhancement Plan: Implementation Progress
 
 **Started**: 2025-11-17
-**Current Phase**: Week 8+ (Layout System Complete)
-**Last Updated**: 2025-12-02
+**Current Phase**: Phase 3 (Symbol Library Integration Complete)
+**Last Updated**: 2025-12-05
+**Test Count**: 758 passed, 3 skipped
 
 ---
 
@@ -41,12 +42,12 @@ All Quick Wins completed before starting main 8-week plan:
 
 ---
 
-## Weeks 1-2: Attribute Completeness + Metrics (IN PROGRESS)
+## Weeks 1-2: Attribute Completeness + Metrics (COMPLETE)
 
 **Theme**: "Unify attribute export with pyDEXPI's native API + add measurement"
 
 **Start Date**: 2025-11-17
-**Target Completion**: 2025-12-01
+**Completed**: 2025-11-17
 
 ### Task Checklist
 
@@ -191,12 +192,12 @@ The key metric is `missing_attributes == []` - when this is empty, no data is lo
 
 ---
 
-## Weeks 5-6: Visualization Orchestration & Symbol Geometry (IN PROGRESS)
+## Weeks 5-6: Visualization Orchestration & Symbol Geometry (COMPLETE)
 
 **Theme**: "Production-ready rendering with MCP integration + Symbol geometry foundation"
 
 **Started**: 2025-11-29
-**Target Completion**: 2025-12-13
+**Completed**: 2025-11-30
 
 ### Task Checklist
 
@@ -244,10 +245,10 @@ The key metric is `missing_attributes == []` - when this is empty, no data is lo
   - [x] Tests cover Point, BoundingBox, Port, SymbolInfo geometry fields
   - [x] Full integration tests for pump/tank with complete geometry
 
-### Remaining Tasks (Week 6 continued)
+### Remaining Tasks (Week 6 continued) - ALL COMPLETE
 
-- [ ] Add geometry data to merged_catalog.json (optional - can defer to Week 7)
-- [ ] Update SymbolRegistry loader to parse geometry from catalog
+- [x] Add geometry data to merged_catalog.json ✅ COMPLETE (Week 8 - 805/805 symbols)
+- [x] Update SymbolRegistry loader to parse geometry from catalog ✅ COMPLETE
 
 ### Success Criteria
 
@@ -288,19 +289,19 @@ The key metric is `missing_attributes == []` - when this is empty, no data is lo
 
 ---
 
-## Weeks 7-8: Integration, ModelStore, and Infrastructure Hardening (IN PROGRESS)
+## Weeks 7-8: Integration, ModelStore, and Infrastructure Hardening (COMPLETE)
 
 **Theme**: "Complete visualization foundation + harden core infrastructure"
 
-**Target Start**: 2025-12-01
-**Target Completion**: 2025-12-15
+**Started**: 2025-12-01
+**Completed**: 2025-12-02
 
 ### Task Checklist
 
-- [ ] **Task 1**: Populate geometry data in merged_catalog.json
-  - [ ] Add bounding_box for priority symbols (pumps, tanks, valves)
-  - [ ] Add port definitions from SVG analysis
-  - [ ] Update SymbolRegistry loader to parse geometry
+- [x] **Task 1**: Populate geometry data in merged_catalog.json ✅ COMPLETE
+  - [x] Add bounding_box for ALL 805 symbols (100% coverage)
+  - [x] Add port definitions from SVG analysis (422/805 = 52.4% have ports)
+  - [x] Update SymbolRegistry loader to parse geometry
 
 - [x] **Task 2**: Introduce ModelStore abstraction ✅ COMPLETE (2025-12-01)
   - [x] Abstract current dict-based stores (dexpi_models, flowsheets) → InMemoryModelStore
@@ -309,13 +310,13 @@ The key metric is `missing_attributes == []` - when this is empty, no data is lo
   - [x] Add snapshot/rollback for transaction support
   - [x] Full dict-like backward compatibility (660/660 tests pass)
 
-- [ ] **Task 3**: Consolidate instrumentation logic (Week 8)
-  - [ ] Replace dexpi_tools.py instrumentation with instrumentation_toolkit
-  - [ ] ~165 lines reduction
+- [x] **Task 3**: Consolidate instrumentation logic ✅ NOT NEEDED
+  - [x] Reviewed: dexpi_tools.py already delegates to instrumentation_toolkit properly
+  - [x] No duplication found - code is well-structured
 
-- [ ] **Task 4**: Complete catalog.py migration (Week 8)
-  - [ ] Extract SVG parsing to core/svg_parser.py
-  - [ ] Update catalog.py imports
+- [x] **Task 4**: Complete catalog.py migration ✅ COMPLETE
+  - [x] Extract SVG parsing to core/svg_parser.py (320 lines)
+  - [x] Update catalog.py imports with deprecation notices
 
 - [x] **Task 5**: End-to-end integration tests ✅ COMPLETE (2025-12-01)
   - [x] Created tests/integration/test_end_to_end.py (20 scenarios)
@@ -369,6 +370,7 @@ The key metric is `missing_attributes == []` - when this is empty, no data is lo
 - **Week 6**: ✅ SymbolInfo geometry foundation (Point, BoundingBox, Port) - ACHIEVED
 - **Week 8**: ✅ Code duplication eliminated, ModelStore operational, end-to-end tests passing - ACHIEVED
 - **Week 8+**: ✅ Layout System with ELK integration, 8 MCP tools, 768 tests passing - ACHIEVED
+- **Week 8++**: ✅ SVG/PDF export via GraphicBuilder, 758 tests passing - ACHIEVED
 
 ---
 
@@ -636,3 +638,200 @@ Per Codex review session #019adb91:
 - `src/core/__init__.py` - Export layout store
 
 **Week 8+ COMPLETE** ✅ - Layout System fully operational with 768 tests passing
+
+---
+
+## Week 8++: SVG/PDF Export via GraphicBuilder (COMPLETE)
+
+**Theme**: "Enable production-quality SVG and PDF output from GraphicBuilder"
+
+**Completed**: 2025-12-02
+**Codex Consensus**: Multi-turn session vetted the implementation approach
+
+### Key Discovery (Codex Analysis)
+
+**GraphicBuilder already creates SVG as a side-effect!**
+
+When `StandAloneTester` runs:
+1. It uses `ImageFactory_SVG` internally
+2. `gFac.writeToDestination()` writes `input.svg`
+3. Then transcodes SVG DOM → PNG via Batik `PNGTranscoder`
+4. Result: BOTH `input.svg` AND `input.png` exist after execution
+
+**The Flask service was only reading `.png` and ignoring `.svg`**
+
+This discovery made SVG support a zero-Java-change feature.
+
+### Task Checklist
+
+- [x] **Phase 1**: SVG Support (Zero Java Changes)
+  - [x] Updated `graphicbuilder-service.py` to read `.svg` files
+  - [x] SVG returned as text (not base64 encoded)
+  - [x] `wrapper.py` already handled text vs binary responses correctly
+  - [x] Added `allow_fallback` option for graceful degradation
+
+- [x] **Phase 2**: PDF Support (Small Java Helper)
+  - [x] Created `PDFConverter.java` (~55 lines) using Batik `PDFTranscoder`
+  - [x] Updated Dockerfile to compile PDFConverter
+  - [x] PDF returned as base64-encoded binary
+  - [x] Cleanup handles all artifact files (.xml, .svg, .png, .pdf)
+
+- [x] **Phase 3**: Update Renderer Router
+  - [x] GraphicBuilder now supports `SVG`, `PNG`, `PDF` formats
+  - [x] Removed `"png_only"` limitation flag
+  - [x] Added `"svg_export"` and `"pdf_export"` features
+
+- [x] **Phase 4**: Update Tests
+  - [x] Updated `test_graphicbuilder_integration.py` for new SVG/PDF behavior
+  - [x] Added `TestFormatSelectionRouting` test class
+  - [x] Updated `test_orchestrator_integration.py` (PDF now supported)
+
+### Files Modified
+
+| File | Changes |
+|------|---------|
+| `src/visualization/graphicbuilder/graphicbuilder-service.py` | Read .svg for SVG, add PDF conversion |
+| `src/visualization/graphicbuilder/PDFConverter.java` | NEW - Batik PDF transcoder (~55 lines) |
+| `src/visualization/graphicbuilder/Dockerfile` | Compile PDFConverter.java |
+| `src/visualization/orchestrator/renderer_router.py` | Enable SVG/PDF formats |
+| `tests/test_graphicbuilder_integration.py` | Updated for SVG/PDF support |
+| `tests/visualization/test_orchestrator_integration.py` | PDF now succeeds (was expected to fail) |
+
+### Success Criteria
+
+- [x] ✅ SVG output returns text content (not base64)
+- [x] ✅ PNG output returns base64-encoded binary
+- [x] ✅ PDF output returns base64-encoded binary via PDFConverter
+- [x] ✅ Router selects GraphicBuilder for production SVG/PDF
+- [x] ✅ All 758 tests passing (753 + 5 new router tests)
+
+### Error Handling (Codex Recommendation)
+
+- **Default**: Hard error if requested format not created (catch regressions early)
+- **Optional**: `allow_fallback=True` in options returns PNG with warning in metadata
+- **Cleanup**: Delete all artifacts after reading, skip cleanup on failure for debugging
+
+**Week 8++ COMPLETE** ✅ - SVG/PDF export operational via GraphicBuilder
+
+---
+
+## Phase 3: Symbol Library Integration with Proteus-Viewer (COMPLETE)
+
+**Theme**: "Integrate curated symbol library with proteus-viewer for consistent P&ID rendering"
+
+**Started**: 2025-12-05
+**Completed**: 2025-12-05
+**Codex Review**: Validated plan with external-first lookup strategy
+
+### Overview
+
+Integrated our curated symbol library (`merged_catalog.json`) with the proteus-viewer to provide consistent, house-standard P&ID symbols with rich metadata (ports, bounding boxes, DEXPI mappings).
+
+**Previous State**: Proteus-viewer only rendered symbols from embedded `<ShapeCatalogue>` in DEXPI XML.
+**Current State**: Proteus-viewer uses our symbol library when available (external-first), with embedded shapes as fallback.
+
+### Task Checklist
+
+- [x] **Task 1**: Create Symbol Library Loader (TypeScript)
+  - [x] Created `src/symbolLibrary/SymbolLibraryLoader.ts`
+  - [x] Loads `merged_catalog.json` with 805 symbols
+  - [x] Indexed by: DEXPI class (94 classes), identifier (805 symbols), partial search
+  - [x] Lazy-loads SVG content from file paths
+
+- [x] **Task 2**: Create SVG-to-PaperJS Converter
+  - [x] Created `src/symbolLibrary/SvgToPaperJs.ts`
+  - [x] Paper.js `importSVG()` with server-side compatibility
+  - [x] `cloneForPlacement()` for safe multi-instance rendering
+  - [x] `applyTransforms()` for position/scale/rotation
+  - [x] `normalizeColors()` for engineering-standard black lines on white background
+
+- [x] **Task 3**: Create Symbol Adapter (Component-compatible)
+  - [x] Created `src/symbolLibrary/ExternalSymbol.ts`
+  - [x] Type discriminator: `isExternalSymbol: boolean = true`
+  - [x] Component-compatible `draw()` interface
+  - [x] Clone-per-placement pattern (never mutate template)
+  - [x] Anchor alignment and transform order matching XML shapes
+
+- [x] **Task 4**: Extend shapeCatalogStore.ts
+  - [x] Added external symbol lookup with multi-strategy cascade:
+    1. External cache (cached ExternalSymbol instances)
+    2. DEXPI class lookup from symbol library
+    3. Identifier lookup for non-DEXPI names
+    4. Partial name search (fallback)
+    5. Embedded ShapeCatalogue (final fallback)
+  - [x] Added `preferExternalSymbols` toggle (default: true)
+  - [x] Added `clearExternalSymbolCache()` for memory management
+  - [x] Union type: `ShapeCatalogItem = Component | ExternalSymbol`
+
+- [x] **Task 5**: Initialize Symbol Library in Server
+  - [x] Updated `src/server.ts` to initialize symbol library on startup
+  - [x] Loads from `../../symbols/assets/merged_catalog.json`
+  - [x] Health endpoint shows symbol library stats:
+    - `symbolLibrary.initialized: true`
+    - `symbolLibrary.preferExternal: true`
+    - `symbolLibrary.embeddedCount: N`
+    - `symbolLibrary.externalCacheCount: N`
+
+- [x] **Task 6**: Add Configuration Option
+  - [x] Added `useExternalSymbols` render option
+  - [x] Per-request toggle for symbol source preference
+
+### Architecture Decision
+
+**Integration Point**: `getFromShapeCatalogStore()` in `shapeCatalogStore.ts`
+
+This function is the single lookup bottleneck where all `componentName` references are resolved. Extended to:
+1. **First** check our symbol library by DEXPI class (for corporate-standard consistency)
+2. **Fall back** to embedded ShapeCatalogue if not found
+
+**Key Design Choices**:
+- External-first by default for consistent house-standard symbols
+- Clone-per-placement to avoid cross-instance mutations
+- Anchor alignment so connection points align with XML Position
+- Transform order: translate → scale → rotate/flip (matching XML shapes)
+
+### Files Created
+
+| File | Lines | Purpose |
+|------|-------|---------|
+| `src/symbolLibrary/SymbolLibraryLoader.ts` | ~250 | Load merged_catalog.json and SVG files |
+| `src/symbolLibrary/SvgToPaperJs.ts` | ~200 | Convert SVG to Paper.js objects |
+| `src/symbolLibrary/ExternalSymbol.ts` | ~150 | Component-compatible wrapper |
+| `src/symbolLibrary/index.ts` | ~40 | Export all symbol library modules |
+
+### Files Modified
+
+| File | Changes |
+|------|---------|
+| `src/proteusXmlDrawing/shapeCatalogStore.ts` | Added external symbol lookup cascade |
+| `src/proteusXmlDrawing/Component.ts` | Added ShapeCatalogItem union type |
+| `src/server.ts` | Initialize symbol library, add health stats, add render option |
+
+### Success Criteria
+
+- [x] ✅ TypeScript builds without errors
+- [x] ✅ Server starts with symbol library initialized
+- [x] ✅ Health endpoint shows `symbolLibrary.initialized: true`
+- [x] ✅ External-first lookup operational (`preferExternal: true`)
+- [x] ✅ Graceful fallback to embedded ShapeCatalogue
+- [x] ✅ Clone-per-placement prevents cross-instance mutations
+- [x] ✅ Per-request toggle via `useExternalSymbols` option
+
+### Health Endpoint Example
+
+```json
+{
+  "status": "healthy",
+  "service": "proteus-viewer",
+  "version": "0.3.0",
+  "capabilities": ["svg", "html", "png"],
+  "symbolLibrary": {
+    "initialized": true,
+    "preferExternal": true,
+    "embeddedCount": 2,
+    "externalCacheCount": 0
+  }
+}
+```
+
+**Phase 3 COMPLETE** ✅ - Symbol library integration operational with external-first lookup

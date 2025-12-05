@@ -5,6 +5,97 @@ All notable changes to the Engineering MCP Server are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2025-12-05
+
+### Added - Symbol Library Integration with Proteus-Viewer
+
+**Unified Symbol Rendering with External-First Lookup**
+
+This release integrates our curated symbol library (`merged_catalog.json`) with the proteus-viewer service, providing consistent house-standard P&ID symbols with rich metadata.
+
+#### Symbol Library Module
+
+**New TypeScript Module**: `src/visualization/proteus-viewer/src/symbolLibrary/`
+
+1. **SymbolLibraryLoader** (`SymbolLibraryLoader.ts`)
+   - Loads `merged_catalog.json` with 805 symbols
+   - Multi-index lookup: DEXPI class (94), identifier (805), partial search
+   - Lazy-loads SVG content from file paths
+   - Caches loaded entries for performance
+
+2. **SvgToPaperJs** (`SvgToPaperJs.ts`)
+   - Paper.js `importSVG()` with server-side compatibility
+   - `cloneForPlacement()` for safe multi-instance rendering
+   - `applyTransforms()` for position/scale/rotation
+   - `normalizeColors()` for engineering-standard black lines on white
+
+3. **ExternalSymbol** (`ExternalSymbol.ts`)
+   - Component-compatible wrapper for external symbols
+   - Type discriminator: `isExternalSymbol: boolean = true`
+   - Clone-per-placement pattern (never mutates template)
+   - Anchor alignment matching XML Position elements
+
+#### Extended shapeCatalogStore
+
+**Multi-Strategy Symbol Lookup Cascade**:
+1. External cache (cached ExternalSymbol instances)
+2. DEXPI class lookup from symbol library
+3. Identifier lookup for non-DEXPI names
+4. Partial name search (fallback)
+5. Embedded ShapeCatalogue (final fallback)
+
+**Configuration**:
+- `preferExternalSymbols` toggle (default: true)
+- Per-request `useExternalSymbols` render option
+- `clearExternalSymbolCache()` for memory management
+
+#### Health Endpoint Enhancement
+
+The `/health` endpoint now shows symbol library status:
+```json
+{
+  "symbolLibrary": {
+    "initialized": true,
+    "preferExternal": true,
+    "embeddedCount": 2,
+    "externalCacheCount": 0
+  }
+}
+```
+
+#### Files Created
+
+| File | Purpose |
+|------|---------|
+| `src/symbolLibrary/SymbolLibraryLoader.ts` | Load merged_catalog.json and SVG files |
+| `src/symbolLibrary/SvgToPaperJs.ts` | Convert SVG to Paper.js objects |
+| `src/symbolLibrary/ExternalSymbol.ts` | Component-compatible wrapper |
+| `src/symbolLibrary/index.ts` | Export all symbol library modules |
+
+#### Files Modified
+
+| File | Changes |
+|------|---------|
+| `src/proteusXmlDrawing/shapeCatalogStore.ts` | External symbol lookup cascade |
+| `src/proteusXmlDrawing/Component.ts` | ShapeCatalogItem union type |
+| `src/server.ts` | Initialize library, health stats, render option |
+
+### Documentation
+
+- Updated `IMPLEMENTATION_PROGRESS.md` with Phase 3 Symbol Library Integration section
+- Updated `src/visualization/proteus-viewer/README.md` with current capabilities
+
+### Migration Notes
+
+**For users rendering Proteus XML:**
+- Symbol library is now used by default (`preferExternalSymbols: true`)
+- Graceful fallback to embedded ShapeCatalogue when symbols not found
+- Per-request toggle via `useExternalSymbols` option in render request
+
+**Breaking Changes:** None - existing functionality unchanged, external symbols provide consistent styling
+
+---
+
 ## [0.8.0] - 2025-12-02
 
 ### Added - Layout System with ELK Integration

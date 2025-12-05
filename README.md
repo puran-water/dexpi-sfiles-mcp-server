@@ -77,6 +77,30 @@ This repository prioritizes data fidelity over drawing aesthetics: the authorita
 
 ---
 
+## Dependencies
+
+### Core Libraries (Pinned Versions)
+
+This project depends on two research libraries from the Process Intelligence Research group:
+
+| Library | Version | Commit SHA | Notes |
+|---------|---------|------------|-------|
+| **pyDEXPI** | v1.1.0 (Sept 2025) | `174321e3575f1488e0fc533d5f61b27a822bd549` | DEXPI P&ID model library - stable equipment/piping APIs |
+| **SFILES2** | June 2025 | `fdc57617be9bcee319af5bb0249667189161dc87` | Flowsheet notation library - includes stream params on edges fix |
+
+These versions are pinned in `pyproject.toml` to ensure reproducible builds. If you need to upgrade:
+1. Test with the new commit locally
+2. Update the SHA in `pyproject.toml`
+3. Update this table
+4. Run full test suite (`pytest tests/`)
+
+**Known Upstream Issues:**
+- SFILES2 #12: `merge_HI_nodes`/`split_HI_nodes` bugs affect heat integration scenarios (workaround: guards in conversion code)
+- SFILES2 #10: MultiDiGraph support incomplete (affects parallel edges)
+- pyDEXPI: `ProteusSerializer.save()` is NotImplementedError (affects nozzle metadata export)
+
+---
+
 ## Installation & Quick Start
 
 1. **Clone & set up environment** (see [SETUP.md](SETUP.md) for full instructions):
