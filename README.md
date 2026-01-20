@@ -1,4 +1,7 @@
 # Engineering MCP Server
+
+> **⚠️ DEVELOPMENT STATUS: This project is under active development and is not yet production-ready. APIs, interfaces, and functionality may change without notice. Use at your own risk for evaluation and testing purposes only. Not recommended for production deployments.**
+
 ## Structured P&ID and Flowsheet Generation for LLM Agents
 
 The Engineering MCP Server exposes pyDEXPI (DEXPI P&IDs) and SFILES2 (BFD/PFD flowsheets) through Anthropic's Model Context Protocol so language-model agents can create, modify, analyze, and persist process-engineering diagrams entirely in machine-readable formats.
