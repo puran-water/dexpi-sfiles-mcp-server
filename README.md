@@ -58,7 +58,7 @@ This repository prioritizes data fidelity over drawing aesthetics: the authorita
 - `layout_save_to_file` / `layout_load_from_file` - Persist layouts to project files
 - `layout_delete` - Remove layout from store
 
-> **Phase 4 Update:** The consolidated tools (`model_create`, `model_load`, `model_save`, `model_tx_begin`, `model_tx_apply`, `model_tx_commit`, `schema_query`, `search_execute`, and `graph_modify`) are now **production-ready** and exposed by the MCP server. Legacy atomic tools remain available for backward compatibility. See [`docs/FEATURE_PARITY_MATRIX.md`](docs/FEATURE_PARITY_MATRIX.md) for migration guidance.
+> **Phase 4 Update:** The consolidated tools (`model_create`, `model_load`, `model_save`, `model_tx_begin`, `model_tx_apply`, `model_tx_commit`, `schema_query`, `search_execute`, and `graph_modify`) are now **implemented** and exposed by the MCP server. Legacy atomic tools remain available for backward compatibility. See [`docs/FEATURE_PARITY_MATRIX.md`](docs/FEATURE_PARITY_MATRIX.md) for migration guidance.
 
 > **Layout System Update (Dec 2025):** Complete Layout Layer with ELK integration. Persistent Node.js worker for efficient layout computation, etag-based concurrency control, file persistence alongside models. See [`docs/LAYOUT_SYSTEM.md`](docs/LAYOUT_SYSTEM.md) for details.
 
@@ -75,7 +75,7 @@ This repository prioritizes data fidelity over drawing aesthetics: the authorita
 | `src/layout/engines/elk.py` | Persistent ELK worker integration for layout computation.
 | `src/persistence/project_persistence.py` | Saves/loads models, writes metadata, GraphML, and Plotly HTML artifacts, and performs git commits.
 | `src/templates/*.py` + `library/patterns/*.yaml` | Parametric template engine and YAML catalog (4 templates).
-| `src/managers/transaction_manager.py` & `src/registry/operation_registry.py` | ACID transaction infrastructure for `model_tx_*` tools (Phase 4 complete, production-ready).
+| `src/managers/transaction_manager.py` & `src/registry/operation_registry.py` | ACID transaction infrastructure for `model_tx_*` tools (Phase 4 complete).
 | `tests/` | Pytest suites covering graph export, template tooling, and TransactionManager behavior.
 
 ---
