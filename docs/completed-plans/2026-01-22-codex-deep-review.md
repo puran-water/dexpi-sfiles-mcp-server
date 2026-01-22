@@ -119,3 +119,42 @@ model_tx_commit(transaction_id=tx_id)
 - `/home/hvksh/skills/pfd-skill/SKILL.md` - Correct signatures, transaction examples
 - `/home/hvksh/skills/instrument-io-skill/SKILL.md` - Correct signatures
 - `/home/hvksh/skills/dexpi-schedules-skill/` - New skill (SKILL.md, references/, scripts/)
+
+---
+
+## Additional Fixes (2026-01-22 Session 2)
+
+The following additional issues from the deep review were implemented:
+
+### Phase 1: Critical Fixes
+
+| Fix | Location | Description |
+|-----|----------|-------------|
+| **Nozzle connectivity logic** | `src/core/conversion.py:922-941`, `src/tools/dexpi_tools.py:879-916` | Removed checks for non-existent `Nozzle.pipingConnection` attribute. Added tracking set for connected nozzles. |
+| **Silent exception swallowing** | `src/core/conversion.py:973-983` | Added `logger.warning()` to report piping connection failures instead of silent `pass`. |
+| **Operation registry attributes** | `src/registry/operations/dexpi_operations.py:184-203` | Fixed `segment.segmentId` → `segment.id` and `pns.pipingNetworkSegments` → `pns.segments`. |
+| **Import path for resolve_process_type** | `src/registry/operations/sfiles_operations.py:54` | Fixed import from `...tools.sfiles_tools` to `...utils.process_resolver`. |
+
+### Phase 2: High-Value Improvements
+
+| Fix | Location | Description |
+|-----|----------|-------------|
+| **merge_HI_nodes=False** | `src/core/conversion.py:238-243`, `src/tools/sfiles_tools.py:1077-1083,1129-1140` | Explicitly pass `merge_HI_nodes=False` to prevent silent failures on complex flowsheets. Used two-step Flowsheet pattern. |
+| **DEXPI→SFILES format** | `src/core/conversion.py:740-822` | Rewrote to use `Flowsheet.convert_to_sfiles()` for proper SFILES2 output instead of legacy arrow notation. |
+| **Dependency alignment** | `requirements.txt:54-56` | Aligned pyDEXPI version with `pyproject.toml` (commit `174321e`). |
+
+### Phase 3: Cleanup
+
+| Fix | Location | Description |
+|-----|----------|-------------|
+| **Hardcoded path** | `src/utils/process_resolver.py:9-49` | Replaced absolute path with multi-location search (relative → env var → legacy with warning). |
+
+### Verification
+
+All modified files pass Python syntax checking:
+```bash
+python3 -m py_compile src/core/conversion.py src/tools/dexpi_tools.py \
+  src/tools/sfiles_tools.py src/registry/operations/sfiles_operations.py \
+  src/registry/operations/dexpi_operations.py src/utils/process_resolver.py
+# Result: All files compile successfully
+```

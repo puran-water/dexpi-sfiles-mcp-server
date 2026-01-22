@@ -1077,8 +1077,10 @@ class SfilesTools:
             # Convert DEXPI to SFILES string via core engine
             sfiles_string = engine.dexpi_to_sfiles(dexpi_model)
 
-            # Create Flowsheet object from SFILES string (proper SFILES2 API)
-            flowsheet = Flowsheet(sfiles_in=sfiles_string)
+            # Create Flowsheet using two-step pattern to control merge_HI_nodes
+            # The constructor Flowsheet(sfiles_in=...) cannot pass merge_HI_nodes=False
+            flowsheet = Flowsheet()
+            flowsheet.create_from_sfiles(sfiles_string, merge_HI_nodes=False)
 
             # Store the flowsheet
             if not flowsheet_id:
@@ -1127,10 +1129,14 @@ class SfilesTools:
         try:
             # Get SFILES representation
             if sfiles_string:
-                # Parse SFILES string using Flowsheet constructor
-                # The constructor automatically calls SFILES_parser() when sfiles_in is provided
+                # Parse SFILES string using two-step pattern
+                # (cannot pass merge_HI_nodes=False through constructor)
                 original_string = sfiles_string.strip()
-                temp_flowsheet = Flowsheet(sfiles_in=original_string)
+                temp_flowsheet = Flowsheet()
+                temp_flowsheet.create_from_sfiles(original_string, merge_HI_nodes=False)
+                # Ensure sfiles_list is populated
+                if not hasattr(temp_flowsheet, 'sfiles_list') or not temp_flowsheet.sfiles_list:
+                    temp_flowsheet.SFILES_parser()
                 sfiles_list = temp_flowsheet.sfiles_list
             elif flowsheet_id:
                 # Get from stored flowsheet

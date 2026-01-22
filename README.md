@@ -192,84 +192,27 @@ Each template exposes typed parameters (see `template_get_schema`) and can be in
 
 ---
 
-## Roadmap & Completed Work
+## Development Status
 
-**Phase 2 (Completed):** Complete pyDEXPI Component Coverage
-- ✅ ComponentRegistry integration – Unified registry for all 272 pyDEXPI classes
-- ✅ 5.3x equipment expansion – From ~30 to 159 equipment types
-- ✅ Dual naming support – Both SFILES aliases and DEXPI class names accepted
-- ✅ Complete piping coverage – All 79 piping types now available
-- ✅ Complete instrumentation – All 34 instrumentation types create correct pyDEXPI classes
-- ✅ 46/46 tests passing (22 registry + 12 schema + 12 other)
-- ✅ User documentation: [Equipment Catalog](docs/EQUIPMENT_CATALOG.md), [Migration Guide](docs/USER_MIGRATION_GUIDE.md), [Usage Examples](docs/MCP_TOOL_EXAMPLES.md)
-- ✅ Zero breaking changes – 100% backward compatible
+For the complete development roadmap including completed phases and planned work, see **[ROADMAP.md](ROADMAP.md)**.
 
-**Phase 3 (Completed):** Symbol Mapping for Visualization
-- ✅ High-visibility components mapped – 42 targets (valves, rotating equipment, instrumentation)
-- ✅ Long-tail coverage completed – 185/272 components mapped (68.0% coverage)
-- ✅ 100% instrumentation coverage (34/34), 85% piping (67/79), 53% equipment (84/159)
-- ✅ Production-ready per Codex review – Remaining 87 placeholders are specialized/abstract components
-- ✅ SymbolMapper extended – 168 new mappings (24 → 192 total in KNOWN_MAPPINGS)
-- ✅ Analysis tools created – `scripts/analyze_symbol_gaps.py`, `scripts/suggest_symbol_mappings.py`
-- ✅ Documentation: [`docs/PHASE3_PASS1_COMPLETE.md`](docs/PHASE3_PASS1_COMPLETE.md), [`docs/PHASE3_PASS2_COMPLETE.md`](docs/PHASE3_PASS2_COMPLETE.md)
-- ✅ All 22 ComponentRegistry tests passing, zero breaking changes
+### Recent Highlights
 
-**Phase 4 (Completed):** Tool consolidation and transaction support
-- ✅ `model_create`, `model_load`, `model_save` – Unified model lifecycle (replaces 9 legacy tools)
-- ✅ `model_tx_begin`, `model_tx_apply`, `model_tx_commit` – ACID transactions for atomic multi-operation changes
-- ✅ `schema_query` – Unified schema introspection (replaces 4 legacy tools)
-- ✅ `search_execute` – Unified search interface (replaces 6 legacy tools)
-- ✅ `graph_modify` – Tactical graph modifications (10 actions available)
-- ✅ 150/150 tests passing with full coverage of consolidated tools
-- ✅ Live MCP testing validated all 12 consolidated tools
-- ✅ Migration guide: [`docs/FEATURE_PARITY_MATRIX.md`](docs/FEATURE_PARITY_MATRIX.md)
+- **Codex Deep Review (January 2026):** Core conversion fixes including SFILES2 native parsing, proper piping connections, and pyDEXPI API corrections. See [`docs/completed-plans/2026-01-22-codex-deep-review.md`](docs/completed-plans/2026-01-22-codex-deep-review.md).
 
-**Phase 5 Week 3 (Completed):** Symbol Registry + Tool Refactor
-- ✅ Symbol Registry Consolidation – Created `src/core/symbol_resolver.py` with 3 capabilities (actuated variants, fuzzy matching, validation)
-- ✅ Replaced `src/visualization/symbols/mapper.py` with deprecation wrapper
-- ✅ Added 31 comprehensive tests for SymbolResolver (all passing)
-- ✅ Routed instrumentation to `instrumentation_toolkit` – Modified `src/tools/dexpi_tools.py` to use pyDEXPI toolkits
-- ✅ Replaced component lookup with `model_toolkit` – Removed manual traversal (27 lines → 16 lines)
-- ✅ Documented `dexpi_introspector` relationship – ACTIVE, complementary to base_model_utils
-- ✅ Full test suite: 437 passed, 3 skipped, zero breaking changes
+- **Layout System (December 2025):** Complete ELK-based automatic layout with 8 MCP tools, optimistic concurrency, and file persistence. See [`docs/LAYOUT_SYSTEM.md`](docs/LAYOUT_SYSTEM.md).
 
-**Phase 5 Week 4 (Completed):** GraphicBuilder Integration
-- ✅ GitLab source pinning – Dockerfile with ARG-based version pinning, Java 8 compatible
-- ✅ Service integration – Fixed Flask wrapper to work with GraphicBuilder CLI limitations
-- ✅ Validation with DEXPI TrainingTestCases – PNG rendering validated (6000x5276 output)
-- ✅ Comprehensive documentation – [`README.md`](src/visualization/graphicbuilder/README.md) (420+ lines) with CLI limitations documented
-- ✅ Test coverage – 17 tests (15 passing, 2 skipped pending Proteus export)
-- ✅ Router integration – Pre-existing, functional, fallback tested
-- ✅ Symbol library – 701 NOAKADEXPI symbols mounted
-- **Status:** Functional for PNG rendering, SVG/PDF pending Java API integration
+- **Tool Consolidation (Phase 4):** 58 legacy tools consolidated into 12 unified tools with ACID transaction support. See [`docs/FEATURE_PARITY_MATRIX.md`](docs/FEATURE_PARITY_MATRIX.md).
 
-**Week 8+ (Completed):** Layout System with ELK Integration
-- ✅ Complete Layout Layer – LayoutMetadata schema, LayoutStore, ELK engine integration
-- ✅ Persistent ELK Worker – Node.js worker process with request/response protocol (Codex Consensus #019adb91)
-- ✅ 8 MCP Tools – layout_compute, layout_get, layout_update, layout_validate, layout_list, layout_save_to_file, layout_load_from_file, layout_delete
-- ✅ Optimistic Concurrency – Etag-based updates with ETAG_MISMATCH error handling
-- ✅ File Persistence – Layouts stored alongside models in project structure
-- ✅ 39 Layout Tests – Full coverage of schema, store, engine, and MCP tools
-- ✅ 768 Total Tests Passing
-- **Documentation:** [`docs/LAYOUT_SYSTEM.md`](docs/LAYOUT_SYSTEM.md)
+### Key Documentation
 
-**Codex Deep Review (Completed January 2026):**
-A comprehensive Codex review (gpt-5.2 xhigh) identified and fixed core conversion issues:
-- ✅ SFILES2 native parsing via `Flowsheet.create_from_sfiles()` (replaces custom regex)
-- ✅ Proper piping connections using `piping_toolkit.connect_piping_network_segment()` with nozzles
-- ✅ ConceptualModel field preservation via in-place mutation
-- ✅ MLGraphLoader validation standardization across all tools
-- ✅ Companion skills (bfd-skill, pfd-skill, instrument-io-skill) updated with correct MCP tool signatures
-- ✅ New dexpi-schedules-skill for extracting equipment/instrument/line/valve schedules
-- **Documentation:** [`docs/completed-plans/2026-01-22-codex-deep-review.md`](docs/completed-plans/2026-01-22-codex-deep-review.md)
-
-**Planned Work:**
-1. **ProteusXMLDrawing Integration** – Fork `src/visualization/proteus-viewer/` backend with text/spline fixups, WebSocket/live update path, expose through MCP visualize tools.
-2. **SFILES2 Visualization** – Expose `SFILES2.visualize_flowsheet()` via `src/tools/sfiles_tools.py`, ship stream/unit tables + OntoCape tags in outputs.
-3. **Additional templates** – Library currently has 4 patterns; expansion to 5+ and beyond is tracked in `docs/templates/template_system.md`.
-4. **Rendering Integration** – Wire Layout Layer into visualization pipeline for coordinate-based rendering.
-
-Refer to [`IMPLEMENTATION_PROGRESS.md`](IMPLEMENTATION_PROGRESS.md) for detailed progress tracking.
+| Document | Purpose |
+|----------|---------|
+| [ROADMAP.md](ROADMAP.md) | Development progress and plans |
+| [SETUP.md](SETUP.md) | Installation guide |
+| [docs/EQUIPMENT_CATALOG.md](docs/EQUIPMENT_CATALOG.md) | Complete equipment catalog |
+| [docs/USER_MIGRATION_GUIDE.md](docs/USER_MIGRATION_GUIDE.md) | Migration from legacy tools |
+| [docs/MCP_TOOL_EXAMPLES.md](docs/MCP_TOOL_EXAMPLES.md) | Usage examples |
 
 ---
 

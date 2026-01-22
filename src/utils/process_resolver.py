@@ -7,11 +7,44 @@ from difflib import get_close_matches
 import re
 
 def load_process_hierarchy() -> Dict[str, Any]:
-    """Load process units hierarchy from JSON file."""
-    hierarchy_path = "/home/hvksh/processeng/process_units_hierarchy.json"
+    """Load process units hierarchy from JSON file.
+
+    Looks for the file in the following locations (in order):
+    1. src/config/process_units_hierarchy.json (relative to package)
+    2. PROCESS_HIERARCHY_PATH environment variable
+    3. Legacy path (for backward compatibility during migration)
+    """
+    # Try relative path first (preferred)
+    config_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "config")
+    hierarchy_path = os.path.join(config_dir, "process_units_hierarchy.json")
+
+    # Check environment variable override
     if not os.path.exists(hierarchy_path):
-        raise FileNotFoundError(f"Process hierarchy file not found: {hierarchy_path}")
-    
+        env_path = os.environ.get("PROCESS_HIERARCHY_PATH")
+        if env_path and os.path.exists(env_path):
+            hierarchy_path = env_path
+
+    # Legacy fallback (emit warning if used)
+    if not os.path.exists(hierarchy_path):
+        legacy_path = os.path.expanduser("~/processeng/process_units_hierarchy.json")
+        if os.path.exists(legacy_path):
+            import warnings
+            warnings.warn(
+                f"Using legacy hierarchy path: {legacy_path}. "
+                f"Please move file to {config_dir}/process_units_hierarchy.json",
+                DeprecationWarning,
+                stacklevel=2
+            )
+            hierarchy_path = legacy_path
+
+    if not os.path.exists(hierarchy_path):
+        raise FileNotFoundError(
+            f"Process hierarchy file not found. Searched:\n"
+            f"  - {config_dir}/process_units_hierarchy.json\n"
+            f"  - PROCESS_HIERARCHY_PATH environment variable\n"
+            f"  - ~/processeng/process_units_hierarchy.json"
+        )
+
     with open(hierarchy_path, 'r') as f:
         return json.load(f)
 

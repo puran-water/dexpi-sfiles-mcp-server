@@ -51,7 +51,7 @@ async def add_unit_handler(model: Any, params: Dict[str, Any]) -> OperationResul
             # For BFD/PFD, this would use the process hierarchy
             if hasattr(model, 'type') and model.type == "BFD":
                 # BFD mode: use semantic IDs
-                from ...tools.sfiles_tools import resolve_process_type
+                from ...utils.process_resolver import resolve_process_type
                 process_info = resolve_process_type(unit_type, allow_custom=params.get("allow_custom", False))
 
                 if process_info:

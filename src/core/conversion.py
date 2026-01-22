@@ -237,8 +237,10 @@ class ConversionEngine:
         """
         try:
             # Create Flowsheet and parse using SFILES2's native parser
+            # Use merge_HI_nodes=False to prevent silent failures on complex flowsheets
+            # (see SFILES2 GitHub issue #12 for known bugs with HI node merging)
             flowsheet = self._Flowsheet()
-            flowsheet.create_from_sfiles(sfiles_string)
+            flowsheet.create_from_sfiles(sfiles_string, merge_HI_nodes=False)
 
             # Extract units from the NetworkX graph
             units = []
@@ -735,18 +737,52 @@ class ConversionEngine:
                         if from_tag and to_tag:
                             streams.append((from_tag.lower(), to_tag.lower()))
 
-        # Build SFILES string
+        # PHASE 2.2 FIX: Build proper SFILES2 output using Flowsheet.convert_to_sfiles()
+        # Instead of legacy '->'.join(result) arrow notation
+        import networkx as nx
+
+        # Build NetworkX graph from extracted data
+        nx_graph = nx.DiGraph()
+
+        # Add nodes with their types
+        for tag, unit_str in units:
+            # Extract type from unit_str format "tag[type]"
+            if '[' in unit_str and ']' in unit_str:
+                unit_type = unit_str.split('[')[1].rstrip(']')
+            else:
+                unit_type = 'equipment'
+            nx_graph.add_node(tag, unit_type=unit_type)
+
+        # Add edges
+        for from_tag, to_tag in streams:
+            nx_graph.add_edge(from_tag, to_tag)
+
+        # Handle case with no nodes
+        if nx_graph.number_of_nodes() == 0:
+            return ""
+
+        # Use Flowsheet to generate proper SFILES2 output
+        try:
+            flowsheet = self._Flowsheet()
+            flowsheet.state = nx_graph
+
+            # Convert to SFILES2 format
+            flowsheet.convert_to_sfiles(version=version, canonical=canonical)
+            sfiles_output = flowsheet.sfiles
+
+            if sfiles_output:
+                return sfiles_output
+
+        except Exception as e:
+            logger.warning(f"Flowsheet.convert_to_sfiles() failed: {e}, using fallback")
+
+        # Fallback: Generate basic SFILES2 parentheses format
+        # This is still better than arrow notation
         if canonical:
-            # Sort for deterministic output
             units.sort(key=lambda x: x[0])
             streams.sort()
 
-        # Create connection graph
-        if not streams:
-            # No connections, just list units
-            return ' '.join(u[1] for u in units)
-
-        # Build connected path
+        # Build connected path with SFILES2 format (unit-name) instead of tag[type]
         result = []
         processed = set()
 
@@ -761,11 +797,11 @@ class ConversionEngine:
         else:
             return ""
 
-        # Build path
-        unit_dict = dict(units)
+        # Build path using SFILES2 format: (unit-name)
         while current:
             if current not in processed:
-                result.append(unit_dict.get(current, f"{current}[unknown]"))
+                # Use SFILES2 format: (node-name) not tag[type]
+                result.append(f"({current})")
                 processed.add(current)
 
             # Find next connection
@@ -778,11 +814,12 @@ class ConversionEngine:
             current = next_unit
 
         # Add any unprocessed units
-        for unit_name, unit_str in units:
+        for unit_name, _ in units:
             if unit_name not in processed:
-                result.append(unit_str)
+                result.append(f"({unit_name})")
 
-        return '->'.join(result)
+        # SFILES2 format concatenates units directly, no arrows
+        return ''.join(result)
 
     def validate_round_trip(
         self,
@@ -919,6 +956,10 @@ class ConversionEngine:
         from_tag = getattr(from_equipment, 'tagName', 'UNKNOWN')
         to_tag = getattr(to_equipment, 'tagName', 'UNKNOWN')
 
+        # Track nozzles that have been used in this conversion
+        # (pyDEXPI Nozzles don't have pipingConnection attribute - they have nodes)
+        _used_nozzles = set()
+
         # Helper to get or create nozzle on equipment
         def _get_or_create_nozzle(equipment, tag_prefix: str, prefer_end: str = "last"):
             if not hasattr(equipment, 'nozzles') or equipment.nozzles is None:
@@ -929,8 +970,11 @@ class ConversionEngine:
                 list(equipment.nozzles)[::-1] if prefer_end == "last" else list(equipment.nozzles)
             )
             for noz in ordered:
-                # Check if nozzle is unconnected
-                if not hasattr(noz, 'pipingConnection') or noz.pipingConnection is None:
+                # Check if nozzle is unconnected (use our tracking set)
+                # Note: pyDEXPI Nozzle has 'nodes' attribute, not 'pipingConnection'
+                noz_id = id(noz)
+                if noz_id not in _used_nozzles:
+                    _used_nozzles.add(noz_id)
                     return noz
 
             # Create new nozzle if all are used
@@ -967,9 +1011,13 @@ class ConversionEngine:
         try:
             pt.connect_piping_network_segment(segment, from_nozzle, as_source=True)
             pt.connect_piping_network_segment(segment, to_nozzle, as_source=False)
-        except Exception:
-            # Fallback: toolkit may not be available, rely on segment ID encoding
-            pass
+            logger.debug(f"Connected segment {segment_id} via piping_toolkit")
+        except Exception as e:
+            # Log the failure but continue - segment ID encoding provides fallback
+            logger.warning(
+                f"Piping connection failed for {segment_id}: {e}. "
+                f"Using segment ID encoding as fallback for graph extraction."
+            )
 
         # Store stream tags if present (for heat exchangers, columns, etc.)
         if stream.tags:

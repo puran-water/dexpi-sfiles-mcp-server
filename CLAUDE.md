@@ -1,116 +1,152 @@
-# CLAUDE.md - MCP Client Guidelines
+# CLAUDE.md - Engineering MCP Server Development Guide
+
+> Concise instructions for AI coding agents developing this MCP server.
+
+## Quick Reference
+
+| Item | Path |
+|------|------|
+| **Active Plan** | `docs/active/` |
+| **Completed Plans** | `docs/completed-plans/` |
+| **Roadmap** | `ROADMAP.md` |
+| **Tests** | `pytest tests/` |
 
 ## Development Status
 
 **Last Updated:** 2026-01-22
 
-### Codex Deep Review (Completed)
+### Recent: Codex Deep Review (Completed)
 
-A comprehensive Codex review was completed on 2026-01-22 addressing core conversion issues and skills architecture. Key fixes:
+Core conversion issues fixed:
+- SFILES2 native parsing via `Flowsheet.create_from_sfiles(merge_HI_nodes=False)`
+- Piping connections via `piping_toolkit.connect_piping_network_segment()` with nozzles
+- pyDEXPI attribute names: `segment.id` (not `segmentId`), `pns.segments` (not `pipingNetworkSegments`)
+- Nozzle tracking via `_used_nozzles` set (pyDEXPI has no `pipingConnection` attribute)
 
-- **SFILES2 Native Parsing** - `Flowsheet.create_from_sfiles()` replaces custom regex parser
-- **Piping Connections** - Uses `piping_toolkit.connect_piping_network_segment()` with nozzles
-- **ConceptualModel Preservation** - In-place mutation preserves all fields
-- **MLGraphLoader Integration** - Standardized validation pattern across tools
-- **Skills Updates** - All companion skills use correct MCP tool signatures
-
-See [`docs/completed-plans/2026-01-22-codex-deep-review.md`](docs/completed-plans/2026-01-22-codex-deep-review.md) for full details.
+See `docs/completed-plans/2026-01-22-codex-deep-review.md` for details.
 
 ---
 
-## Project File Management
+## Critical Development Policies
 
-### IMPORTANT: File Overwriting Policy
+### 1. File Overwriting Policy
 
-When saving models to a project, **ALWAYS overwrite existing files** rather than creating new versions with different names. The git integration handles version control automatically.
-
-#### Correct Behavior ✅
-```
-# Save initially
-project_save(model_name="reactor_design", ...)  # Creates reactor_design.json
-
-# After modifications, save again with SAME name
-project_save(model_name="reactor_design", ...)  # Overwrites reactor_design.json
-```
-
-#### Incorrect Behavior ❌
-```
-# DO NOT create versioned files
-project_save(model_name="reactor_design_v2", ...)  # Wrong!
-project_save(model_name="reactor_design_modified", ...)  # Wrong!
-project_save(model_name="reactor_design_2024", ...)  # Wrong!
-```
-
-### Why This Matters
-
-1. **Git handles versioning** - Each save creates a git commit automatically
-2. **Clean project structure** - Avoids file proliferation
-3. **Clear history** - Git log shows all changes with timestamps and messages
-4. **Easy rollback** - Users can checkout any previous version via git
-
-### Best Practices
-
-1. **Use consistent model names** throughout a project
-2. **Write meaningful commit messages** that describe what changed
-3. **Let users decide** when to create checkpoints (via commit messages)
-4. **Trust git** to maintain the complete history
-
-### Example Workflow
+**ALWAYS overwrite existing files** when saving models. Git handles versioning.
 
 ```python
-# Initial creation
-project_init(project_path="/projects/plant_design")
-model_id = create_pid(project_name="Plant A", drawing_number="PID-001")
+# Correct - same name overwrites
+project_save(model_name="reactor_design", ...)  # Creates file
+project_save(model_name="reactor_design", ...)  # Overwrites file
 
-# First save
-project_save(
-    model_name="main_pid",  # Remember this name!
-    commit_message="Initial P&ID with feed section"
-)
-
-# Make changes...
-add_equipment(model_id, ...)
-
-# Save again with SAME name
-project_save(
-    model_name="main_pid",  # Same name - overwrites file
-    commit_message="Added reactor section"
-)
-
-# More changes...
-add_instrumentation(model_id, ...)
-
-# Save again with SAME name
-project_save(
-    model_name="main_pid",  # Same name - overwrites file
-    commit_message="Added control loops"
-)
+# WRONG - never version filenames
+project_save(model_name="reactor_design_v2", ...)  # Don't do this
 ```
 
-The result is ONE file (`main_pid.json`) with full history in git, not three separate files.
+### 2. pyDEXPI API Usage
+
+```python
+# Nozzle connectivity - use tracking set, not non-existent attribute
+_used_nozzles = set()
+if id(nozzle) not in _used_nozzles:
+    _used_nozzles.add(id(nozzle))
+
+# Piping connections
+from pydexpi.toolkits import piping_toolkit as pt
+pt.connect_piping_network_segment(segment, nozzle, as_source=True)
+
+# Segment attributes
+segment = PipingNetworkSegment(id=line_number)  # Not segmentId
+pns.segments.append(segment)  # Not pipingNetworkSegments
+```
+
+### 3. SFILES2 API Usage
+
+```python
+# Two-step pattern for merge_HI_nodes control
+flowsheet = Flowsheet()
+flowsheet.create_from_sfiles(sfiles_string, merge_HI_nodes=False)
+
+# NOT: Flowsheet(sfiles_in=sfiles_string)  # Can't pass merge_HI_nodes
+
+# Output format
+flowsheet.convert_to_sfiles(version="v2", canonical=True)
+```
+
+---
+
+## Project Structure
+
+```
+engineering-mcp-server/
+├── src/
+│   ├── server.py              # MCP server entry point
+│   ├── tools/                 # MCP tool implementations
+│   │   ├── dexpi_tools.py     # DEXPI P&ID tools
+│   │   ├── sfiles_tools.py    # SFILES BFD/PFD tools
+│   │   └── ...
+│   ├── core/                  # Core business logic
+│   │   ├── conversion.py      # SFILES <-> DEXPI conversion
+│   │   └── ...
+│   ├── registry/operations/   # Operation handlers
+│   └── utils/                 # Utilities
+├── tests/                     # Pytest test suite
+├── docs/
+│   ├── active/                # Active planning docs
+│   └── completed-plans/       # Completed work documentation
+├── ROADMAP.md                 # Development roadmap
+└── README.md                  # User-facing documentation
+```
+
+---
+
+## Testing
+
+```bash
+# Run all tests
+pytest tests/
+
+# Run with coverage
+pytest tests/ --cov=src
+
+# Run specific module
+pytest tests/test_core_layer_errors.py -v
+
+# Syntax check modified files
+python3 -m py_compile src/path/to/file.py
+```
+
+---
+
+## Dependencies
+
+| Library | Version | Notes |
+|---------|---------|-------|
+| pyDEXPI | `174321e` | v1.1.0 - stable APIs |
+| SFILES2 | `fdc5761` | June 2025 - stream params fix |
+
+Pinned in `pyproject.toml`. Keep `requirements.txt` in sync.
+
+---
 
 ## Visualization
 
-### Visualization Options
+| Format | Method | Use Case |
+|--------|--------|----------|
+| HTML (Plotly) | Auto on `project_save` | Topology analysis |
+| GraphML | `*_export_graphml` | External tools |
+| PNG | GraphicBuilder Docker | Engineering docs |
 
-The system provides multiple visualization formats:
-- **HTML**: Interactive plotly visualization with spring layout (current default)
-- **GraphML**: For topology analysis and external tools
-- **JSON**: Git-trackable state representation
-- **SVG/DXF**: Planned for Phase 1 of BFD system (Sprint 5) - will enable browser review and CAD tool integration
+SVG/DXF export planned but not yet implemented.
 
-**Current Status:** SVG generation for BFD/PFD diagrams is not yet implemented. Use HTML visualizations for interactive viewing or GraphML for external tool integration. SVG export will be added in a future update when BFD visualization system is complete.
+---
 
-## File Organization
+## File Organization for Projects
 
-Projects follow this structure:
 ```
 project_root/
-├── .git/           # Version control
-├── metadata.json   # Project metadata
-├── bfd/           # Block flow diagrams (SFILES)
-├── pfd/           # Process flow diagrams (SFILES)
-└── pid/           # P&ID diagrams (DEXPI)
+├── .git/           # Git handles versioning
+├── metadata.json
+├── bfd/            # Block flow diagrams (SFILES)
+├── pfd/            # Process flow diagrams (SFILES)
+└── pid/            # P&ID diagrams (DEXPI)
 ```
-
-Each diagram type has its own folder, but within each folder, **overwrite files with the same name** when saving updates.

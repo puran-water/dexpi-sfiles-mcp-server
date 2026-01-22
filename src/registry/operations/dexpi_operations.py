@@ -183,8 +183,7 @@ async def connect_components_handler(model: Any, params: Dict[str, Any]) -> Oper
 
         # Create piping connection (simplified)
         # Actual implementation would use piping_toolkit.graph_connect
-        segment = PipingNetworkSegment()
-        segment.segmentId = line_number
+        segment = PipingNetworkSegment(id=line_number)
 
         # Add segment to model
         if not model.conceptualModel.pipingNetworkSystems:
@@ -192,15 +191,16 @@ async def connect_components_handler(model: Any, params: Dict[str, Any]) -> Oper
 
         # Find or create piping network system
         if not model.conceptualModel.pipingNetworkSystems:
-            pns = PipingNetworkSystem()
+            pns = PipingNetworkSystem(id="piping_system_main", segments=[])
             model.conceptualModel.pipingNetworkSystems.append(pns)
         else:
             pns = model.conceptualModel.pipingNetworkSystems[0]
 
-        if not pns.pipingNetworkSegments:
-            pns.pipingNetworkSegments = []
+        # pyDEXPI uses 'segments' attribute, not 'pipingNetworkSegments'
+        if not hasattr(pns, 'segments') or pns.segments is None:
+            pns.segments = []
 
-        pns.pipingNetworkSegments.append(segment)
+        pns.segments.append(segment)
 
         return OperationResult(
             success=True,

@@ -876,13 +876,17 @@ class DexpiTools:
         if not to_equipment:
             raise ValueError(f"Component '{to_component}' not found (searched equipment and valves)")
         
+        # Track nozzles used in this connection operation
+        # Note: pyDEXPI Nozzle class has 'nodes' attribute, not 'pipingConnection'
+        _used_nozzles_in_model = getattr(model, '_used_nozzles', set())
+        model._used_nozzles = _used_nozzles_in_model
+
         # Helper to check if a nozzle is already used in a piping connection
         def _nozzle_is_connected(noz) -> bool:
             if noz is None:
                 return False
-            if hasattr(noz, 'pipingConnection'):
-                return noz.pipingConnection is not None
-            return False
+            # Use tracking set since Nozzle doesn't have pipingConnection attribute
+            return id(noz) in _used_nozzles_in_model
 
         # Helper to find an available nozzle or create a new one
         def _get_or_create_nozzle(equipment, tag_prefix: str, prefer_end: str = "last"):
@@ -896,6 +900,8 @@ class DexpiTools:
             )
             for noz in ordered:
                 if not _nozzle_is_connected(noz):
+                    # Mark as used before returning
+                    _used_nozzles_in_model.add(id(noz))
                     return noz
 
             # If all existing nozzles are used, create a new one
@@ -905,6 +911,8 @@ class DexpiTools:
                 subTagName=f"{tag_prefix}{next_index}"
             )
             equipment.nozzles.append(new_nozzle)
+            # Mark the new nozzle as used
+            _used_nozzles_in_model.add(id(new_nozzle))
             return new_nozzle
 
         # Get source (from) nozzle: prefer last (often outlet)
