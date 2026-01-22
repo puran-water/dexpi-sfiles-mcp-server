@@ -1,5 +1,23 @@
 # CLAUDE.md - MCP Client Guidelines
 
+## Development Status
+
+**Last Updated:** 2026-01-22
+
+### Codex Deep Review (Completed)
+
+A comprehensive Codex review was completed on 2026-01-22 addressing core conversion issues and skills architecture. Key fixes:
+
+- **SFILES2 Native Parsing** - `Flowsheet.create_from_sfiles()` replaces custom regex parser
+- **Piping Connections** - Uses `piping_toolkit.connect_piping_network_segment()` with nozzles
+- **ConceptualModel Preservation** - In-place mutation preserves all fields
+- **MLGraphLoader Integration** - Standardized validation pattern across tools
+- **Skills Updates** - All companion skills use correct MCP tool signatures
+
+See [`docs/completed-plans/2026-01-22-codex-deep-review.md`](docs/completed-plans/2026-01-22-codex-deep-review.md) for full details.
+
+---
+
 ## Project File Management
 
 ### IMPORTANT: File Overwriting Policy

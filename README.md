@@ -253,6 +253,16 @@ Each template exposes typed parameters (see `template_get_schema`) and can be in
 - ✅ 768 Total Tests Passing
 - **Documentation:** [`docs/LAYOUT_SYSTEM.md`](docs/LAYOUT_SYSTEM.md)
 
+**Codex Deep Review (Completed January 2026):**
+A comprehensive Codex review (gpt-5.2 xhigh) identified and fixed core conversion issues:
+- ✅ SFILES2 native parsing via `Flowsheet.create_from_sfiles()` (replaces custom regex)
+- ✅ Proper piping connections using `piping_toolkit.connect_piping_network_segment()` with nozzles
+- ✅ ConceptualModel field preservation via in-place mutation
+- ✅ MLGraphLoader validation standardization across all tools
+- ✅ Companion skills (bfd-skill, pfd-skill, instrument-io-skill) updated with correct MCP tool signatures
+- ✅ New dexpi-schedules-skill for extracting equipment/instrument/line/valve schedules
+- **Documentation:** [`docs/completed-plans/2026-01-22-codex-deep-review.md`](docs/completed-plans/2026-01-22-codex-deep-review.md)
+
 **Planned Work:**
 1. **ProteusXMLDrawing Integration** – Fork `src/visualization/proteus-viewer/` backend with text/spline fixups, WebSocket/live update path, expose through MCP visualize tools.
 2. **SFILES2 Visualization** – Expose `SFILES2.visualize_flowsheet()` via `src/tools/sfiles_tools.py`, ship stream/unit tables + OntoCape tags in outputs.

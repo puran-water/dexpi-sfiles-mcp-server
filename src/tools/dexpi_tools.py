@@ -649,7 +649,61 @@ class DexpiTools:
         if not model.conceptualModel.processInstrumentationFunctions:
             model.conceptualModel.processInstrumentationFunctions = []
 
-        model.conceptualModel.processInstrumentationFunctions.append(instrument)
+        # PHASE 2.3 FIX: Use instrumentation_toolkit when connecting to equipment
+        # This creates proper signal connections like _add_control_loop does
+        signal_connection_created = False
+        if connected_equipment:
+            try:
+                from pydexpi.toolkits import instrumentation_toolkit as it
+                from pydexpi.dexpi_classes.instrumentation import (
+                    ProcessInstrumentationFunction,
+                    ProcessSignalGeneratingFunction,
+                    MeasuringLineFunction
+                )
+
+                # Create a parent ProcessInstrumentationFunction if this is a transmitter
+                is_transmitter = (
+                    "transmitter" in instrument_type.lower() or
+                    instrument_type in ["LevelTransmitter", "PressureTransmitter",
+                                       "TemperatureTransmitter", "FlowTransmitter"]
+                )
+
+                if is_transmitter:
+                    # Create signal generating function for transmitter
+                    signal_gen = ProcessSignalGeneratingFunction(
+                        tagName=tag_name,
+                        signalType="4-20mA"
+                    )
+
+                    # Create measuring line
+                    measuring_line = MeasuringLineFunction(
+                        id=f"measuring_line_{tag_name}"
+                    )
+
+                    # Create parent loop function
+                    loop_function = ProcessInstrumentationFunction(
+                        id=f"loop_{tag_name}"
+                    )
+
+                    # Use toolkit to establish connection
+                    it.add_signal_generating_function_to_instrumentation_function(
+                        loop_function, signal_gen, measuring_line
+                    )
+
+                    model.conceptualModel.processInstrumentationFunctions.append(loop_function)
+                    signal_connection_created = True
+                else:
+                    # For non-transmitters, just append to the list
+                    model.conceptualModel.processInstrumentationFunctions.append(instrument)
+
+            except ImportError as e:
+                logger.warning(f"instrumentation_toolkit not available: {e}")
+                model.conceptualModel.processInstrumentationFunctions.append(instrument)
+            except Exception as e:
+                logger.warning(f"Failed to create signal connection: {e}")
+                model.conceptualModel.processInstrumentationFunctions.append(instrument)
+        else:
+            model.conceptualModel.processInstrumentationFunctions.append(instrument)
 
         # Check if this is a transmitter for backward compatibility
         is_transmitter = instrument_type in ["LevelTransmitter", "PressureTransmitter", "TemperatureTransmitter", "FlowTransmitter"] or "transmitter" in instrument_type.lower()
@@ -660,7 +714,8 @@ class DexpiTools:
             "connected_equipment": connected_equipment,
             "model_id": model_id,
             "pyDEXPI_class": component_def.dexpi_class.__name__,
-            "signal_generating": is_transmitter
+            "signal_generating": is_transmitter,
+            "signal_connection_created": signal_connection_created
         })
     
     async def _add_control_loop(self, args: dict) -> dict:
@@ -951,11 +1006,28 @@ class DexpiTools:
                 issues.append("No equipment defined")
         
         # Comprehensive validation would include graph validation
+        # PHASE 2.2 FIX: Standardize on MLGraphLoader behavior
         if validation_level == "comprehensive":
             try:
-                # Convert to graph and validate
+                # Convert to graph using MLGraphLoader
                 graph = self.graph_loader.dexpi_to_graph(model)
-                self.graph_loader.validate_graph_format(graph)
+
+                # Validate graph format - handle different API signatures
+                if hasattr(self.graph_loader, 'validate_graph_format'):
+                    # Try without args first (newer API)
+                    try:
+                        self.graph_loader.validate_graph_format()
+                    except TypeError:
+                        # Fall back to passing graph (older API)
+                        self.graph_loader.validate_graph_format(graph)
+
+                # Additional topology checks
+                import networkx as nx
+                if not nx.is_weakly_connected(graph):
+                    issues.append(f"Graph has {nx.number_weakly_connected_components(graph)} disconnected components")
+                if list(nx.isolates(graph)):
+                    issues.append(f"Graph has {len(list(nx.isolates(graph)))} isolated nodes")
+
             except Exception as e:
                 issues.append(f"Graph validation failed: {str(e)}")
         

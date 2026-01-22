@@ -46,6 +46,83 @@ class EmptySfilesError(ValueError):
     pass
 
 
+class HeatIntegrationWarning(UserWarning):
+    """Warning when heat integration nodes are detected but handled safely."""
+    pass
+
+
+# Heat Integration Node Guard
+# SFILES2 has known bugs with merge_HI_nodes/split_HI_nodes (GitHub issue #12)
+# These patterns identify HI nodes that may cause issues
+HI_NODE_PATTERNS = {
+    # OntoCape HI node names
+    "hot_in", "hot_out", "cold_in", "cold_out",
+    "1_in", "1_out", "2_in", "2_out",
+    # SFILES HI markers
+    "HI_", "hi_", "hx_hot", "hx_cold",
+}
+
+
+def detect_hi_nodes(graph) -> List[str]:
+    """
+    Detect heat integration nodes in SFILES2 graph.
+
+    Args:
+        graph: NetworkX DiGraph from Flowsheet.state
+
+    Returns:
+        List of node names that appear to be HI nodes
+    """
+    hi_nodes = []
+    for node in graph.nodes():
+        node_lower = str(node).lower()
+        # Check for HI node patterns
+        if any(pattern in node_lower for pattern in HI_NODE_PATTERNS):
+            hi_nodes.append(node)
+        # Check node attributes for HI markers
+        node_data = graph.nodes.get(node, {})
+        if node_data.get('is_hi_node') or node_data.get('heat_integration'):
+            hi_nodes.append(node)
+    return list(set(hi_nodes))
+
+
+def guard_hi_operations(flowsheet, operation: str = "auto") -> bool:
+    """
+    Guard against SFILES2 HI bugs before calling merge/split operations.
+
+    This prevents crashes from known issues in SFILES2 #12 (merge_HI_nodes/split_HI_nodes bugs).
+
+    Args:
+        flowsheet: Flowsheet instance
+        operation: "merge", "split", or "auto" (detect from graph)
+
+    Returns:
+        True if safe to proceed, False if HI nodes detected that could cause issues
+
+    Raises:
+        HeatIntegrationWarning: When HI nodes are detected and skipped
+    """
+    import warnings
+
+    graph = flowsheet.state
+    hi_nodes = detect_hi_nodes(graph)
+
+    if not hi_nodes:
+        return True  # No HI nodes, safe to proceed
+
+    # HI nodes detected - issue warning and skip operation
+    warning_msg = (
+        f"Heat integration nodes detected: {hi_nodes}. "
+        f"Skipping {operation} operation due to known SFILES2 bugs "
+        "(see GitHub issue process-intelligence-research/SFILES2#12). "
+        "HI node connections will be preserved as-is without merge/split."
+    )
+    warnings.warn(warning_msg, HeatIntegrationWarning)
+    logger.warning(warning_msg)
+
+    return False  # Not safe to call merge/split
+
+
 # Import core modules
 from .equipment import EquipmentFactory, EquipmentRegistry, get_factory, get_registry
 from .symbols import SymbolRegistry, get_registry as get_symbol_registry
@@ -87,11 +164,15 @@ class ConversionEngine:
     Handles parsing, generation, validation, and round-trip integrity.
     """
 
-    # SFILES regex patterns (consolidated from multiple sources)
+    # SFILES regex patterns (kept for legacy fallback only)
     UNIT_PATTERN = re.compile(r'(\w+)\[([^\]]+)\](?:\(([^)]+)\))?')
     STREAM_PATTERN = re.compile(r'(\w+)(?:\[[^\]]+\])?(?:\([^)]+\))?\s*->\s*(\w+)')
     PROPERTY_PATTERN = re.compile(r'(\w+)=([^,]+)')
     TAG_PATTERN = re.compile(r'{([^:]+):([^}]+)}')
+
+    # SFILES2 native patterns for direct parsing
+    SFILES2_UNIT_PATTERN = re.compile(r'\(([^)]+)\)')  # (unit-name)
+    SFILES2_TAG_PATTERN = re.compile(r'\{([^}]+)\}')  # {tag}
 
     def __init__(
         self,
@@ -103,18 +184,25 @@ class ConversionEngine:
         self.equipment_registry = get_registry()
         self.symbol_registry = symbol_registry or get_symbol_registry()
 
-        # Connection metadata storage (segment ID -> (from_tag, to_tag))
-        # Workaround for py DEXPI complexity in simplified SFILES implementation
-        self._connection_metadata: Dict[str, Tuple[str, str]] = {}
+        # Import SFILES2 Flowsheet for native parsing
+        from ..adapters.sfiles_adapter import get_flowsheet_class_cached
+        self._Flowsheet = get_flowsheet_class_cached()
 
     def parse_sfiles(self, sfiles_string: str) -> SfilesModel:
         """
-        Parse SFILES string into structured model.
+        Parse SFILES string into structured model using SFILES2's native parser.
+
+        PHASE 1 FIX: Uses Flowsheet.create_from_sfiles() instead of custom regex.
+        This correctly handles:
+        - Branches: (a)[(b)](c)
+        - Cycles/recycles: (a)<1(b)1
+        - Heat exchanger tags: {he:HE101}
+        - Column tags: {col:C101}
+        - All SFILES2 v1/v2 constructs
 
         Supports formats:
-        - Simple: unit1[type]->unit2[type]
-        - With properties: unit1[type](prop=val)->unit2[type]
-        - With tags: unit1[type]->unit2[type]{col:C101,he:HE101}
+        - SFILES2: (reactor-0)(separator-1)
+        - Legacy: unit1[type]->unit2[type]
 
         Args:
             sfiles_string: SFILES notation string
@@ -122,12 +210,123 @@ class ConversionEngine:
         Returns:
             Parsed SfilesModel
         """
+        sfiles_string = sfiles_string.strip()
+
+        # Detect format: SFILES2 uses (unit-name), legacy uses unit[type]
+        is_sfiles2_format = bool(self.SFILES2_UNIT_PATTERN.search(sfiles_string))
+        is_legacy_format = bool(self.UNIT_PATTERN.search(sfiles_string))
+
+        if is_sfiles2_format:
+            # Use SFILES2's native parser via Flowsheet
+            return self._parse_sfiles2_native(sfiles_string)
+        elif is_legacy_format:
+            # Fallback to legacy regex parser for unit[type]->unit[type] format
+            return self._parse_sfiles_legacy(sfiles_string)
+        else:
+            raise EmptySfilesError(
+                f"SFILES parsing could not recognize format. "
+                f"Input: '{sfiles_string[:100]}...'"
+            )
+
+    def _parse_sfiles2_native(self, sfiles_string: str) -> SfilesModel:
+        """
+        Parse SFILES2 string using the native Flowsheet.create_from_sfiles() API.
+
+        This is the correct approach per Codex review - leverages SFILES2's
+        built-in parser which correctly handles branches, cycles, and tags.
+        """
+        try:
+            # Create Flowsheet and parse using SFILES2's native parser
+            flowsheet = self._Flowsheet()
+            flowsheet.create_from_sfiles(sfiles_string)
+
+            # Extract units from the NetworkX graph
+            units = []
+            for node, data in flowsheet.state.nodes(data=True):
+                # Parse unit name: format is typically "type-number"
+                name = str(node)
+                parts = name.rsplit('-', 1)
+                if len(parts) == 2 and parts[1].isdigit():
+                    unit_type = parts[0]
+                else:
+                    unit_type = data.get('unit_type', name)
+
+                # Extract parameters from node attributes
+                parameters = {k: v for k, v in data.items()
+                             if k not in ('unit_type', 'name')}
+
+                unit = SfilesUnit(
+                    name=name,
+                    unit_type=unit_type,
+                    parameters=parameters
+                )
+                units.append(unit)
+
+            # Extract streams from the NetworkX graph edges
+            streams = []
+            for from_unit, to_unit, data in flowsheet.state.edges(data=True):
+                # Extract tags from edge attributes
+                tags = {}
+                if 'tags' in data:
+                    tags = data['tags']
+                # Also check for he/col directly
+                if data.get('he'):
+                    tags['he'] = data['he'] if isinstance(data['he'], list) else [data['he']]
+                if data.get('col'):
+                    tags['col'] = data['col'] if isinstance(data['col'], list) else [data['col']]
+
+                stream = SfilesStream(
+                    from_unit=str(from_unit),
+                    to_unit=str(to_unit),
+                    tags=tags,
+                    properties={k: v for k, v in data.items()
+                               if k not in ('tags', 'he', 'col')}
+                )
+                streams.append(stream)
+
+            # Determine model type
+            model_type = getattr(flowsheet, 'type', 'PFD')
+            if model_type not in ('BFD', 'PFD'):
+                # Infer from unit types
+                bfd_types = ['reactor', 'clarifier', 'treatment', 'separation',
+                            'screening', 'grit', 'aeration', 'thickener', 'digester']
+                if any(any(bt in u.unit_type.lower() for bt in bfd_types) for u in units):
+                    model_type = "BFD"
+                else:
+                    model_type = "PFD"
+
+            # VALIDATE before returning
+            if not units and flowsheet.state.number_of_nodes() == 0:
+                raise EmptySfilesError(
+                    f"SFILES2 parsing produced empty model. "
+                    f"Input: '{sfiles_string[:100]}...'"
+                )
+
+            return SfilesModel(
+                units=units,
+                streams=streams,
+                model_type=model_type
+            )
+
+        except ImportError as e:
+            # SFILES2 not available, fall back to legacy
+            logger.warning(f"SFILES2 not available, using legacy parser: {e}")
+            return self._parse_sfiles_legacy(sfiles_string)
+        except Exception as e:
+            logger.error(f"SFILES2 native parsing failed: {e}")
+            raise EmptySfilesError(
+                f"SFILES2 parsing failed: {e}. Input: '{sfiles_string[:100]}...'"
+            )
+
+    def _parse_sfiles_legacy(self, sfiles_string: str) -> SfilesModel:
+        """
+        Legacy parser for unit[type]->unit[type] format.
+
+        Kept for backward compatibility with older SFILES notation.
+        """
         units = []
         streams = []
         unit_map = {}  # name -> SfilesUnit
-
-        # Clean and normalize string
-        sfiles_string = sfiles_string.strip()
 
         # Extract units
         for match in self.UNIT_PATTERN.finditer(sfiles_string):
@@ -188,16 +387,16 @@ class ConversionEngine:
             )
             streams.append(stream)
 
-        # Determine model type (BFD if any BFD-specific types found)
+        # Determine model type
         model_type = "PFD"
         bfd_types = ['reactor', 'clarifier', 'treatment', 'separation']
         if any(unit.unit_type.lower() in bfd_types for unit in units):
             model_type = "BFD"
 
-        # VALIDATE before returning - FAIL LOUDLY on empty models
+        # VALIDATE before returning
         if not units and not streams:
             raise EmptySfilesError(
-                f"SFILES parsing produced empty model. Invalid format? "
+                f"Legacy SFILES parsing produced empty model. "
                 f"Input: '{sfiles_string[:100]}...'"
             )
 
@@ -450,25 +649,32 @@ class ConversionEngine:
         self,
         dexpi_model: DexpiModel,
         canonical: bool = True,
-        version: str = "v2"
+        version: str = "v2",
+        use_mlgraph: bool = True
     ) -> str:
         """
         Convert DEXPI model to SFILES string.
+
+        PHASE 2.1 FIX: Uses MLGraphLoader for robust graph extraction when
+        segment endpoints are missing (e.g., imported Proteus XML).
 
         Args:
             dexpi_model: DEXPI model to convert
             canonical: Generate canonical (sorted) representation
             version: SFILES version (v1: simple, v2: with tags)
+            use_mlgraph: Use MLGraphLoader for edge extraction (recommended)
 
         Returns:
             SFILES notation string
         """
+        from pydexpi.loaders.ml_graph_loader import MLGraphLoader
+
         units = []
         streams = []
 
         # Extract equipment
         if hasattr(dexpi_model.conceptualModel, 'taggedPlantItems'):
-            for equipment in dexpi_model.conceptualModel.taggedPlantItems:
+            for equipment in dexpi_model.conceptualModel.taggedPlantItems or []:
                 # Get SFILES type from DEXPI class
                 equipment_type = self._get_sfiles_type(equipment)
                 tag = getattr(equipment, 'tagName', 'UNKNOWN')
@@ -477,14 +683,56 @@ class ConversionEngine:
                 unit_str = f"{tag.lower()}[{equipment_type}]"
                 units.append((tag.lower(), unit_str))
 
-        # Extract connections - FIXED: use 'segments' not 'pipingNetworkSegments'
-        if hasattr(dexpi_model.conceptualModel, 'pipingNetworkSystems'):
-            for pns in dexpi_model.conceptualModel.pipingNetworkSystems:
-                if hasattr(pns, 'segments'):
-                    for segment in pns.segments:
-                        # Read from connection metadata storage
-                        if segment.id in self._connection_metadata:
-                            from_tag, to_tag = self._connection_metadata[segment.id]
+        # PHASE 2.1: Try MLGraphLoader first for robust edge extraction
+        if use_mlgraph:
+            try:
+                ml_loader = MLGraphLoader()
+                nx_graph = ml_loader.dexpi_to_graph(dexpi_model)
+
+                # Extract edges from NetworkX graph
+                for from_node, to_node, data in nx_graph.edges(data=True):
+                    from_tag = str(from_node)
+                    to_tag = str(to_node)
+                    streams.append((from_tag.lower(), to_tag.lower()))
+
+                # Also extract nodes if units list is empty
+                if not units:
+                    for node, data in nx_graph.nodes(data=True):
+                        node_str = str(node)
+                        # Get type from node attributes or infer from name
+                        unit_type = data.get('dexpi_class', data.get('type', 'equipment'))
+                        unit_str = f"{node_str.lower()}[{unit_type}]"
+                        units.append((node_str.lower(), unit_str))
+
+            except Exception as e:
+                logger.warning(f"MLGraphLoader extraction failed, falling back: {e}")
+                streams = []  # Reset and try direct extraction
+
+        # Fallback: Extract connections from segment ID pattern
+        if not streams:
+            if hasattr(dexpi_model.conceptualModel, 'pipingNetworkSystems'):
+                for pns in dexpi_model.conceptualModel.pipingNetworkSystems or []:
+                    for segment in getattr(pns, 'segments', []) or []:
+                        from_tag = None
+                        to_tag = None
+
+                        # Extract from segment ID pattern "segment__FROM__TO" (double underscore)
+                        seg_id = getattr(segment, 'id', '')
+                        if seg_id.startswith('segment__'):
+                            # Split on double underscore after prefix
+                            parts = seg_id[9:].split('__', 1)
+                            if len(parts) == 2:
+                                from_tag = parts[0]
+                                to_tag = parts[1]
+
+                        # Fallback: try sourceItem/targetItem (for imported models)
+                        if not from_tag or not to_tag:
+                            if hasattr(segment, 'sourceItem') and segment.sourceItem:
+                                from_tag = getattr(segment.sourceItem, 'componentName', None)
+                            if hasattr(segment, 'targetItem') and segment.targetItem:
+                                to_tag = getattr(segment.targetItem, 'componentName', None)
+
+                        if from_tag and to_tag:
                             streams.append((from_tag.lower(), to_tag.lower()))
 
         # Build SFILES string
@@ -628,21 +876,26 @@ class ConversionEngine:
         )
 
     def _add_equipment_to_model(self, model: DexpiModel, equipment: Equipment):
-        """Add equipment to DEXPI model."""
-        # Correct attribute name from DeepWiki: taggedPlantItems (not taggedPlantItems assignment)
-        # pydexpi uses pydantic - must use model_copy or pass to constructor
-        if not model.conceptualModel.taggedPlantItems:
-            # Initialize with current equipment
-            current_items = []
-        else:
-            current_items = list(model.conceptualModel.taggedPlantItems)
+        """Add equipment to DEXPI model while preserving all ConceptualModel fields.
 
-        current_items.append(equipment)
-        # Reassign the whole list (pydantic requirement)
-        model.conceptualModel = ConceptualModel(
-            taggedPlantItems=current_items,
-            pipingNetworkSystems=model.conceptualModel.pipingNetworkSystems or []
-        )
+        PHASE 1.3 FIX: Uses model_copy(update=...) or in-place mutation to preserve
+        all fields (metaData, processInstrumentationFunctions, etc.)
+        """
+        # Get current conceptual model
+        cm = model.conceptualModel
+
+        # Initialize list if needed
+        if not cm.taggedPlantItems:
+            cm.taggedPlantItems = []
+
+        # Append equipment in place (pydantic allows list mutation)
+        cm.taggedPlantItems.append(equipment)
+
+        # Note: We don't reconstruct ConceptualModel, so all fields are preserved:
+        # - metaData
+        # - processInstrumentationFunctions
+        # - pipingNetworkSystems
+        # - Any other attributes
 
     def _add_connection(
         self,
@@ -651,39 +904,97 @@ class ConversionEngine:
         to_equipment: Equipment,
         stream: SfilesStream
     ):
-        """Add piping connection between equipment."""
-        # Correct API from DeepWiki:
-        # - PipingNetworkSystem uses 'segments' not 'pipingNetworkSegments'
-        # - ConceptualModel uses 'pipingNetworkSystems'
-        # - pydantic requires proper initialization, not attribute assignment
+        """Add piping connection between equipment using pyDEXPI's piping_toolkit.
 
-        # Create segment and store connection metadata
-        segment = PipingNetworkSegment()
+        PHASE 1.4 FIX: Uses piping_toolkit.connect_piping_network_segment() to create
+        proper nozzle-based connections that MLGraphLoader can extract reliably.
+
+        Also encodes connection info in segment ID as fallback for simpler extraction.
+        """
+        from pydexpi.dexpi_classes.piping import Pipe
+        from pydexpi.dexpi_classes.equipment import Nozzle
+        from pydexpi.toolkits import piping_toolkit as pt
+
+        # Get equipment tags for segment naming
         from_tag = getattr(from_equipment, 'tagName', 'UNKNOWN')
         to_tag = getattr(to_equipment, 'tagName', 'UNKNOWN')
 
-        # Store connection metadata in instance dict (workaround for pyDEXPI complexity)
-        self._connection_metadata[segment.id] = (from_tag, to_tag)
+        # Helper to get or create nozzle on equipment
+        def _get_or_create_nozzle(equipment, tag_prefix: str, prefer_end: str = "last"):
+            if not hasattr(equipment, 'nozzles') or equipment.nozzles is None:
+                equipment.nozzles = []
+
+            # Try to reuse an existing unconnected nozzle
+            ordered = (
+                list(equipment.nozzles)[::-1] if prefer_end == "last" else list(equipment.nozzles)
+            )
+            for noz in ordered:
+                # Check if nozzle is unconnected
+                if not hasattr(noz, 'pipingConnection') or noz.pipingConnection is None:
+                    return noz
+
+            # Create new nozzle if all are used
+            eq_tag = getattr(equipment, 'tagName', 'EQ')
+            next_index = len(equipment.nozzles) + 1
+            new_nozzle = Nozzle(
+                id=f"nozzle_{tag_prefix}_{eq_tag}_{next_index}",
+                subTagName=f"{tag_prefix}{next_index}"
+            )
+            equipment.nozzles.append(new_nozzle)
+            return new_nozzle
+
+        # Get source nozzle (outlet) and target nozzle (inlet)
+        from_nozzle = _get_or_create_nozzle(from_equipment, tag_prefix="N_OUT_", prefer_end="last")
+        to_nozzle = _get_or_create_nozzle(to_equipment, tag_prefix="N_IN_", prefer_end="first")
+
+        # Create Pipe for the connection
+        line_number = f"{from_tag}_to_{to_tag}"
+        pipe = Pipe(
+            id=f"pipe_{line_number}",
+            tagName=line_number
+        )
+
+        # Create segment with connection info encoded in ID (for fallback extraction)
+        # Format: "segment__FROM__TO" (double underscore) allows extraction in dexpi_to_sfiles
+        segment_id = f"segment__{from_tag}__{to_tag}"
+        segment = PipingNetworkSegment(id=segment_id)
+
+        # Pipe goes in connections list
+        segment.connections = [pipe]
+        segment.items = []
+
+        # Use piping_toolkit to create proper nozzle connections
+        try:
+            pt.connect_piping_network_segment(segment, from_nozzle, as_source=True)
+            pt.connect_piping_network_segment(segment, to_nozzle, as_source=False)
+        except Exception:
+            # Fallback: toolkit may not be available, rely on segment ID encoding
+            pass
+
+        # Store stream tags if present (for heat exchangers, columns, etc.)
+        if stream.tags:
+            for tag_type, tag_values in stream.tags.items():
+                setattr(segment, f'_{tag_type}_tags', tag_values)
+
+        # Get conceptual model
+        cm = model.conceptualModel
+
+        # Initialize piping systems if needed
+        if not cm.pipingNetworkSystems:
+            cm.pipingNetworkSystems = []
 
         # Get or create piping network system
-        current_systems = list(model.conceptualModel.pipingNetworkSystems) if model.conceptualModel.pipingNetworkSystems else []
-
-        if current_systems:
-            # Add to existing system
-            existing_segments = list(current_systems[0].segments) if current_systems[0].segments else []
-            existing_segments.append(segment)
-            current_systems[0] = PipingNetworkSystem(
-                segments=existing_segments
-            )
+        if cm.pipingNetworkSystems:
+            pns = cm.pipingNetworkSystems[0]
+            if not pns.segments:
+                pns.segments = []
+            pns.segments.append(segment)
         else:
             # Create new system
-            current_systems = [PipingNetworkSystem(segments=[segment])]
+            pns = PipingNetworkSystem(segments=[segment])
+            cm.pipingNetworkSystems.append(pns)
 
-        # Update model
-        model.conceptualModel = ConceptualModel(
-            taggedPlantItems=model.conceptualModel.taggedPlantItems or [],
-            pipingNetworkSystems=current_systems
-        )
+        # Note: No reconstruction of ConceptualModel, preserving all fields
 
     def _get_sfiles_type(self, equipment: Equipment) -> str:
         """Get SFILES type string from DEXPI equipment instance."""

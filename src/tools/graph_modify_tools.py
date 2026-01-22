@@ -1211,8 +1211,19 @@ class GraphModifyTools:
         """Post-action validation."""
         if ctx.model_type == "dexpi":
             try:
-                # Use MLGraphLoader for validation
-                self.graph_loader.validate_graph_format(ctx.model)
+                # Use MLGraphLoader standardized pattern:
+                # 1. Call dexpi_to_graph() to populate the loader
+                # 2. Call validate_graph_format() (handling signature variation)
+                graph = self.graph_loader.dexpi_to_graph(ctx.model)
+
+                # Validate with signature handling (no args for newer API)
+                if hasattr(self.graph_loader, 'validate_graph_format'):
+                    try:
+                        self.graph_loader.validate_graph_format()
+                    except TypeError:
+                        # Fall back to passing graph (older API)
+                        self.graph_loader.validate_graph_format(graph)
+
                 return success_response({"validated": True})
             except Exception as e:
                 return error_response(

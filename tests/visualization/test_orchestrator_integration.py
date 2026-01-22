@@ -11,12 +11,12 @@ import sys
 from pathlib import Path
 from unittest.mock import patch
 
-# Add src to path
-sys.path.append(str(Path(__file__).parent.parent.parent / "src"))
+# Add repo root to path (not src) to enable proper relative imports
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from core.conversion import get_engine
-from core.analytics import model_metrics
-from visualization.orchestrator.renderer_router import RendererRouter, RenderRequirements, OutputFormat, QualityLevel, Platform
+from src.core.conversion import get_engine
+from src.core.analytics import model_metrics
+from src.visualization.orchestrator.renderer_router import RendererRouter, RenderRequirements, OutputFormat, QualityLevel, Platform
 
 
 class TestOrchestrationIntegration:
@@ -88,18 +88,19 @@ class TestOrchestrationIntegration:
 
     def test_renderer_selection(self):
         """Test renderer selection based on requirements."""
-        # PDF format is not supported by any currently available renderer
-        # The router should raise RuntimeError for unsupported formats
+        # PDF format is now supported by GraphicBuilder (via PDFConverter)
+        # Mock GraphicBuilder as available for this test
+        self.router._check_graphicbuilder_health = lambda: True
+
         requirements = RenderRequirements(
             format=OutputFormat.PDF,
             quality=QualityLevel.PRODUCTION,
             platform=Platform.PRINT
         )
 
-        with pytest.raises(RuntimeError) as excinfo:
-            self.router.select_renderer(requirements)
-        assert "PDF" in str(excinfo.value)
-        assert "not supported" in str(excinfo.value)
+        renderer = self.router.select_renderer(requirements)
+        assert renderer == "graphicbuilder", \
+            f"Expected graphicbuilder for production PDF, got {renderer}"
 
         # Web interactive requirement - should work with plotly
         requirements = RenderRequirements(
@@ -164,7 +165,8 @@ class TestOrchestrationIntegration:
             platform=Platform.API
         )
         renderer = self.router.select_renderer(requirements)
-        assert renderer in ["graphicbuilder", "python_simple", "plotly"]
+        # proteus_viewer is now available as a SVG renderer
+        assert renderer in ["graphicbuilder", "python_simple", "plotly", "proteus_viewer"]
 
         # 6. Get routing configuration
         config = self.router.route_request(
@@ -176,34 +178,28 @@ class TestOrchestrationIntegration:
 
     def test_scenario_based_routing(self):
         """Test pre-defined scenario routing."""
-        # production_pdf scenario uses PDF format which is not supported
-        # by any available renderer, so it should raise RuntimeError
-        with pytest.raises(RuntimeError) as excinfo:
-            self.router.get_renderer_for_scenario("production_pdf")
-        assert "PDF" in str(excinfo.value)
+        # production_pdf scenario uses PDF format which is now supported by GraphicBuilder
+        # Mock GraphicBuilder as available for this test
+        self.router._check_graphicbuilder_health = lambda: True
+
+        renderer = self.router.get_renderer_for_scenario("production_pdf")
+        assert renderer == "graphicbuilder", \
+            f"Expected graphicbuilder for production_pdf scenario, got {renderer}"
 
         # Define scenarios that should work with available renderers
+        # Note: proteus_viewer only supports SVG format (not HTML/interactive)
         scenarios = [
-            ("web_interactive", "plotly", None),  # plotly should always be available
-            ("quick_preview", "python_simple", None),  # python_simple should always be available
-            ("current_html", "plotly", None)  # plotly should always be available
+            ("web_interactive", ["plotly"]),  # Plotly for interactive HTML
+            ("quick_preview", ["python_simple"]),  # python_simple should always be available
+            ("current_html", ["plotly"])  # Plotly for HTML
         ]
 
-        for scenario, expected_renderer, fallback in scenarios:
+        for scenario, valid_renderers in scenarios:
             renderer = self.router.get_renderer_for_scenario(scenario)
 
-            # Check if expected renderer is available
-            if expected_renderer in self.available_renderers:
-                if self.available_renderers[expected_renderer]:
-                    assert renderer == expected_renderer, \
-                        f"Scenario {scenario}: expected {expected_renderer} when available, got {renderer}"
-                elif fallback:
-                    assert renderer == fallback, \
-                        f"Scenario {scenario}: expected fallback {fallback} when {expected_renderer} unavailable, got {renderer}"
-                else:
-                    # No fallback defined, should get the expected renderer or fail
-                    assert renderer == expected_renderer, \
-                        f"Scenario {scenario}: expected {expected_renderer}, got {renderer}"
+            # Check if renderer is in the list of valid options
+            assert renderer in valid_renderers, \
+                f"Scenario {scenario}: expected one of {valid_renderers}, got {renderer}"
 
     def test_renderer_availability(self):
         """Test renderer availability checking.
@@ -225,16 +221,17 @@ class TestOrchestrationIntegration:
         available = self.router.validate_renderer_availability("python_simple")
         assert available is True, "python_simple should always be available"
 
-        # ProteusViewer not yet implemented
+        # ProteusViewer - may be available if service is running
         available = self.router.validate_renderer_availability("proteus_viewer")
-        assert available is False, "ProteusViewer should not be available (not implemented)"
+        assert isinstance(available, bool), "Health check should return boolean"
+        proteus_status = "available" if available else "unavailable"
 
         # Log availability status for debugging
         print(f"\nRenderer availability status:")
         print(f"  - GraphicBuilder: {graphicbuilder_status}")
         print(f"  - Plotly: available")
         print(f"  - python_simple: available")
-        print(f"  - ProteusViewer: unavailable (not implemented)")
+        print(f"  - ProteusViewer: {proteus_status}")
 
 
 def run_integration_tests():
