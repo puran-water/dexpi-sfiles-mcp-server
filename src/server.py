@@ -116,8 +116,13 @@ class EngineeringDrawingMCPServer:
             self.sfiles_tools,
             self.search_tools
         )
-        self.visualization_tools = VisualizationTools(self.dexpi_models, self.flowsheets)
         self.layout_tools = LayoutTools(self.dexpi_models, self.flowsheets)
+        # Wire VisualizationTools with shared LayoutStore for use_layout support
+        self.visualization_tools = VisualizationTools(
+            self.dexpi_models,
+            self.flowsheets,
+            layout_store=self.layout_tools.layout_store
+        )
 
         # Phase 4: Unified model and transaction tools
         self.model_tools = ModelTools(
@@ -178,7 +183,7 @@ class EngineeringDrawingMCPServer:
                 # Phase 4: Unified tools (priority routing)
                 if name.startswith("model_tx_"):
                     result = await self.transaction_tools.handle_tool(name, arguments)
-                elif name in ["model_create", "model_load", "model_save"]:
+                elif name in ["model_create", "model_load", "model_save", "model_combine"]:
                     result = await self.model_tools.handle_tool(name, arguments)
                 # Check explicit batch tools first (before prefix matching)
                 elif name in ["model_batch_apply", "rules_apply", "graph_connect"]:

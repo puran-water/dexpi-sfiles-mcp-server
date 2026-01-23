@@ -2,7 +2,10 @@
 Symbol Catalog and Registry
 Manages DEXPI symbol library with metadata extraction
 
-DEPRECATION NOTICE (Week 8):
+DEPRECATION NOTICE (Phase 8.3 - January 2026):
+This module is deprecated and will be removed in a future release.
+
+Migration Guide:
 - DEXPI_CLASS_MAPPING: Use src.core.symbols.SymbolRegistry.get_by_dexpi_class() instead
 - extract_svg_metadata(): Use src.core.svg_parser.extract_svg_metadata() instead
 - SymbolCatalog: Use src.core.symbols.SymbolRegistry for authoritative symbol lookups
@@ -17,8 +20,20 @@ from dataclasses import dataclass, asdict
 from typing import List, Dict, Optional, Tuple
 import logging
 import hashlib
+import warnings
 
 logger = logging.getLogger(__name__)
+
+
+def _emit_deprecation_warning(func_name: str, alternative: str) -> None:
+    """Emit a deprecation warning for catalog.py functions."""
+    warnings.warn(
+        f"{func_name} is deprecated and will be removed in a future release. "
+        f"Use {alternative} instead. "
+        f"See src/core/symbols.py for the recommended API.",
+        DeprecationWarning,
+        stacklevel=3
+    )
 
 
 @dataclass
@@ -82,7 +97,12 @@ class SymbolMetadata:
 
 
 class SymbolCatalog:
-    """Symbol catalog management."""
+    """Symbol catalog management.
+
+    .. deprecated:: Phase 8.3
+        Use :class:`src.core.symbols.SymbolRegistry` instead.
+        This class will be removed in a future release.
+    """
 
     # DEPRECATED: Use src.core.symbols.SymbolRegistry.get_by_dexpi_class() instead.
     # This mapping is maintained for backward compatibility only.
@@ -146,9 +166,17 @@ class SymbolCatalog:
         """
         Initialize catalog.
 
+        .. deprecated:: Phase 8.3
+            Use :class:`src.core.symbols.SymbolRegistry` instead.
+
         Args:
             base_path: Base path for symbol library
         """
+        _emit_deprecation_warning(
+            "SymbolCatalog",
+            "src.core.symbols.SymbolRegistry"
+        )
+
         if base_path is None:
             base_path = Path(__file__).parent / "assets"
 
@@ -161,7 +189,15 @@ class SymbolCatalog:
             self.load_catalog()
 
     def load_catalog(self) -> None:
-        """Load catalog from JSON file."""
+        """Load catalog from JSON file.
+
+        .. deprecated:: Phase 8.3
+            Use :meth:`src.core.symbols.SymbolRegistry.load` instead.
+        """
+        _emit_deprecation_warning(
+            "SymbolCatalog.load_catalog",
+            "SymbolRegistry.load"
+        )
         try:
             with open(self.catalog_file) as f:
                 data = json.load(f)
@@ -187,7 +223,15 @@ class SymbolCatalog:
             logger.error(f"Failed to load catalog: {e}")
 
     def save_catalog(self) -> None:
-        """Save catalog to JSON file."""
+        """Save catalog to JSON file.
+
+        .. deprecated:: Phase 8.3
+            Use :meth:`src.core.symbols.SymbolRegistry` instead.
+        """
+        _emit_deprecation_warning(
+            "SymbolCatalog.save_catalog",
+            "SymbolRegistry"
+        )
         try:
             # Convert to JSON-serializable format
             data = {
@@ -215,12 +259,19 @@ class SymbolCatalog:
         """
         Extract metadata from SVG file.
 
+        .. deprecated:: Phase 8.3
+            Use :func:`src.core.svg_parser.extract_svg_metadata` instead.
+
         Args:
             svg_path: Path to SVG file
 
         Returns:
             Extracted metadata
         """
+        _emit_deprecation_warning(
+            "SymbolCatalog.extract_svg_metadata",
+            "src.core.svg_parser.extract_svg_metadata"
+        )
         try:
             # Parse SVG
             tree = ET.parse(svg_path)
@@ -346,6 +397,9 @@ class SymbolCatalog:
         """
         Add symbol to catalog.
 
+        .. deprecated:: Phase 8.3
+            Use :meth:`src.core.symbols.SymbolRegistry` instead.
+
         Args:
             symbol_id: Unique symbol ID
             name: Display name
@@ -357,6 +411,10 @@ class SymbolCatalog:
         Returns:
             Created SymbolMetadata
         """
+        _emit_deprecation_warning(
+            "SymbolCatalog.add_symbol",
+            "SymbolRegistry"
+        )
         # Extract metadata from SVG
         svg_metadata = self.extract_svg_metadata(svg_path)
 
@@ -385,12 +443,19 @@ class SymbolCatalog:
         """
         Find symbol for DEXPI class.
 
+        .. deprecated:: Phase 8.3
+            Use :meth:`src.core.symbols.SymbolRegistry.get_by_dexpi_class` instead.
+
         Args:
             dexpi_class: DEXPI class name
 
         Returns:
             Symbol metadata or None
         """
+        _emit_deprecation_warning(
+            "SymbolCatalog.find_symbol_for_class",
+            "SymbolRegistry.get_by_dexpi_class"
+        )
         # First check direct mapping
         symbol_id = self.DEXPI_CLASS_MAPPING.get(dexpi_class)
         if symbol_id and symbol_id in self.symbols:
@@ -417,6 +482,9 @@ class SymbolCatalog:
         """
         Search symbols.
 
+        .. deprecated:: Phase 8.3
+            Use :meth:`src.core.symbols.SymbolRegistry.search` instead.
+
         Args:
             query: Search query
             category: Filter by category
@@ -425,6 +493,10 @@ class SymbolCatalog:
         Returns:
             List of matching symbols
         """
+        _emit_deprecation_warning(
+            "SymbolCatalog.search_symbols",
+            "SymbolRegistry.search"
+        )
         results = []
 
         for symbol in self.symbols.values():
@@ -452,14 +524,30 @@ class SymbolCatalog:
         return results
 
     def get_categories(self) -> List[str]:
-        """Get list of categories."""
+        """Get list of categories.
+
+        .. deprecated:: Phase 8.3
+            Use :meth:`src.core.symbols.SymbolRegistry.get_categories` instead.
+        """
+        _emit_deprecation_warning(
+            "SymbolCatalog.get_categories",
+            "SymbolRegistry.get_categories"
+        )
         categories = set()
         for symbol in self.symbols.values():
             categories.add(symbol.category)
         return sorted(list(categories))
 
     def get_statistics(self) -> Dict:
-        """Get catalog statistics."""
+        """Get catalog statistics.
+
+        .. deprecated:: Phase 8.3
+            Use :meth:`src.core.symbols.SymbolRegistry.get_statistics` instead.
+        """
+        _emit_deprecation_warning(
+            "SymbolCatalog.get_statistics",
+            "SymbolRegistry.get_statistics"
+        )
         stats = {
             "total_symbols": len(self.symbols),
             "categories": {}

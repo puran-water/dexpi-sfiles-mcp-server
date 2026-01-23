@@ -44,6 +44,36 @@ class ModelTools:
         """Return unified model lifecycle tools."""
         return [
             Tool(
+                name="model_combine",
+                description="Merge multiple DEXPI models into one combined model. Combines all tagged plant items, instrumentation, and piping from source models.",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "source_model_ids": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "List of DEXPI model IDs to combine (minimum 2)",
+                            "minItems": 2
+                        },
+                        "target_model_id": {
+                            "type": "string",
+                            "description": "ID for the combined model (auto-generated if not provided)"
+                        },
+                        "metadata": {
+                            "type": "object",
+                            "description": "Optional metadata for the combined model",
+                            "properties": {
+                                "project_name": {"type": "string"},
+                                "drawing_number": {"type": "string"},
+                                "revision": {"type": "string"},
+                                "description": {"type": "string"}
+                            }
+                        }
+                    },
+                    "required": ["source_model_ids"]
+                }
+            ),
+            Tool(
                 name="model_create",
                 description="Create a new model (DEXPI P&ID or SFILES flowsheet) - Replaces dexpi_create_pid and sfiles_create_flowsheet",
                 inputSchema={
@@ -158,7 +188,8 @@ class ModelTools:
         handlers = {
             "model_create": self._create_model,
             "model_load": self._load_model,
-            "model_save": self._save_model
+            "model_save": self._save_model,
+            "model_combine": self._combine_models
         }
 
         handler = handlers.get(name)
@@ -405,3 +436,102 @@ class ModelTools:
                     f"Invalid format '{format_type}' for SFILES models. Use 'sfiles_string' or 'graphml'",
                     "INVALID_FORMAT"
                 )
+
+    async def _combine_models(self, args: dict) -> dict:
+        """Combine multiple DEXPI models into one.
+
+        Uses pydexpi.toolkits.model_toolkit.combine_dexpi_models() to merge
+        models, combining all list attributes from conceptual models.
+
+        Args:
+            args: {
+                "source_model_ids": list[str],  # Minimum 2 models
+                "target_model_id": str (optional),
+                "metadata": dict (optional)
+            }
+
+        Returns:
+            Success response with combined model info
+        """
+        from pydexpi.toolkits.model_toolkit import combine_dexpi_models
+
+        source_model_ids = args["source_model_ids"]
+        target_model_id = args.get("target_model_id", str(uuid4()))
+        metadata = args.get("metadata", {})
+
+        # Validate minimum number of models
+        if len(source_model_ids) < 2:
+            return error_response(
+                "At least 2 source models are required for combination",
+                "INSUFFICIENT_MODELS",
+                details={"provided": len(source_model_ids), "required": 2}
+            )
+
+        # Collect models from store
+        models = []
+        missing_models = []
+        for model_id in source_model_ids:
+            if model_id in self.dexpi_models:
+                models.append(self.dexpi_models[model_id])
+            else:
+                missing_models.append(model_id)
+
+        if missing_models:
+            return error_response(
+                f"Models not found: {', '.join(missing_models)}",
+                "MODELS_NOT_FOUND",
+                details={"missing": missing_models}
+            )
+
+        # Check if target_model_id already exists
+        if target_model_id in self.dexpi_models:
+            return error_response(
+                f"Target model ID '{target_model_id}' already exists. Choose a different ID.",
+                "MODEL_ID_EXISTS",
+                details={"target_model_id": target_model_id}
+            )
+
+        try:
+            # Combine models using pyDEXPI toolkit
+            combined = combine_dexpi_models(models, **metadata)
+
+            # Store the combined model
+            self.dexpi_models[target_model_id] = combined
+
+            # Count items in combined model
+            stats = {
+                "equipment_count": 0,
+                "instrumentation_count": 0,
+                "piping_count": 0
+            }
+
+            if combined.conceptualModel:
+                if combined.conceptualModel.taggedPlantItems:
+                    stats["equipment_count"] = len(combined.conceptualModel.taggedPlantItems)
+                if combined.conceptualModel.processInstrumentationFunctions:
+                    stats["instrumentation_count"] = len(combined.conceptualModel.processInstrumentationFunctions)
+                if combined.conceptualModel.pipingNetworkSystems:
+                    stats["piping_count"] = len(combined.conceptualModel.pipingNetworkSystems)
+
+            return success_response({
+                "target_model_id": target_model_id,
+                "source_model_ids": source_model_ids,
+                "source_count": len(source_model_ids),
+                "statistics": stats
+            })
+
+        except NotImplementedError as e:
+            # pyDEXPI raises this if models have diagram/shapeCatalog attributes
+            return error_response(
+                f"Cannot combine models with diagram data: {str(e)}. "
+                "Models must not have diagram or shapeCatalogue attributes.",
+                "DIAGRAM_NOT_SUPPORTED",
+                details={"error": str(e)}
+            )
+        except Exception as e:
+            logger.exception(f"Model combination failed")
+            return error_response(
+                f"Model combination failed: {str(e)}",
+                "COMBINATION_FAILED",
+                details={"error": str(e)}
+            )

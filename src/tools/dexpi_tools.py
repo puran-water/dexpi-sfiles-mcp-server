@@ -1605,7 +1605,7 @@ class DexpiTools:
             # Convert to graph
             from pydexpi.loaders.ml_graph_loader import MLGraphLoader
             loader = MLGraphLoader(model)
-            loader.parse_dexpi_to_graph()
+            loader.dexpi_to_graph()
             
             # Validate graph format
             validation_issues = []

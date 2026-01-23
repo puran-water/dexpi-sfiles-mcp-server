@@ -18,17 +18,14 @@ This document tracks completed work and planned development for the Engineering 
 
 ### Phase 3: Symbol Mapping for Visualization
 
-- 185/272 components mapped (68.0% coverage)
-- 100% instrumentation (34/34), 85% piping (67/79), 53% equipment (84/159)
-- SymbolMapper extended with 168 new mappings
+- 308/805 symbols mapped (38.3% coverage) with DEXPI class mappings
+- SymbolMapper extended with NOAKA/DISC symbol libraries
 - Analysis tools: `scripts/analyze_symbol_gaps.py`, `scripts/suggest_symbol_mappings.py`
 
 ### Phase 4: Tool Consolidation
 
-- 58 legacy tools consolidated into 12 unified tools (79% reduction)
-- ACID transaction support via `model_tx_begin`, `model_tx_apply`, `model_tx_commit`
-- Unified model lifecycle: `model_create`, `model_load`, `model_save`
-- 150/150 tests passing
+- 6 unified tools (`model_create`, `model_load`, `model_save`, `model_tx_begin`, `model_tx_apply`, `model_tx_commit`) added for ACID transactions alongside 71 domain-specific tools
+- Unified model lifecycle with ACID transaction support
 - Migration guide: `docs/FEATURE_PARITY_MATRIX.md`
 
 ### Phase 5: Symbol Registry + Tool Refactor
@@ -51,7 +48,7 @@ This document tracks completed work and planned development for the Engineering 
 - Persistent Node.js worker for layout computation
 - 8 MCP tools: `layout_compute`, `layout_get`, `layout_update`, `layout_validate`, `layout_list`, `layout_save_to_file`, `layout_load_from_file`, `layout_delete`
 - Etag-based optimistic concurrency control
-- 39 layout tests, 768 total tests passing
+- 39 layout tests, 860+ total tests passing
 
 ### Codex Deep Review (January 2026)
 
@@ -68,6 +65,22 @@ This document tracks completed work and planned development for the Engineering 
 - New dexpi-schedules-skill
 
 See `docs/completed-plans/2026-01-22-codex-deep-review.md` for full details.
+
+### Current Metrics (2026-01-22)
+
+- MCP Tools: 78 total (7 unified + 71 domain-specific)
+- Symbol Coverage: 308/805 (38.3%)
+- Test Suite: 870+ tests (including Phase 8 tests)
+- Process Templates: 8 complete
+
+### Phase 8: ROADMAP Audit & Quick Wins (2026-01-22)
+
+- 8.1: Fixed ROADMAP accuracy (tool counts, metrics)
+- 8.2.1: Added `sfiles_visualize` tool - SFILES2 visualization with HTML/PNG/SVG output
+- 8.2.2: Added `model_combine` tool - merge multiple DEXPI models
+- 8.2.3: Added `search_instances` tool - find instances by DEXPI class
+- 8.3: Added deprecation warnings to `catalog.py` (migration to SymbolRegistry)
+- 8.4: Layout-rendering integration - `use_layout`/`layout_id` params in visualize_model
 
 ---
 
@@ -96,17 +109,11 @@ See `docs/completed-plans/2026-01-22-codex-deep-review.md` for full details.
 
 ## Planned Work
 
-### ProteusXMLDrawing Integration
+### ProteusXMLDrawing Integration (Phase 8.5)
 Fork `src/visualization/proteus-viewer/` backend with text/spline fixups, WebSocket/live update path, expose through MCP visualize tools.
 
-### SFILES2 Visualization
-Expose `SFILES2.visualize_flowsheet()` via `src/tools/sfiles_tools.py`, ship stream/unit tables + OntoCape tags in outputs.
-
 ### Additional Templates
-Library currently has 4 patterns; expansion to 5+ tracked in `docs/templates/template_system.md`.
-
-### Rendering Integration
-Wire Layout Layer into visualization pipeline for coordinate-based rendering.
+Library currently has 8 patterns; expansion to 15+ tracked in `docs/templates/template_system.md`.
 
 ---
 
@@ -129,6 +136,7 @@ Wire Layout Layer into visualization pipeline for coordinate-based rendering.
 
 | Date | Milestone |
 |------|-----------|
+| 2026-01-22 | Phase 8 - ROADMAP Audit & Quick Wins (sfiles_visualize, model_combine, search_instances) |
 | 2026-01-22 | Codex Deep Review - core conversion fixes |
 | 2025-12-02 | SVG/PDF Export via GraphicBuilder |
 | 2025-12-01 | Layout System v0.8.0 |

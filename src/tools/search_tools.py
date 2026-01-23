@@ -190,6 +190,40 @@ class SearchTools:
                 }
             ),
             Tool(
+                name="search_instances",
+                description="Find all instances of specified DEXPI class types in a model. Returns equipment inventory/search results with optional filtering and pagination.",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "model_id": {
+                            "type": "string",
+                            "description": "DEXPI model ID to search in"
+                        },
+                        "class_names": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "List of DEXPI class names to find (e.g., ['CentrifugalPump', 'Tank']). If empty, finds all instances."
+                        },
+                        "limit": {
+                            "type": "integer",
+                            "description": "Maximum number of results to return",
+                            "default": 100
+                        },
+                        "offset": {
+                            "type": "integer",
+                            "description": "Number of results to skip for pagination",
+                            "default": 0
+                        },
+                        "include_attributes": {
+                            "type": "boolean",
+                            "description": "Include basic attributes in results (id, tagName)",
+                            "default": True
+                        }
+                    },
+                    "required": ["model_id"]
+                }
+            ),
+            Tool(
                 name="search_execute",
                 description="Unified search tool - consolidates all search_* operations",
                 inputSchema={
@@ -290,6 +324,7 @@ class SearchTools:
             "search_connected": self._search_connected,
             "query_model_statistics": self._query_statistics,
             "search_by_stream": self._search_by_stream,
+            "search_instances": self._search_instances,
             "search_execute": self._unified_search
         }
         
@@ -672,7 +707,121 @@ class SearchTools:
             "result_count": len(results),
             "results": results[:100]
         })
-    
+
+    async def _search_instances(self, args: dict) -> dict:
+        """Find all instances of specified DEXPI class types in a model.
+
+        Uses pydexpi.toolkits.model_toolkit.get_all_instances_in_model() for
+        recursive discovery of instances within the model.
+
+        Args:
+            args: {
+                "model_id": str,
+                "class_names": list[str] (optional),
+                "limit": int (default 100),
+                "offset": int (default 0),
+                "include_attributes": bool (default True)
+            }
+
+        Returns:
+            Success response with list of discovered instances
+        """
+        from pydexpi.toolkits.model_toolkit import get_all_instances_in_model
+
+        model_id = args["model_id"]
+        class_names = args.get("class_names", [])
+        limit = args.get("limit", 100)
+        offset = args.get("offset", 0)
+        include_attributes = args.get("include_attributes", True)
+
+        # Validate model exists
+        if model_id not in self.dexpi_models:
+            return error_response(
+                f"DEXPI model {model_id} not found",
+                "MODEL_NOT_FOUND"
+            )
+
+        model = self.dexpi_models[model_id]
+
+        try:
+            # Resolve class names to actual class types
+            dexpi_classes = None
+            if class_names:
+                import pydexpi.dexpi_classes.pydantic_classes as dexpi_module
+                resolved_classes = []
+                invalid_classes = []
+
+                for class_name in class_names:
+                    if hasattr(dexpi_module, class_name):
+                        resolved_classes.append(getattr(dexpi_module, class_name))
+                    else:
+                        invalid_classes.append(class_name)
+
+                if invalid_classes:
+                    return error_response(
+                        f"Unknown DEXPI classes: {', '.join(invalid_classes)}",
+                        "INVALID_CLASS_NAMES",
+                        details={"invalid": invalid_classes}
+                    )
+
+                dexpi_classes = tuple(resolved_classes) if resolved_classes else None
+
+            # Discover instances using pyDEXPI toolkit
+            all_instances = get_all_instances_in_model(model, dexpi_classes)
+
+            # Sort by class name then id for stable ordering
+            all_instances.sort(key=lambda x: (
+                x.__class__.__name__,
+                getattr(x, 'id', '') or '',
+                getattr(x, 'tagName', '') or ''
+            ))
+
+            # Apply pagination
+            total_count = len(all_instances)
+            paginated = all_instances[offset:offset + limit]
+
+            # Serialize results to summary format
+            results = []
+            for instance in paginated:
+                result = {
+                    "class_name": instance.__class__.__name__
+                }
+
+                if include_attributes:
+                    # Include basic identifying attributes
+                    if hasattr(instance, 'id') and instance.id:
+                        result["id"] = instance.id
+                    if hasattr(instance, 'tagName') and instance.tagName:
+                        result["tagName"] = instance.tagName
+                    if hasattr(instance, 'name') and instance.name:
+                        result["name"] = instance.name
+
+                results.append(result)
+
+            # Group counts by class
+            class_counts = {}
+            for instance in all_instances:
+                class_name = instance.__class__.__name__
+                class_counts[class_name] = class_counts.get(class_name, 0) + 1
+
+            return success_response({
+                "model_id": model_id,
+                "total_count": total_count,
+                "returned_count": len(results),
+                "offset": offset,
+                "limit": limit,
+                "has_more": (offset + limit) < total_count,
+                "class_counts": class_counts,
+                "results": results
+            })
+
+        except Exception as e:
+            logger.error(f"Instance search failed: {e}", exc_info=True)
+            return error_response(
+                f"Instance search failed: {str(e)}",
+                "SEARCH_FAILED"
+            )
+
     # Helper methods
     
     def _search_dexpi_model(self, model: Any, tag_pattern: str, pattern: Any,

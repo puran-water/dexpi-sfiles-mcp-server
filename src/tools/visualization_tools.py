@@ -27,15 +27,22 @@ logger = logging.getLogger(__name__)
 class VisualizationTools:
     """Provides visualization tools for engineering models."""
 
-    def __init__(self, dexpi_models: Dict[str, Any], flowsheets: Dict[str, Any]):
+    def __init__(
+        self,
+        dexpi_models: Dict[str, Any],
+        flowsheets: Dict[str, Any],
+        layout_store: Optional[Any] = None
+    ):
         """Initialize with model stores.
 
         Args:
             dexpi_models: Store of DEXPI models
             flowsheets: Store of SFILES flowsheets
+            layout_store: Optional LayoutStore for coordinate-based rendering
         """
         self.dexpi_models = dexpi_models
         self.flowsheets = flowsheets
+        self.layout_store = layout_store
         self.router = RendererRouter()
         self.converter = UnifiedGraphConverter()
 
@@ -60,8 +67,8 @@ class VisualizationTools:
                         },
                         "format": {
                             "type": "string",
-                            "enum": ["html", "png", "graphml"],
-                            "description": "Output format. HTML is interactive, PNG is production quality.",
+                            "enum": ["html", "svg", "png", "graphml"],
+                            "description": "Output format. HTML is interactive, SVG for native P&ID rendering, PNG is production quality.",
                             "default": "html"
                         },
                         "quality": {
@@ -75,6 +82,15 @@ class VisualizationTools:
                             "enum": ["spring", "hierarchical", "auto"],
                             "description": "Layout algorithm to use",
                             "default": "spring"
+                        },
+                        "use_layout": {
+                            "type": "boolean",
+                            "description": "Use stored layout for coordinate-based rendering (requires layout_compute first)",
+                            "default": False
+                        },
+                        "layout_id": {
+                            "type": "string",
+                            "description": "Specific layout ID to use (auto-detected by model_id if not provided)"
                         },
                         "options": {
                             "type": "object",
@@ -148,6 +164,8 @@ class VisualizationTools:
         output_format = args.get("format", "html").upper()
         quality = args.get("quality", "standard")
         layout = args.get("layout", "spring")
+        use_layout = args.get("use_layout", False)
+        layout_id = args.get("layout_id")
         options = args.get("options", {})
 
         # Validate format enum
@@ -189,6 +207,44 @@ class VisualizationTools:
                 return error_response(f"Flowsheet {model_id} not found", code="MODEL_NOT_FOUND")
             flowsheet = self.flowsheets[model_id]
             graph = flowsheet.state
+
+        # Handle layout lookup if requested
+        layout_metadata = None
+        if use_layout and self.layout_store:
+            try:
+                from ..core.layout_store import LayoutNotFoundError
+
+                # If layout_id not specified, try to find layout for this model_id
+                if layout_id:
+                    layout_metadata = self.layout_store.get(layout_id)
+                else:
+                    # Search for layouts with matching model_ref using list_by_model API
+                    matching_layouts = self.layout_store.list_by_model(model_type, model_id)
+                    if matching_layouts:
+                        layout_id = matching_layouts[0]  # Use first matching layout
+                        layout_metadata = self.layout_store.get(layout_id)
+
+                if layout_metadata is None:
+                    return error_response(
+                        f"No layout found for model {model_id}. "
+                        f"Run layout_compute first or provide layout_id.",
+                        code="LAYOUT_NOT_FOUND"
+                    )
+
+                logger.info(f"Using layout {layout_id} for model {model_id}")
+
+            except LayoutNotFoundError as e:
+                return error_response(
+                    f"Layout {layout_id} not found: {e}",
+                    code="LAYOUT_NOT_FOUND"
+                )
+            except Exception as e:
+                logger.warning(f"Layout lookup failed: {e}")
+                if use_layout:
+                    return error_response(
+                        f"Layout lookup failed: {str(e)}",
+                        code="LAYOUT_ERROR"
+                    )
 
         # Handle GraphML export directly (no renderer needed - it's a data export)
         if output_format == "GRAPHML":
@@ -238,7 +294,7 @@ class VisualizationTools:
 
         elif selected_renderer == "graphicbuilder":
             # GraphicBuilder PNG rendering
-            result = await self._render_graphicbuilder(model, model_type, options)
+            result = await self._render_graphicbuilder(model, model_type, options, layout_metadata)
             if result.get("ok") is False:
                 return result
             return success_response({
@@ -248,6 +304,38 @@ class VisualizationTools:
                 "renderer": "graphicbuilder",
                 "content_type": "image/png",
                 "content_base64": result.get("content_base64"),
+                "node_count": graph.number_of_nodes(),
+                "edge_count": graph.number_of_edges()
+            })
+
+        elif selected_renderer == "proteus_viewer":
+            # Proteus viewer SVG rendering - for DEXPI models only
+            if model_type != "dexpi":
+                # Fall back to Plotly for non-DEXPI
+                logger.info("Proteus viewer only supports DEXPI models, falling back to Plotly")
+                content = self._render_plotly(graph, model_id, layout, options)
+                return success_response({
+                    "model_id": model_id,
+                    "model_type": model_type,
+                    "format": "html",
+                    "renderer": "plotly",
+                    "content_type": "text/html",
+                    "content": content,
+                    "fallback": True,
+                    "fallback_reason": "Proteus viewer only supports DEXPI models"
+                })
+
+            result = await self._render_proteus(model, model_id, options, layout_metadata)
+            if result.get("ok") is False:
+                return result
+            return success_response({
+                "model_id": model_id,
+                "model_type": model_type,
+                "format": "svg",
+                "renderer": "proteus_viewer",
+                "content_type": "image/svg+xml",
+                "content": result.get("content"),
+                "metadata": result.get("metadata", {}),
                 "node_count": graph.number_of_nodes(),
                 "edge_count": graph.number_of_edges()
             })
@@ -392,7 +480,8 @@ class VisualizationTools:
         self,
         model,
         model_type: str,
-        options: dict = None
+        options: dict = None,
+        layout_metadata: Optional[Any] = None
     ) -> dict:
         """Render using GraphicBuilder (PNG output).
 
@@ -400,6 +489,7 @@ class VisualizationTools:
             model: DEXPI model to render
             model_type: Model type (must be 'dexpi')
             options: Rendering options
+            layout_metadata: Optional LayoutMetadata for coordinate-based positioning
 
         Returns:
             Dict with status and base64-encoded PNG content
@@ -422,12 +512,21 @@ class VisualizationTools:
 
             # Export model to temp file and render
             import tempfile
-            from pydexpi.loaders import ProteusExporter
+            from pathlib import Path
 
-            with tempfile.NamedTemporaryFile(suffix='.xml', delete=False) as f:
+            # Use ProteusXMLExporter with layout_metadata if available
+            if layout_metadata:
+                from ..exporters.proteus_xml_exporter import ProteusXMLExporter
+                with tempfile.NamedTemporaryFile(suffix='.xml', delete=False) as f:
+                    temp_xml = f.name
+                exporter = ProteusXMLExporter()
+                exporter.export(model, Path(temp_xml), validate=False, layout_metadata=layout_metadata)
+            else:
+                from pydexpi.loaders import ProteusExporter
+                with tempfile.NamedTemporaryFile(suffix='.xml', delete=False) as f:
+                    temp_xml = f.name
                 exporter = ProteusExporter(model)
-                exporter.export(f.name)
-                temp_xml = f.name
+                exporter.export(temp_xml)
 
             # Render PNG
             png_path = temp_xml.replace('.xml', '.png')
@@ -460,6 +559,99 @@ class VisualizationTools:
             logger.error(f"GraphicBuilder render error: {e}")
             return error_response(str(e), code="RENDER_ERROR")
 
+    async def _render_proteus(
+        self,
+        model,
+        model_id: str,
+        options: dict = None,
+        layout_metadata: Optional[Any] = None
+    ) -> dict:
+        """Render DEXPI model using Proteus viewer service (SVG output).
+
+        Args:
+            model: DEXPI model to render
+            model_id: Model identifier
+            options: Rendering options
+            layout_metadata: Optional LayoutMetadata for coordinate-based positioning
+
+        Returns:
+            Dict with status and SVG content
+        """
+        import os
+        import tempfile
+        import urllib.request
+        import urllib.error
+        from pathlib import Path
+
+        try:
+            from ..exporters.proteus_xml_exporter import ProteusXMLExporter
+
+            # Export model to temp file then read as string
+            with tempfile.NamedTemporaryFile(suffix='.xml', delete=False) as f:
+                temp_xml_path = f.name
+
+            exporter = ProteusXMLExporter()
+            exporter.export(model, Path(temp_xml_path), validate=False, layout_metadata=layout_metadata)
+
+            with open(temp_xml_path, 'r', encoding='utf-8') as f:
+                xml_string = f.read()
+
+            os.unlink(temp_xml_path)  # Clean up temp file
+
+            # Send to Proteus viewer service
+            port = int(os.environ.get("PROTEUS_VIEWER_PORT", "8081"))
+            url = f"http://localhost:{port}/render"
+
+            options = options or {}
+            background_color = options.get("background_color", "#1e1e1e")
+
+            # Prepare request
+            request_data = {
+                "xml": xml_string,
+                "options": {"backgroundColor": background_color}
+            }
+            json_data = json.dumps(request_data).encode('utf-8')
+
+            req = urllib.request.Request(
+                url,
+                data=json_data,
+                headers={
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                method="POST"
+            )
+
+            with urllib.request.urlopen(req, timeout=30) as response:
+                result = json.loads(response.read().decode('utf-8'))
+
+            if result.get("success"):
+                return {
+                    "status": "success",
+                    "content": result.get("content"),
+                    "metadata": result.get("metadata", {})
+                }
+            else:
+                return error_response(
+                    result.get("error", "Proteus viewer render failed"),
+                    code="RENDER_FAILED"
+                )
+
+        except urllib.error.URLError as e:
+            logger.error(f"Proteus viewer service unavailable: {e}")
+            return error_response(
+                "Proteus viewer service is not available. Start with: cd src/visualization/proteus-viewer && npm start",
+                code="SERVICE_UNAVAILABLE"
+            )
+        except ImportError as e:
+            return error_response(
+                f"Proteus XML exporter not available: {e}",
+                code="MODULE_NOT_FOUND"
+            )
+        except Exception as e:
+            logger.error(f"Proteus viewer render error: {e}")
+            return error_response(str(e), code="RENDER_ERROR")
+
     async def _list_renderers(self, args: dict) -> dict:
         """List available renderers and their capabilities.
 
@@ -480,5 +672,7 @@ class VisualizationTools:
             "renderers": renderers,
             "default": "plotly",
             "recommended_for_html": "plotly",
-            "recommended_for_png": "graphicbuilder"
+            "recommended_for_svg": "proteus_viewer",
+            "recommended_for_png": "graphicbuilder",
+            "recommended_for_pdf": "graphicbuilder"
         })

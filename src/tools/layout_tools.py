@@ -402,7 +402,7 @@ class LayoutTools:
             # Use pyDEXPI's graph loader
             from pydexpi.loaders.ml_graph_loader import MLGraphLoader
             loader = MLGraphLoader(plant_model=model)
-            loader.parse_dexpi_to_graph()
+            loader.dexpi_to_graph()
 
             # Enhance with layout hints
             graph = loader.plant_graph.copy()
@@ -789,7 +789,7 @@ class LayoutTools:
                     model = self.dexpi_models[model_id]
                     from pydexpi.loaders.ml_graph_loader import MLGraphLoader
                     loader = MLGraphLoader(plant_model=model)
-                    loader.parse_dexpi_to_graph()
+                    loader.dexpi_to_graph()
                     model_nodes = set(loader.plant_graph.nodes())
                 elif model_type == "sfiles" and model_id in self.flowsheets:
                     flowsheet = self.flowsheets[model_id]

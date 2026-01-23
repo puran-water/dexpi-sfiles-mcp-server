@@ -15,7 +15,19 @@
 
 **Last Updated:** 2026-01-22
 
-### Recent: Codex Deep Review (Completed)
+### Recent: Phase 8 ROADMAP Audit & Quick Wins (Completed)
+
+New MCP tools and improvements:
+- `sfiles_visualize` - SFILES2 visualization with HTML/PNG/SVG output, graceful table fallback
+- `model_combine` - Merge multiple DEXPI models into one
+- `search_instances` - Find instances by DEXPI class with pagination
+- Layout-rendering integration via `use_layout`/`layout_id` params in `visualize_model`
+- Full deprecation warnings on `catalog.py` (migration to SymbolRegistry)
+- API fixes: `dexpi_to_graph()`, `list_by_model()` for LayoutStore
+
+See `docs/completed-plans/2026-01-22-phase8-roadmap-audit.md` for details.
+
+### Previous: Codex Deep Review (Completed)
 
 Core conversion issues fixed:
 - SFILES2 native parsing via `Flowsheet.create_from_sfiles(merge_HI_nodes=False)`

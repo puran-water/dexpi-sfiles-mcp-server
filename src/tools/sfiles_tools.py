@@ -278,6 +278,51 @@ class SfilesTools:
                         "sfiles_string": {"type": "string", "description": "Optional SFILES string to generalize (alternative to flowsheet_id)"}
                     }
                 }
+            ),
+            Tool(
+                name="sfiles_visualize",
+                description="Generate visualization of SFILES flowsheet with optional stream/unit tables. Returns HTML (interactive), SVG (vector), or PNG (raster) output.",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "flowsheet_id": {
+                            "type": "string",
+                            "description": "ID of flowsheet to visualize"
+                        },
+                        "output_format": {
+                            "type": "string",
+                            "enum": ["html", "svg", "png"],
+                            "description": "Output format: html (interactive matplotlib), svg (vector via pyflowsheet), png (raster)",
+                            "default": "html"
+                        },
+                        "include_tables": {
+                            "type": "boolean",
+                            "description": "Include stream and unit tables in output",
+                            "default": True
+                        },
+                        "show_labels": {
+                            "type": "boolean",
+                            "description": "Show stream labels on flowsheet",
+                            "default": True
+                        },
+                        "block_style": {
+                            "type": "boolean",
+                            "description": "Use block diagram style (true) or equipment symbols (false)",
+                            "default": True
+                        },
+                        "chemical_species": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "Optional list of chemical species names for table headers"
+                        },
+                        "decimals": {
+                            "type": "integer",
+                            "description": "Number of decimal places in tables",
+                            "default": 3
+                        }
+                    },
+                    "required": ["flowsheet_id"]
+                }
             )
         ]
     
@@ -300,6 +345,7 @@ class SfilesTools:
             "sfiles_pattern_helper": self._pattern_helper,
             "sfiles_convert_from_dexpi": self._convert_from_dexpi,
             "sfiles_generalize": self._generalize,
+            "sfiles_visualize": self._visualize,
             # Removed duplicate handlers:
             # - sfiles_init_project (now in ProjectTools)
             # - sfiles_save_to_project (now in ProjectTools)
@@ -1182,3 +1228,219 @@ class SfilesTools:
                 f"Generalization failed: {str(e)}",
                 "GENERALIZATION_ERROR"
             )
+
+    async def _visualize(self, args: dict) -> dict:
+        """
+        Generate visualization of SFILES flowsheet.
+
+        Uses SFILES2 visualize_flowsheet() to generate matplotlib figures
+        and optional stream/unit tables. Converts to requested output format.
+
+        Args:
+            args: dict with flowsheet_id, output_format, include_tables, etc.
+
+        Returns:
+            dict with visualization content (base64-encoded for binary formats)
+        """
+        import os
+        import io
+        import base64
+        import tempfile
+
+        # Set matplotlib backend for headless operation before importing pyplot
+        os.environ.setdefault('MPLBACKEND', 'Agg')
+
+        flowsheet_id = args["flowsheet_id"]
+        output_format = args.get("output_format", "html").lower()
+        include_tables = args.get("include_tables", True)
+        show_labels = args.get("show_labels", True)
+        block_style = args.get("block_style", True)
+        chemical_species = args.get("chemical_species")
+        decimals = args.get("decimals", 3)
+
+        # Validate flowsheet exists
+        if flowsheet_id not in self.flowsheets:
+            return error_response(
+                f"Flowsheet {flowsheet_id} not found",
+                "FLOWSHEET_NOT_FOUND"
+            )
+
+        flowsheet = self.flowsheets[flowsheet_id]
+
+        # Check for empty flowsheet
+        if flowsheet.state.number_of_nodes() == 0:
+            return error_response(
+                "Cannot visualize empty flowsheet - add units first",
+                "EMPTY_FLOWSHEET"
+            )
+
+        # Check if flowsheet has required attributes for table generation
+        # Tables require: processstream_name/processstream_data on edges,
+        # unit_type_specific/unit on nodes (from SFILES2 library)
+        tables_warning = None
+        if include_tables:
+            has_table_attrs = False
+            for _, _, data in flowsheet.state.edges(data=True):
+                if 'processstream_name' in data or 'processstream_data' in data:
+                    has_table_attrs = True
+                    break
+            if not has_table_attrs:
+                # Gracefully disable tables if attributes are missing
+                include_tables = False
+                tables_warning = (
+                    "Table generation disabled: flowsheet missing required "
+                    "processstream_name/processstream_data attributes on streams. "
+                    "Use SFILES2 native parsing or populate stream data for tables."
+                )
+
+        try:
+            import matplotlib
+            matplotlib.use('Agg')  # Force non-interactive backend
+            import matplotlib.pyplot as plt
+
+            # Use temp directory for file isolation to avoid path collisions
+            with tempfile.TemporaryDirectory() as temp_dir:
+                svg_path = os.path.join(temp_dir, "flowsheet")
+
+                # Call SFILES2 visualize_flowsheet
+                # Note: plot_as_pfd writes SVG to disk, figure=True returns matplotlib fig
+                fig, table_streams, table_units = flowsheet.visualize_flowsheet(
+                    figure=(output_format in ["html", "png"]),
+                    plot_with_stream_labels=show_labels,
+                    table=include_tables,
+                    plot_as_pfd=(output_format == "svg"),
+                    pfd_block=block_style,
+                    decimals=decimals,
+                    pfd_path=svg_path,
+                    chemicalspecies=chemical_species,
+                    add_positions=True
+                )
+
+                result_data = {
+                    "flowsheet_id": flowsheet_id,
+                    "format": output_format,
+                    "node_count": flowsheet.state.number_of_nodes(),
+                    "edge_count": flowsheet.state.number_of_edges()
+                }
+
+                # Add warning if tables were disabled due to missing attributes
+                if tables_warning:
+                    result_data["warning"] = tables_warning
+                    result_data["tables_included"] = False
+                else:
+                    result_data["tables_included"] = include_tables
+
+                # Handle output format conversion
+                if output_format == "html":
+                    # Convert matplotlib figure to HTML with embedded image
+                    if fig is not None:
+                        buf = io.BytesIO()
+                        fig.savefig(buf, format='png', dpi=150, bbox_inches='tight')
+                        buf.seek(0)
+                        img_base64 = base64.b64encode(buf.read()).decode('utf-8')
+                        plt.close(fig)
+
+                        # Build HTML with embedded image and tables
+                        html_parts = [
+                            '<!DOCTYPE html>',
+                            '<html><head><meta charset="utf-8">',
+                            '<style>',
+                            'body { font-family: Arial, sans-serif; margin: 20px; }',
+                            'img { max-width: 100%; height: auto; }',
+                            'table { border-collapse: collapse; margin: 10px 0; }',
+                            'th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }',
+                            'th { background-color: #4CAF50; color: white; }',
+                            'tr:nth-child(even) { background-color: #f2f2f2; }',
+                            'h2 { color: #333; }',
+                            '</style></head><body>',
+                            f'<h1>Flowsheet: {flowsheet_id}</h1>',
+                            f'<img src="data:image/png;base64,{img_base64}" alt="Flowsheet diagram"/>',
+                        ]
+
+                        if include_tables and table_streams is not None:
+                            html_parts.append('<h2>Stream Table</h2>')
+                            html_parts.append(self._dataframe_to_html(table_streams))
+
+                        if include_tables and table_units is not None:
+                            html_parts.append('<h2>Unit Table</h2>')
+                            html_parts.append(self._dataframe_to_html(table_units))
+
+                        html_parts.append('</body></html>')
+                        result_data["content"] = '\n'.join(html_parts)
+                        result_data["content_type"] = "text/html"
+                    else:
+                        return error_response(
+                            "Failed to generate figure",
+                            "VISUALIZATION_FAILED"
+                        )
+
+                elif output_format == "png":
+                    # Convert matplotlib figure to PNG
+                    if fig is not None:
+                        buf = io.BytesIO()
+                        fig.savefig(buf, format='png', dpi=150, bbox_inches='tight')
+                        buf.seek(0)
+                        result_data["content_base64"] = base64.b64encode(buf.read()).decode('utf-8')
+                        result_data["content_type"] = "image/png"
+                        plt.close(fig)
+                    else:
+                        return error_response(
+                            "Failed to generate figure",
+                            "VISUALIZATION_FAILED"
+                        )
+
+                elif output_format == "svg":
+                    # Read SVG file written by pyflowsheet
+                    svg_file = f"{svg_path}.svg"
+                    if os.path.exists(svg_file):
+                        with open(svg_file, 'r', encoding='utf-8') as f:
+                            result_data["content"] = f.read()
+                        result_data["content_type"] = "image/svg+xml"
+                    else:
+                        return error_response(
+                            "SVG generation failed - pyflowsheet may not be available",
+                            "SVG_GENERATION_FAILED"
+                        )
+
+                else:
+                    return error_response(
+                        f"Unsupported output format: {output_format}",
+                        "INVALID_FORMAT"
+                    )
+
+                # Add tables to result if requested and not in HTML format
+                if include_tables and output_format != "html":
+                    if table_streams is not None:
+                        result_data["stream_table"] = self._dataframe_to_dict(table_streams)
+                    if table_units is not None:
+                        result_data["unit_table"] = self._dataframe_to_dict(table_units)
+
+                return success_response(result_data)
+
+        except ImportError as e:
+            return error_response(
+                f"Visualization dependency missing: {str(e)}. Install matplotlib and pyflowsheet.",
+                "DEPENDENCY_MISSING"
+            )
+        except Exception as e:
+            logger.error(f"Visualization failed: {e}", exc_info=True)
+            return error_response(
+                f"Visualization failed: {str(e)}",
+                "VISUALIZATION_ERROR"
+            )
+
+    def _dataframe_to_html(self, df) -> str:
+        """Convert pandas DataFrame to HTML table string."""
+        try:
+            return df.to_html(classes='streamtable', index=True, border=0)
+        except Exception:
+            # Fallback for non-pandas objects
+            return f"<pre>{str(df)}</pre>"
+
+    def _dataframe_to_dict(self, df) -> dict:
+        """Convert pandas DataFrame to dictionary."""
+        try:
+            return df.to_dict(orient='split')
+        except Exception:
+            # Fallback for non-pandas objects
+            return {"raw": str(df)}

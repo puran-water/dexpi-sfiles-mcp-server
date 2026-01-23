@@ -154,10 +154,10 @@ Created: {metadata['created']}
             loader = MLGraphLoader(plant_model=model)
             # Ensure graph is parsed using the correct API
             try:
-                loader.parse_dexpi_to_graph()
+                loader.dexpi_to_graph()
             except AttributeError as e:
                 raise AttributeError(
-                    "MLGraphLoader does not have parse_dexpi_to_graph() method. "
+                    "MLGraphLoader does not have dexpi_to_graph() method. "
                     "The pyDEXPI API may have changed. "
                     "Update project_persistence.py to use the correct method. "
                     f"Error: {e}"
