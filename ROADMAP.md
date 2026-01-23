@@ -1,6 +1,6 @@
 # Engineering MCP Server - Development Roadmap
 
-**Last Updated:** 2026-01-22
+**Last Updated:** 2026-01-23
 
 This document tracks completed work and planned development for the Engineering MCP Server.
 
@@ -73,7 +73,7 @@ See `docs/completed-plans/2026-01-22-codex-deep-review.md` for full details.
 - Test Suite: 870+ tests (including Phase 8 tests)
 - Process Templates: 8 complete
 
-### Phase 8: ROADMAP Audit & Quick Wins (2026-01-22)
+### Phase 8: ROADMAP Audit & Quick Wins (2026-01-22, verified 2026-01-23)
 
 - 8.1: Fixed ROADMAP accuracy (tool counts, metrics)
 - 8.2.1: Added `sfiles_visualize` tool - SFILES2 visualization with HTML/PNG/SVG output
@@ -81,6 +81,7 @@ See `docs/completed-plans/2026-01-22-codex-deep-review.md` for full details.
 - 8.2.3: Added `search_instances` tool - find instances by DEXPI class
 - 8.3: Added deprecation warnings to `catalog.py` (migration to SymbolRegistry)
 - 8.4: Layout-rendering integration - `use_layout`/`layout_id` params in visualize_model
+- **Visual verification:** Playwright webapp testing confirms Plotly HTML and Matplotlib SVG outputs render correctly
 
 ---
 
@@ -136,6 +137,7 @@ Library currently has 8 patterns; expansion to 15+ tracked in `docs/templates/te
 
 | Date | Milestone |
 |------|-----------|
+| 2026-01-23 | Phase 8 webapp testing verification (Playwright) |
 | 2026-01-22 | Phase 8 - ROADMAP Audit & Quick Wins (sfiles_visualize, model_combine, search_instances) |
 | 2026-01-22 | Codex Deep Review - core conversion fixes |
 | 2025-12-02 | SVG/PDF Export via GraphicBuilder |

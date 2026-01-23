@@ -13,9 +13,9 @@
 
 ## Development Status
 
-**Last Updated:** 2026-01-22
+**Last Updated:** 2026-01-23
 
-### Recent: Phase 8 ROADMAP Audit & Quick Wins (Completed)
+### Recent: Phase 8 ROADMAP Audit & Quick Wins (Completed & Verified)
 
 New MCP tools and improvements:
 - `sfiles_visualize` - SFILES2 visualization with HTML/PNG/SVG output, graceful table fallback
@@ -24,6 +24,8 @@ New MCP tools and improvements:
 - Layout-rendering integration via `use_layout`/`layout_id` params in `visualize_model`
 - Full deprecation warnings on `catalog.py` (migration to SymbolRegistry)
 - API fixes: `dexpi_to_graph()`, `list_by_model()` for LayoutStore
+
+**Webapp Testing Verified:** Playwright headless browser verification of Plotly HTML and Matplotlib SVG outputs.
 
 See `docs/completed-plans/2026-01-22-phase8-roadmap-audit.md` for details.
 
