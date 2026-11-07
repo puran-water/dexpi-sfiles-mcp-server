@@ -1,3 +1,19 @@
+# dexpi-sfiles-mcp-server — historical archive
+
+This repository is archived. Its implementation predates the current PuranOS monorepo and is retained as a historical reference. It does not receive the fixes delivered to the current internal tooling.
+
+A refreshed, scoped public export is a candidate for a later release. **No new implementation is released by this documentation update.** Current work first updates the public documentation and website.
+
+For installable packages, see the [current public engineering catalogue](https://github.com/puran-water/PuranOS-public/blob/main/docs/public-tools.md). For the wider working system, see [sizing-to-balance, proposal and BEP workflows](https://github.com/puran-water/PuranOS-public/blob/main/docs/workflows.md), [Studio](https://github.com/puran-water/PuranOS-public/blob/main/docs/studio.md) and [specialist roles](https://github.com/puran-water/PuranOS-public/blob/main/docs/architecture/personas/README.md).
+
+[Puran Water](https://puranwater.com/) · [Discuss an engineering need](https://puranwater.com/contact/)
+
+---
+
+## Historical implementation documentation
+
+The instructions below apply to the archived code and its original dependencies. Current monorepo capabilities, engineering qualification and deployment cannot be inferred from them.
+
 # Engineering MCP Server
 
 > **⚠️ DEVELOPMENT STATUS: This project is under active development and is not yet production-ready. APIs, interfaces, and functionality may change without notice. Use at your own risk for evaluation and testing purposes only. Not recommended for production deployments.**
